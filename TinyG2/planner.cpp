@@ -432,7 +432,7 @@ mpBuf_t * mp_get_run_buffer()
 
 uint8_t mp_free_run_buffer()					// EMPTY current run buf & adv to next
 {
-	mp_clear_buffer(mb.r);						// clear it out (& reset replannable)
+	mp_clear_buffer(mb.r);						// clear it out
 //	mb.r->buffer_state = MP_BUFFER_EMPTY;		// redundant after the clear, above
 	mb.r = mb.r->nx;							// advance to next run buffer
 	if (mb.r->buffer_state == MP_BUFFER_QUEUED) {// only if queued...
@@ -526,12 +526,11 @@ void mp_dump_plan_buffer_by_index(uint8_t index) { _dump_plan_buffer(&mb.bf[inde
 
 static void _dump_plan_buffer(mpBuf_t *bf)
 {
-	fprintf_P(stderr, PSTR("***Runtime Buffer[%d] bstate:%d  mtype:%d  mstate:%d  replan:%d\n"),
+	fprintf_P(stderr, PSTR("***Runtime Buffer[%d] bstate:%d  mtype:%d  mstate:%d\n"),
 			_get_buffer_index(bf),
 			bf->buffer_state,
 			bf->move_type,
-			bf->move_state,
-			bf->replannable);
+			bf->move_state);
 
 	print_scalar(PSTR("line number:     "), bf->linenum);
 	print_vector(PSTR("position:        "), mm.position, AXES);

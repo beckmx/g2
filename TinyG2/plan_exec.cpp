@@ -73,6 +73,9 @@ stat_t mp_exec_move()
 		}
 	}
     
+    // Check if we have a replan queued up
+    mp_check_for_replan();
+    
 	// if there's an out-of-band dwell in progress, execute it in lieu of the run buffer
 	if (!fp_ZERO(mr.out_of_band_dwell_time)) {
 		return mp_exec_out_of_band_dwell();
@@ -112,9 +115,6 @@ stat_t mp_exec_move()
  *		   Returning STAT_OK at this point does NOT advance position meaning any
  *		   position error will be compensated by the next move.
  *
- *	Note 2 Solves a potential race condition where the current move ends but the
- * 		   new move has not started because the previous move is still being run
- *		   by the steppers. Planning can overwrite the new move.
  */
 /* OPERATION:
  *	Aline generates jerk-controlled S-curves as per Ed Red's course notes:
@@ -176,13 +176,10 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
 		// initialization to process the new incoming bf buffer (Gcode block)
 		memcpy(&mr.gm, &(bf->gm), sizeof(GCodeState_t));// copy in the gcode model state
-		bf->replannable = false;
 														// too short lines have already been removed
-		if (fp_ZERO(bf->length)) {						// ...looks for an actual zero here
+		if (fp_ZERO(bf->head_length + bf->body_length + bf->tail_length)) {						// ...looks for an actual zero here
 			mr.move_state = MOVE_OFF;					// reset mr buffer
 			mr.section_state = SECTION_OFF;
-			if(bf->nx->move_state == MOVE_NEW)
-				bf->nx->replannable = false;				// prevent overplanning (Note 2)
 			st_prep_null();								// call this to keep the loader happy
 			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF) cm_cycle_end();	// free buffer & end cycle if planner is empty
 			return (STAT_OK);
@@ -240,8 +237,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	} else {
 		mr.move_state = MOVE_OFF;						// reset mr buffer
 		mr.section_state = SECTION_OFF;
-		if(bf->nx->move_state == MOVE_NEW)
-			bf->nx->replannable = false;					// prevent overplanning (Note 2)
 		if (bf->move_state == MOVE_RUN) {
 			if (mp_free_run_buffer() && cm.hold_state == FEEDHOLD_OFF)
 				cm_cycle_end();	// free buffer & end cycle if planner is empty

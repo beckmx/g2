@@ -157,7 +157,6 @@ typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 	uint8_t move_type;				// used to dispatch to run routine
 	uint8_t move_code;				// byte that can be used by used exec functions
 	uint8_t move_state;				// move state machine sequence
-	uint8_t replannable;			// TRUE if move can be re-planned
 
 	float unit[AXES];				// unit vector for axis scaling & planning
 
@@ -180,6 +179,14 @@ typedef struct mpBuffer {			// See Planning Velocity Notes for variable usage
 	float jerk;						// maximum linear jerk term for this move
 	float recip_jerk;				// 1/Jm used for planning (computed and cached)
 	float cbrt_jerk;				// cube root of Jm used for planning (computed and cached)
+    
+    /* For re-plan requests: update these values, and they'll be copied into the right place by exec */
+    float replanned_head_length;
+    float replanned_body_length;
+    float replanned_tail_length;
+    float replanned_entry_velocity;
+    float replanned_cruise_velocity;
+    float replanned_exit_velocity;
 
 	GCodeState_t gm;				// Gode model state - passed from model, used by planner and runtime
 
@@ -232,6 +239,23 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 	float entry_velocity;
 	float cruise_velocity;
 	float exit_velocity;
+    
+    /* For re-plan requests: update these values, and they'll be copied into the right place by exec */
+    float replanned_head_length;
+    float replanned_body_length;
+    float replanned_tail_length;
+    float replanned_entry_velocity;
+    float replanned_cruise_velocity;
+    float replanned_exit_velocity;
+    
+    uint8_t replan_state;
+    uint8_t replan_interrupted;
+    /* The bp0 when the replan finished */
+    mpBuf_t *replan_bp0;
+    /* In case of feedholds, the buffer to insert bp0 after */
+    mpBuf_t *replan_hold_buffer;
+    float replan_hold_buffer_length;
+    float replan_bp0_length;
 
 	float segments;					// number of segments in line (also used by arc generation)
 	uint32_t segment_count;			// count of running segments
@@ -251,6 +275,12 @@ typedef struct mpMoveRuntimeSingleton {	// persistent runtime variables
 
 	magic_t magic_end;
 } mpMoveRuntimeSingleton_t;
+
+enum replanFlags {
+    REPLAN_OFF = 0,
+    REPLAN_REQUESTED = 1,
+    REPLAN_SWAP_REQUESTED = 2,
+};
 
 // Reference global scope structures
 extern mpBufferPool_t mb;				// move buffer queue
@@ -283,7 +313,10 @@ stat_t mp_exec_out_of_band_dwell(void);
 
 stat_t mp_aline(GCodeState_t *gm_in);
 
+void mp_check_for_replan();
+
 stat_t mp_plan_hold_callback(void);
+stat_t mp_replan_callback(void);
 stat_t mp_start_hold(void);
 stat_t mp_feed_rate_override(uint8_t flag, float parameter);
 
