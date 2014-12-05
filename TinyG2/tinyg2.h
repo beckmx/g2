@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		072.57 // fix unique_id
+#define TINYG_FIRMWARE_BUILD   		072.58 // planner rewrite of doom
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.97						// firmware major version
