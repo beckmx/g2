@@ -105,8 +105,12 @@ void mp_check_for_replan()
         return;
     }
     
-    /* If the replan was interrupted by exec, reject it... */
-    if(mr.replan_interrupted) {
+    /* If the replan was interrupted by exec, and involves a change in mr, or if bp0 changed, reject it... */
+    bool mrChanged = fp_NE(mr.entry_velocity, mr.replanned_entry_velocity) ||
+                    fp_NE(mr.cruise_velocity, mr.replanned_cruise_velocity) ||
+                    fp_NE(mr.exit_velocity, mr.replanned_exit_velocity) ||
+                    fp_NE(mr.head_length + mr.body_length + mr.tail_length, mr.replanned_head_length + mr.replanned_body_length + mr.replanned_tail_length);
+    if(mr.replan_interrupted && (mrChanged || mr.replan_bp0 != mb.r)) {
         mr.replan_state = REPLAN_REQUESTED;
         return;
     }
@@ -520,29 +524,59 @@ static void _plan_block_list(mpBuf_t *bf)
 	// forward planning pass - recomputes trapezoids in the list from the first block to the bf block.
 	while ((bp = mp_get_next_buffer(bp)) != bf) {
         if (bp->move_state == MOVE_RUN) {
-            /* Currently running block... */
-            bp->replanned_entry_velocity = _compute_next_segment_velocity();
-        } else if(bp->pv == bf || bp->pv->move_state == MOVE_OFF) {
-            /* First block, but nothing's currently running */
-            bp->replanned_entry_velocity = mr.exit_velocity;
+            /* Only replan the running block if the exit velocity has changed... */
+            float target_exit_velocity = min4( bp->exit_vmax,
+                                               bp->nx->entry_vmax,
+                                               bp->nx->braking_velocity,
+                                               (bp->entry_velocity + bp->delta_vmax));
+            if(fp_NE(target_exit_velocity, bp->exit_velocity)) {
+                /* Currently running block... take the next segment velocity, and recompute the length */
+                bp->replanned_entry_velocity = _compute_next_segment_velocity();
+                bp->length = get_axis_vector_length(mr.target, mr.position);
+                bp->replanned_cruise_velocity = bp->cruise_vmax;
+                bp->replanned_exit_velocity = target_exit_velocity;
+                mp_calculate_trapezoid(bp);
+            }
+            continue;
         } else {
-            /* bp+X where X > 0 */
-            bp->replanned_entry_velocity = bp->pv->replanned_exit_velocity;
+            if(bp->pv == bf || bp->pv->move_state == MOVE_OFF) {
+                /* First block, but nothing's currently running */
+                bp->replanned_entry_velocity = mr.exit_velocity;
+            } else {
+                /* bp+X where X > 0 */
+                bp->replanned_entry_velocity = bp->pv->replanned_exit_velocity;
+            }
+            bp->replanned_exit_velocity = min4( bp->exit_vmax,
+                                                bp->nx->entry_vmax,
+                                                bp->nx->braking_velocity,
+                                               (bp->replanned_entry_velocity + bp->delta_vmax));
+        
+            if(fp_EQ(bp->replanned_entry_velocity, bp->entry_velocity) &&
+               fp_EQ(bp->replanned_exit_velocity, bp->exit_velocity) &&
+               fp_EQ(bp->head_length + bp->body_length + bp->tail_length, bp->length)) {
+                bp->replanned_head_length = bp->head_length;
+                bp->replanned_body_length = bp->body_length;
+                bp->replanned_tail_length = bp->tail_length;
+            } else {
+                bp->replanned_cruise_velocity = bp->cruise_vmax;
+                mp_calculate_trapezoid(bp);
+            }
         }
-        
-        bp->replanned_cruise_velocity = bp->cruise_vmax;
-        bp->replanned_exit_velocity = min4( bp->exit_vmax,
-                                            bp->nx->entry_vmax,
-                                            bp->nx->braking_velocity,
-                                           (bp->replanned_entry_velocity + bp->delta_vmax));
-        
-        mp_calculate_trapezoid(bp);
     }
 	// finish up the last block move
 	bp->replanned_entry_velocity = bp->pv->replanned_exit_velocity;
-	bp->replanned_cruise_velocity = bp->cruise_vmax;
 	bp->replanned_exit_velocity = 0;
-	mp_calculate_trapezoid(bp);
+    
+    if(fp_EQ(bp->replanned_entry_velocity, bp->entry_velocity) &&
+       fp_EQ(bp->replanned_exit_velocity, bp->exit_velocity) &&
+       fp_EQ(bp->head_length + bp->body_length + bp->tail_length, bp->length)) {
+        bp->replanned_head_length = bp->head_length;
+        bp->replanned_body_length = bp->body_length;
+        bp->replanned_tail_length = bp->tail_length;
+    } else {
+        bp->replanned_cruise_velocity = bp->cruise_vmax;
+        mp_calculate_trapezoid(bp);
+    }
 }
 
 /*
