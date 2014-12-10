@@ -135,18 +135,27 @@ void mp_check_for_replan()
         mp_copy_buffer(mr.replan_hold_buffer, &scratchBuf);
     }
     
-    _mr_swap_replanned_trapezoid();
+    /* Get exec_aline to reset the segment processing, if needed */
+    if(mr.move_state == MOVE_RUN && (
+         fp_NE(mr.replanned_head_length, mr.head_length) ||
+         fp_NE(mr.replanned_body_length, mr.body_length) ||
+         fp_NE(mr.replanned_tail_length, mr.tail_length))) {
+        _mr_swap_replanned_trapezoid();
+        
+        mr.section = SECTION_HEAD;
+        mr.section_state = SECTION_NEW;
+        for (uint8_t axis=0; axis<AXES; axis++) {
+			mr.waypoint[SECTION_HEAD][axis] = mr.position[axis] + mr.unit[axis] * mr.head_length;
+			mr.waypoint[SECTION_BODY][axis] = mr.position[axis] + mr.unit[axis] * (mr.head_length + mr.body_length);
+			mr.waypoint[SECTION_TAIL][axis] = mr.position[axis] + mr.unit[axis] * (mr.head_length + mr.body_length + mr.tail_length);
+		}
+    }
+
     mpBuf_t *bp = mr.replan_bp0;
     do {
         _swap_replanned_trapezoid(bp);
         bp = mp_get_next_buffer(bp);
     } while((bp->move_state != MOVE_OFF) && (bp != mr.replan_bp0));
-    
-    /* Get exec_aline to reset the segment processing */
-    if(mr.move_state == MOVE_RUN) {
-        mr.section = SECTION_HEAD;
-        mr.section_state = SECTION_NEW;
-    }
     
     if(mr.replan_hold_buffer != NULL && cm.hold_state == FEEDHOLD_PLAN) {
         cm.hold_state = FEEDHOLD_DECEL;
@@ -335,12 +344,12 @@ stat_t mp_aline(GCodeState_t *gm_in)
     bf->replanned_cruise_velocity = bf->cruise_vmax;
     mp_calculate_trapezoid(bf);
     _swap_replanned_trapezoid(bf);
-    
-    _request_replan();
 
 	// Note: these next lines must remain in exact order. Position must update before committing the buffer.
 	copy_vector(mm.position, bf->gm.target);	// set the planner position
 	mp_commit_write_buffer(MOVE_TYPE_ALINE); 	// commit current block (must follow the position update)
+    
+    _request_replan();
 	return (STAT_OK);
 }
 
