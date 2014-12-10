@@ -121,18 +121,25 @@ void mp_check_for_replan()
         mr.replan_bp0->length = mr.replan_bp0_length;
         mr.replan_bp0->delta_vmax = mp_get_target_velocity(0, mr.replan_bp0->length, mr.replan_bp0);
         mr.replan_bp0->move_state = MOVE_NEW;
-    }
-    if(mr.replan_hold_buffer != NULL && mr.replan_hold_buffer != mr.replan_bp0) {
-        mr.replan_hold_buffer->length = mr.replan_hold_buffer_length;
-        mr.replan_hold_buffer->delta_vmax = mp_get_target_velocity(0, mr.replan_hold_buffer->length, mr.replan_hold_buffer);
-        /* shift stuff to make room for bp0... */
-        mp_copy_buffer(&scratchBuf, mr.replan_bp0);
-        mpBuf_t *bp = mr.replan_bp0;
-        do {
-            mp_copy_buffer(bp, bp->nx);
-            bp = bp->nx;
-        } while(bp != mr.replan_hold_buffer);
-        mp_copy_buffer(mr.replan_hold_buffer, &scratchBuf);
+        if(mr.replan_hold_buffer != mr.replan_bp0) {
+            //If the hold buffer exists and is not bp0, then the hold buffer has been split into
+            //"hold buffer" (decel to new hold point) and "bp0" (accel back to original target)
+            copy_vector(mr.replan_bp0->gm.target, mr.replan_hold_buffer->gm.target);
+            for(uint8_t axis = 0; axis < AXES; axis++) {
+                mr.replan_hold_buffer->gm.target[axis] -= mr.replan_hold_buffer->unit[axis] * (mr.replan_hold_buffer->head_length + mr.replan_hold_buffer->body_length + mr.replan_hold_buffer->tail_length);
+            }
+            copy_vector(mr.replan_bp0->unit, mr.replan_hold_buffer->unit);
+            mr.replan_hold_buffer->length = mr.replan_hold_buffer_length;
+            mr.replan_hold_buffer->delta_vmax = mp_get_target_velocity(0, mr.replan_hold_buffer->length, mr.replan_hold_buffer);
+            /* shift stuff to make room for bp0... */
+            mp_copy_buffer(&scratchBuf, mr.replan_bp0);
+            mpBuf_t *bp = mr.replan_bp0;
+            do {
+                mp_copy_buffer(bp, bp->nx);
+                bp = bp->nx;
+            } while(bp != mr.replan_hold_buffer);
+            mp_copy_buffer(mr.replan_hold_buffer, &scratchBuf);
+        }
     }
     
     /* Get exec_aline to reset the segment processing, if needed */
@@ -149,6 +156,7 @@ void mp_check_for_replan()
 			mr.waypoint[SECTION_BODY][axis] = mr.position[axis] + mr.unit[axis] * (mr.head_length + mr.body_length);
 			mr.waypoint[SECTION_TAIL][axis] = mr.position[axis] + mr.unit[axis] * (mr.head_length + mr.body_length + mr.tail_length);
 		}
+        copy_vector(mr.target, mr.waypoint[SECTION_TAIL]);
     }
 
     mpBuf_t *bp = mr.replan_bp0;
@@ -862,7 +870,7 @@ stat_t mp_plan_hold_callback()
             break;
 	}
 	// Deceleration now fits in the current bp buffer
-	// Plan the bp0 as the decel, bp0 as the accel
+	// Plan the bp as the decel, bp0 as the accel
     bp->replanned_tail_length = braking_length;
     bp->exit_vmax = bp->replanned_exit_velocity = 0;
     mr.replan_hold_buffer_length = braking_length;
