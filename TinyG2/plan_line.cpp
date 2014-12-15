@@ -170,6 +170,21 @@ void mp_check_for_replan()
         bp = mp_get_next_buffer(bp);
     } while((bp->move_state != MOVE_OFF) && (bp != mr.replan_bp0));
     
+    if(cm.homing_state == HOMING_HOMED) {
+        float pos[AXES];
+        copy_vector(pos, mr.target);
+        for(bp = mb.r; bp->move_state != MOVE_OFF; bp = bp->nx)
+        {
+            if(bp->move_state == MOVE_RUN || bp->move_type != MOVE_TYPE_ALINE) continue;
+            for(uint8_t axis = 0; axis < AXES; ++axis) {
+                pos[axis] += bp->unit[axis] * bp->length;
+                if(fp_NE(pos[axis], bp->gm.target[axis]))
+                    __builtin_trap();
+            }
+            if(bp->nx == mb.r) break;
+        }
+    }
+    
     if(mr.replan_hold_buffer != NULL && cm.hold_state == FEEDHOLD_PLAN) {
         cm.hold_state = FEEDHOLD_DECEL;
         _request_replan(); //to smooth out stuff on the other side of the hold...

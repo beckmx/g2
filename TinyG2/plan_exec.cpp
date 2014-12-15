@@ -205,6 +205,11 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 			mr.waypoint[SECTION_HEAD][axis] = mr.position[axis] + mr.unit[axis] * mr.head_length;
 			mr.waypoint[SECTION_BODY][axis] = mr.position[axis] + mr.unit[axis] * (mr.head_length + mr.body_length);
 			mr.waypoint[SECTION_TAIL][axis] = mr.position[axis] + mr.unit[axis] * (mr.head_length + mr.body_length + mr.tail_length);
+            
+            if(cm.homing_state == HOMING_HOMED && fp_NE(mr.target[axis], mr.waypoint[SECTION_TAIL][axis])) {
+                printf("MR: Target doesn't match waypoint: axis %d, %f vs %f\n", axis, mr.target[axis], mr.waypoint[SECTION_TAIL][axis]);
+                __builtin_trap();
+            }
 		}
 	}
 	// NB: from this point on the contents of the bf buffer do not affect execution
@@ -235,6 +240,10 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 	if (status == STAT_EAGAIN) {
 		sr_request_status_report(SR_REQUEST_TIMED);		// continue reporting mr buffer
 	} else {
+        for(uint8_t axis = 0; axis<AXES; ++axis) {
+            if(cm.homing_state == HOMING_HOMED && fp_NE(mr.position[axis], mr.target[axis]))
+                __builtin_trap();
+        }
 		mr.move_state = MOVE_OFF;						// reset mr buffer
 		mr.section_state = SECTION_OFF;
 		if (bf->move_state == MOVE_RUN) {
