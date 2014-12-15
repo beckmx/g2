@@ -115,6 +115,11 @@ void mp_check_for_replan()
         return;
     }
     
+    if(mr.move_state == MOVE_OFF && mr.replan_hold_buffer != NULL) {
+        mr.replan_state = REPLAN_OFF;
+        return;
+    }
+    
     /* If we need to swap bp0 in somewhere weird, or adjust lengths, do it now...
      * This is as a result of mp_plan_hold_callback */
     if(mr.replan_hold_buffer != NULL) {
@@ -126,7 +131,7 @@ void mp_check_for_replan()
             //"hold buffer" (decel to new hold point) and "bp0" (accel back to original target)
             copy_vector(mr.replan_bp0->gm.target, mr.replan_hold_buffer->gm.target);
             for(uint8_t axis = 0; axis < AXES; axis++) {
-                mr.replan_hold_buffer->gm.target[axis] -= mr.replan_hold_buffer->unit[axis] * (mr.replan_hold_buffer->head_length + mr.replan_hold_buffer->body_length + mr.replan_hold_buffer->tail_length);
+                mr.replan_hold_buffer->gm.target[axis] -= mr.replan_hold_buffer->unit[axis] * mr.replan_bp0_length;
             }
             copy_vector(mr.replan_bp0->unit, mr.replan_hold_buffer->unit);
             mr.replan_hold_buffer->length = mr.replan_hold_buffer_length;
@@ -800,6 +805,7 @@ stat_t mp_plan_hold_callback()
 	//otherwise, we we wait for FEEDHOLD_PLAN and then plan a DECEL buffer
 	if (cm.hold_state != FEEDHOLD_PLAN) { return (STAT_NOOP);}	// not planning a feedhold
     if (mr.replan_state == REPLAN_SWAP_REQUESTED) { return (STAT_NOOP);} //we're waiting for exec to accept the current replan
+    if (mr.move_state == MOVE_OFF) { return (STAT_NOOP); }
     
     mr.replan_interrupted = 0;
     

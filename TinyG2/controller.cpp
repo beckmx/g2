@@ -169,8 +169,8 @@ static void _controller_HSM()
 	DISPATCH(_interlock_estop_handler());       // 5a. interlock or estop have been thrown
 
 	DISPATCH(cm_feedhold_sequencing_callback());// 6a. feedhold state machine runner
-	DISPATCH(mp_replan_callback());				// 6b. process replan request
-    DISPATCH(mp_plan_hold_callback());          // 6c. process feedhold planning request
+    DISPATCH(mp_plan_hold_callback());          // 6b. process feedhold planning request
+	DISPATCH(mp_replan_callback());				// 6c. process replan request
 	DISPATCH(xio_callback());					// 7. manages state changes in the XIO system
 	DISPATCH(_system_assertions());				// 8. system integrity assertions
 

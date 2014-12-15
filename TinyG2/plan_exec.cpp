@@ -529,10 +529,9 @@ static stat_t _exec_aline_segment()
 	// Set target position for the segment
 	// If the segment ends on a section waypoint synchronize to the head, body or tail end
 	// Otherwise if not at a section waypoint compute target from segment time and velocity
-	// Don't do waypoint correction if you are going into a hold.
 
-	if ((--mr.segment_count == 0) && (mr.section_state == SECTION_2nd_HALF) &&
-		(cm.motion_state != MOTION_HOLD)) {
+    --mr.segment_count;
+	if ((mr.segment_count == 0) && (mr.section_state == SECTION_2nd_HALF)) {
 		copy_vector(mr.gm.target, mr.waypoint[mr.section]);
 	} else {
 		float segment_length = mr.segment_velocity * mr.segment_time;

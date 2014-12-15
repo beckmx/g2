@@ -1291,7 +1291,11 @@ stat_t cm_feedhold_sequencing_callback()
 	if ((cm.end_hold_requested == true) && (cm.queue_flush_requested == false)) {
 		if(cm.motion_state != MOTION_HOLD)
 			cm.end_hold_requested = false;
-		else if(cm.hold_state == FEEDHOLD_HOLD) {
+        // Don't let a resume take effect until we've replanned the far side of a feedhold...
+        // When we insert a feedhold into the planner, we just plan down to zero, and leave the far side
+        // in an inconsistent state.  A replan will clean up that inconsistency, but if we resume before
+        // we successfully replan, it's bad news.
+		else if(cm.hold_state == FEEDHOLD_HOLD && mr.replan_state == REPLAN_OFF) {
 			cm.end_hold_requested = false;
 			cm_end_hold();
 		}
