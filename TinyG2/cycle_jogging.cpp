@@ -101,7 +101,7 @@ stat_t cm_jogging_cycle_start(uint8_t axis)
 	jog.velocity_max = cm.a[axis].velocity_max;
 
 	jog.start_pos = cm_get_absolute_position(RUNTIME, axis);
-	jog.dest_pos = cm_get_jogging_dest();
+	jog.dest_pos = jog.start_pos + cm_get_jogging_dest();
 	jog.step = 0;
 
 	jog.axis = axis;
