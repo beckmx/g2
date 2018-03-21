@@ -122,8 +122,8 @@ stat_t poll_switches()
     poll_switch(&sw.s[AXIS_X][SW_MAX], (bool)axis_X_max_pin);
     poll_switch(&sw.s[AXIS_Y][SW_MIN], (bool)axis_Y_min_pin);
     poll_switch(&sw.s[AXIS_Y][SW_MAX], (bool)axis_Y_max_pin);
-    poll_switch(&sw.s[AXIS_Z][SW_MIN], (bool)axis_Z_min_pin);
-    poll_switch(&sw.s[AXIS_Z][SW_MAX], (bool)axis_Z_max_pin);
+    poll_switch(&sw.s[AXIS_Z][SW_MIN], (bool)axis_Y_min_pin);
+    poll_switch(&sw.s[AXIS_Z][SW_MAX], (bool)axis_Y_max_pin);
 #if (HOMING_AXES >= 4)
     poll_switch(&sw.s[AXIS_A][SW_MIN], (bool)axis_A_min_pin);
     poll_switch(&sw.s[AXIS_A][SW_MAX], (bool)axis_A_max_pin);

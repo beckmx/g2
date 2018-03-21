@@ -52,6 +52,8 @@
 #include "Reset.h"
 #endif
 
+#include "uart.h"
+
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS *********************************************************
  ***********************************************************************************/
@@ -78,6 +80,8 @@ static void _dispatch_kernel(void);
 // prep for export to other modules:
 stat_t hardware_hard_reset_handler(void);
 //stat_t hardware_bootloader_handler(void);
+
+TinyUSART usart1;
 
 /***********************************************************************************
  **** CODE *************************************************************************
@@ -149,7 +153,26 @@ stat_t controller_test_assertions()
 
 void controller_run()
 {
+	usart1.init();
+	fprintf_P(stderr,PSTR("USART1 Initialized\n"));
+
+	char c = 'a';
+	int count = 0;
+
 	while (true) {
+		if(count++ > 32)
+		{
+			usart1.writeByte(c++);
+			//fprintf_P(stderr, PSTR("Wrote 'a'\r\n"));
+			count = 0;
+		}
+
+		int16_t t = usart1.readByte();
+		if(t >= 0)
+		{
+			fprintf_P(stderr, PSTR("Read: %c (0x%x)\r\n"), (char)t, t);
+		}
+
 		_controller_HSM();
 	}
 }
@@ -188,7 +211,7 @@ static void _controller_HSM()
 	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
 	DISPATCH(cm_jogging_cycle_callback());		// jog cycle operation
 	DISPATCH(cm_deferred_write_callback());		// persist G10 changes when not in machining cycle
-    
+
     DISPATCH(write_persistent_values_callback());
 
 //----- command readers and parsers --------------------------------------------------//
@@ -451,7 +474,7 @@ static stat_t _interlock_estop_handler(void)
 		cm.estop_state &= ~ESTOP_PRESSED;
 		report = true;
 	}
-    
+
     //if E-Stop and Interlock are both 0, and we're off, go into "ESC Reboot"
     if((cm.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_OFFLINE && (cm.estop_state & ESTOP_PRESSED) == 0 && (cm.safety_state & SAFETY_INTERLOCK_OPEN) == 0) {
         cm.safety_state &= ~SAFETY_ESC_MASK;
@@ -459,7 +482,7 @@ static stat_t _interlock_estop_handler(void)
         cm.esc_boot_timer = SysTickTimer_getValue();
         report = true;
     }
-    
+
     //Check if ESC lockout timer or reboot timer have expired
     uint32_t now = SysTickTimer_getValue();
     if((cm.safety_state & SAFETY_ESC_LOCKOUT) != 0 && (now - cm.esc_lockout_timer) > ESC_LOCKOUT_TIME) {

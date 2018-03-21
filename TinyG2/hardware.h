@@ -86,7 +86,7 @@ extern "C"{
 #else
 #define SYS_ID_LEN 12
 #endif
-    
+
 /************************************************************************************
  **** ARM SAM3X8E SPECIFIC HARDWARE *************************************************
  ************************************************************************************/
@@ -166,8 +166,11 @@ static InputPin<kXAxis_MinPinNumber> axis_X_min_pin(kPullUp);
 static InputPin<kXAxis_MaxPinNumber> axis_X_max_pin(kPullUp);
 static InputPin<kYAxis_MinPinNumber> axis_Y_min_pin(kPullUp);
 static InputPin<kYAxis_MaxPinNumber> axis_Y_max_pin(kPullUp);
-static InputPin<kZAxis_MinPinNumber> axis_Z_min_pin(kPullUp);
-static InputPin<kZAxis_MaxPinNumber> axis_Z_max_pin(kPullUp);
+//static InputPin<kZAxis_MinPinNumber> axis_Z_min_pin(kPullUp);
+//static InputPin<kZAxis_MaxPinNumber> axis_Z_max_pin(kPullUp);
+
+static Pin<kUART1_RXD_PinNumber> uart1_rxd_pin(kPeripheralA);
+static Pin<kUART1_TXD_PinNumber> uart1_txd_pin(kPeripheralA);
 
 static InputPin<kAAxis_MinPinNumber> axis_A_min_pin(kPullUp);
 static InputPin<kAAxis_MaxPinNumber> axis_A_max_pin(kPullUp);
