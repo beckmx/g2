@@ -34,9 +34,6 @@ void TinyUSART::init()
 {
 	enableClock();
 
-    uart1_rxd_pin.setMode(kInput);
-    uart1_txd_pin.setMode(kPeripheralA);
-
 	// Reset and disable TX and RX
     USART1->US_CR = US_CR_RSTRX | US_CR_RSTTX | US_CR_RXDIS | US_CR_TXDIS;
 
@@ -97,10 +94,4 @@ void TinyUSART::enableClock()
 	{
         PMC->PMC_PCER0 = id_mask;
     }
-
-#if 0 //May need to try:
-            if ((PMC->PMC_PCSR1 & id_mask) != id_mask) {
-                PMC->PMC_PCER1 = id_mask;
-            }
-#endif
 }
