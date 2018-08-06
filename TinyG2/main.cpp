@@ -35,6 +35,7 @@
 #include "test.h"
 #include "pwm.h"
 #include "xio.h"
+#include "spi2.h"
 //#include "network.h"
 
 #ifdef __AVR
@@ -105,7 +106,7 @@ void _system_init(void)
 
 	// Initialize C library
 	__libc_init_array();
-    
+
     // Store the flash UUID
     cacheUniqueId();
 
@@ -149,6 +150,8 @@ static void _application_init(void)
 	planner_init();					// motion planning subsystem
 	canonical_machine_init();		// canonical machine				- must follow config_init()
 
+	spi2_init();						// spi2 subsystem
+
 #ifdef __AVR
 	// now bring up the interrupts and get started
 	PMIC_SetVectorLocationToApplication();// as opposed to boot ROM
@@ -170,11 +173,14 @@ int main(void)
 {
 	// system initialization
 	_system_init();
-    
+
 	// TinyG application setup
 	_application_init();
 	_unit_tests();					// run any unit tests that are enabled
 	run_canned_startup();			// run any pre-loaded commands
+
+	//ms
+	spi2_test();
 
 	// main loop
 	for (;;) {

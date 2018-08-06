@@ -68,15 +68,15 @@ namespace Motate {
 		// For use on PWM pins only!
 		kPWMPinInverted    = 1<<7,
 	};
-    
+
     enum PinInterruptOptions {
         kPinInterruptsOff                = 0,
-        
+
         kPinInterruptOnChange            = 1,
-        
+
         kPinInterruptOnRisingEdge        = 1<<1,
         kPinInterruptOnFallingEdge       = 2<<1,
-        
+
         kPinInterruptOnLowLevel          = 3<<1,
         kPinInterruptOnHighLevel         = 4<<1,
 
@@ -86,19 +86,19 @@ namespace Motate {
 		kPinInterruptOnSoftwareTrigger   = 1<<4,
 
         kPinInterruptTypeMask            = (1<<5)-1,
-        
+
 		/* Set priority levels here as well: */
 		kPinInterruptPriorityHighest     = 1<<5,
 		kPinInterruptPriorityHigh        = 1<<6,
 		kPinInterruptPriorityMedium      = 1<<7,
 		kPinInterruptPriorityLow         = 1<<8,
 		kPinInterruptPriorityLowest      = 1<<9,
-        
+
         kPinInterruptPriorityMask        = ((1<<10) - (1<<5))
     };
-	
+
 	typedef uint32_t uintPort_t;
-    
+
 	typedef const int8_t pin_number;
 
 	template <unsigned char portLetter>
@@ -111,7 +111,7 @@ namespace Motate {
 		static const uint32_t pmcId() {
             return 0;
         };
-		
+
 		void setModes(const uintPort_t value, const uintPort_t mask = 0xffffffff) {
 			// stub
 		};
@@ -156,7 +156,7 @@ namespace Motate {
 		Pin(const PinMode type, const PinOptions options = kNormal) {};
 		void operator=(const bool value) {};
 		operator bool() { return 0; };
-		
+
 		void init(const PinMode type, const uint16_t options = kNormal, const bool fromConstructor=false) {};
 		void setMode(const PinMode type, const bool fromConstructor=false) {};
 		PinMode getMode() { return kUnchanged; };
@@ -171,7 +171,7 @@ namespace Motate {
 		uint8_t getOutputValue() { return 0; };
 		static uint32_t maskForPort(const uint8_t otherPortLetter) { return 0; };
 		bool isNull() { return true; };
-        
+
         /* Placeholder for user code. */\
         static void interrupt() __attribute__ ((weak));\
 	};
@@ -179,7 +179,7 @@ namespace Motate {
     template<uint8_t portChar, uint8_t portPin>
 	struct ReversePinLookup : Pin<-1> {
     };
-    
+
 	template<int8_t pinNum>
 	struct InputPin : Pin<pinNum> {
 		InputPin() : Pin<pinNum>(kInput) {};
@@ -209,10 +209,10 @@ namespace Motate {
 		operator bool() { return (get() != 0); };
 	private: /* Make these private to catch them early. */
 		void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */
-	};	
-	
+	};
+
 	// TODO: Make the Pin<> use the appropriate Port<>, reducing duplication when there's no penalty
-	
+
     #define _MAKE_MOTATE_PIN(pinNum, registerLetter, registerChar, registerPin)\
 		template<>\
 		struct Pin<pinNum> {\
@@ -350,7 +350,7 @@ namespace Motate {
         };
 
 
-    
+
 
 	static const uint32_t kDefaultPWMFrequency = 1000;
 	template<int8_t pinNum>
@@ -415,16 +415,16 @@ namespace Motate {
     template<int8_t pinNum>
 	struct SPIChipSelectPin : Pin<pinNum> {
 		SPIChipSelectPin() : Pin<pinNum>(kPeripheralA) {};
-        
+
         static const uint8_t moduleId = 0;
         static const uint8_t csOffset = 0;
-        
+
 		/*Override these to pick up new methods */
-        
+
 	private: /* Make these private to catch them early. */
 		/* These are intentially not defined. */
 //		void init(const PinMode type, const PinOptions options = kNormal);
-        
+
 		/* WARNING: Covariant return types! */
 		bool get();
 		operator bool();
@@ -444,25 +444,25 @@ namespace Motate {
             operator bool();\
         };
 
-    
+
     template<int8_t pinNum>
 	struct SPIOtherPin {
 		SPIOtherPin() : Pin<pinNum>(kOutput) {};
-        
+
 //        static const uint16_t moduleId = 255;
-        
+
 		/*Override these to pick up new methods */
-        
+
 	private: /* Make these private to catch them early. */
 		/* These are intentially not defined. */
 //		void init(const PinMode type, const PinOptions options = kNormal);
-        
+
 		/* WARNING: Covariant return types! */
 		bool get();
 		operator bool();
 	};
 
-    
+
     #define _MAKE_MOTATE_SPI_OTHER_PIN(pinNum, peripheralAorB)\
         template<>\
         struct SPIOtherPin<pinNum> : Pin<pinNum> {\
@@ -475,11 +475,11 @@ namespace Motate {
             bool get();\
             operator bool();\
         };
-    
-    
-    
-    
-    
+
+
+
+
+
 
 	#define _MAKE_MOTATE_PORT32(registerLetter, registerChar)\
 		template <>\
@@ -626,7 +626,7 @@ namespace Motate {
 
 	typedef Pin<-1> NullPin;
 	static NullPin nullPin;
-    
+
 } // end namespace Motate
 
 
@@ -791,9 +791,9 @@ namespace Motate {
 #endif
 	public:
 		PinHolder32() {
-			
+
 		};
-		
+
 		void write(uint32_t in_value) {
 			uint32_t port_value    = 0x00; // Port<> handles reading the port and setting the masked pins
 #define _MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, bitNumber, bitMask) \
@@ -841,7 +841,7 @@ namespace Motate {
 				port_value |= in_value & port ## portLetter ## CopyMask;\
 				port ## portLetter.write(port_value, ~port ## portLetter ## ClearMask);\
 			}
-			
+
 			_MOTATE_PH32_PINHOLDER_SETPORT(A);
 			_MOTATE_PH32_PINHOLDER_SETPORT(B);
 #ifdef PIOC
@@ -852,7 +852,7 @@ namespace Motate {
 #endif
 		}
 	};
-	
+
 	// disable pinholder for Due for now -- nned to convert to 32bit
 	// PinHolder - 32bit virtual ports (I've never made a template with 32 parameters before.)
 	template<

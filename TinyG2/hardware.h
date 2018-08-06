@@ -86,7 +86,7 @@ extern "C"{
 #else
 #define SYS_ID_LEN 12
 #endif
-    
+
 /************************************************************************************
  **** ARM SAM3X8E SPECIFIC HARDWARE *************************************************
  ************************************************************************************/
@@ -145,7 +145,7 @@ static Pin<kSPI0_SCKPinNumber>  spi_sck_pin(kPeripheralA);
 
 //static OutputPin<kSocket1_SPISlaveSelectPinNumber> spi_ss1_pin;
 //static OutputPin<kSocket2_SPISlaveSelectPinNumber> spi_ss2_pin;
-//static OutputPin<kSocket3_SPISlaveSelectPinNumber> spi_ss3_pin;
+static InputPin<kSocket3_SPISlaveSelectPinNumber> spi2_int_pin((Motate::PinOptions)(kPullUp|kDebounce));
 //static OutputPin<kSocket4_SPISlaveSelectPinNumber> spi_ss4_pin;
 //static OutputPin<kSocket5_SPISlaveSelectPinNumber> spi_ss5_pin;
 //static OutputPin<kSocket6_SPISlaveSelectPinNumber> spi_ss6_pin;
