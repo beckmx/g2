@@ -135,6 +135,14 @@ namespace Motate {
             spi()->SPI_CR = SPI_CR_SPIDIS;
         };
 
+        uint32_t get_status() {
+          return spi()->SPI_SR;
+        };
+
+        bool is_tx_empty() {
+          return (spi()->SPI_SR & SPI_SR_TXEMPTY);
+        };
+
         bool setChannel(const uint8_t channel) {
             // if we are transmitting, we cannot switch
             while (!(spi()->SPI_SR & SPI_SR_TXEMPTY)) {
@@ -268,6 +276,14 @@ namespace Motate {
             // Should be a non-op for already-enabled devices.
             hardware.enable();
 
+        };
+
+        uint32_t get_status() {
+          return hardware.get_status();
+        };
+
+        bool is_tx_empty() {
+          return hardware.is_tx_empty();
         };
 
         bool setChannel() {
