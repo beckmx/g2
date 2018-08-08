@@ -30,44 +30,6 @@ void spi2_init() {
 
 }
 
-// spi2_safe_rd: waits until transfer done + read data ready then returns valid byte
-uint8_t spi2_safe_rd(bool lastXfer) {
-
-  //uint8_t tries = 0xFF;
-  uint8_t read_byte;
-
-  // WORKAROUND: TX buffer not empty, will cause next read to fail
-  if (!(spi2->is_tx_empty())) {
-    spi2->read(true, 0xFF);
-  }
-
-  /*while ((read_byte = spi2->read(lastXfer)) < 0);*/
-
-  //return read_byte;
-  return spi2->read(lastXfer);
-}
-
-// spi2_safe_rd_multi: waits until transfer done + read data ready then returns multiple valid bytes
-void spi2_safe_rd_multi(uint8_t *buf, uint16_t n, bool lastXfer) {
-
-  uint8_t read_byte;
-
-  // WORKAROUND: TX buffer not empty, will cause next read to fail
-  if (!(spi2->is_tx_empty())) {
-    spi2->read(true, 0xFF);
-  }
-
-  //while ((read_byte = spi2->read(false)) < 0);
-
-  // Set first slot in buffer to valid byte
-  //buf[0] = read_byte;
-
-  // Read in the remaining bytes
-  //spi2->read(&buf[1], (n - 1), lastXfer);
-  spi2->read(buf, n, lastXfer);
-}
-
-
 // spi2_cmd: Start a SPI master transfer (read/write) using the provided buffer
 uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd, uint8_t *data_buf, uint16_t num_data) {
 
@@ -95,17 +57,16 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd, uint8_t *data_buf, ui
 
   // Process data bytes if available
   if (rnw && (num_data > 0)) {
-    //spi2_safe_rd_multi(data_buf, num_data, false);
-    spi2->read(data_buf, num_data, true);
+    spi2->read(data_buf, num_data, false);
   } else if (num_data > 0) {
     spi2->write(data_buf, num_data, false);
-    if (!(spi2->is_tx_empty())) { // WORKAROUND: TX buffer not empty, next read will fail
+    if (!(spi2->is_tx_empty())) {   // WORKAROUND: TX buffer not empty, next read will fail
       spi2->read(true, 0xFF);
     }
   }
 
   // Read and return status byte
-  status = spi2->read(true);
+  status = spi2->read(true);  //TODO: Fix Read -> Read, no status byte (RDRF = -1)
 
   return status;
 }
@@ -131,22 +92,7 @@ uint8_t spi2_slave_handler() {
     spi2->setChannel();
 
     // Read command
-    //cmd = spi2_safe_rd(false);
-
-    // Execute command from master
-    spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
-    spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
-
-    if (!(spi2->is_tx_empty())) { // WORKAROUND: TX buffer not empty, next read will fail
-      spi2->read(true, 0xFF);
-    }
-
     cmd = spi2->read(false);
-    spi2_cmd(true, SPI2_WRITE, SPI2_CMD_NULL, buf, 16); //TODO Temporary
-
-    //spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, 16);
-
-    while(1);
 
     switch (cmd) {
 
@@ -181,22 +127,19 @@ void spi2_test() {
   uint8_t buf[16] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-  //spi2->setChannel();
+  spi2->setChannel();
 
   // Try a few sample commands (0x00, 0x01, 0x03)
-  //spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
-  //spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
+  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
+  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
   //spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, 16);
 
   // Command 0x02
-  //spi2_safe_rd(false);
-  //spi2_cmd(true, SPI2_WRITE, SPI2_CMD_NULL, buf, 16);
-
-  //TESTING - Fixes Write then Read Issue
-  //while ((cmd = spi2->read(true, 0xFF)) < 0);
-  //spi2->write(buf, 16, false);
-  //spi2->read(true, 0xFF);
-  //while ((status = spi2->read(true, 0xFF)) < 0);
+  if (!(spi2->is_tx_empty())) { // WORKAROUND: TX buffer not empty, next read will fail
+    spi2->read(true, 0xFF);
+  }
+  spi2->read(false);  // Command byte
+  spi2_cmd(true, SPI2_WRITE, SPI2_CMD_NULL, buf, 16); //TODO Temporary
 }
 
 // SPI2 Slave ISR

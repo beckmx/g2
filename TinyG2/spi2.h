@@ -40,8 +40,6 @@ extern "C" {
 
 // Function Prototypes
 void spi2_init(void);
-uint8_t spi2_safe_rd(bool);
-void spi2_safe_rd_multi(uint8_t*, uint16_t, bool);
 uint8_t spi2_cmd(bool, uint8_t, uint8_t, uint8_t*, uint16_t);
 uint8_t spi2_slave_handler(void);
 void spi2_test(void);

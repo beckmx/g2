@@ -143,6 +143,10 @@ namespace Motate {
           return (spi()->SPI_SR & SPI_SR_TXEMPTY);
         };
 
+        bool is_rx_ready() {
+          return (spi()->SPI_SR & SPI_SR_RDRF);
+        };
+
         bool setChannel(const uint8_t channel) {
             // if we are transmitting, we cannot switch
             while (!(spi()->SPI_SR & SPI_SR_TXEMPTY)) {
@@ -284,6 +288,10 @@ namespace Motate {
 
         bool is_tx_empty() {
           return hardware.is_tx_empty();
+        };
+
+        bool is_rx_ready() {
+          return hardware.is_rx_ready();
         };
 
         bool setChannel() {
