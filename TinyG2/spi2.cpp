@@ -8,6 +8,9 @@
 #include <stdio.h>
 #include <memory>
 
+// SPI2 Slave Interrupt Flag
+static volatile bool spi2_slave_int = false;
+
 // Create a SPI instance using CS1 pin for select
 std::shared_ptr<Motate::SPI<kSocket2_SPISlaveSelectPinNumber>> spi2;
 
@@ -16,46 +19,112 @@ void spi2_init() {
 
   // Pin direction, type, debounce set in hardware.h
 
-  // Set up interrupt on falling edge of SPI_CS2 pin
-  spi2_int_pin.setInterrupts(kPinInterruptOnFallingEdge);
+  // Initialize the SPI peripheral and set to this channel
+  spi2.reset(new Motate::SPI<kSocket2_SPISlaveSelectPinNumber>(SPI2_MCK_DIV));
 
+  // Set up highest priority interrupt on falling edge of SPI_CS2 pin
+  spi2_int_pin.setInterrupts(kPinInterruptOnFallingEdge|kPinInterruptPriorityHighest);
 
+  // Clear Slave Interrupt Flag
+  spi2_slave_int = false;
+
+}
+
+// spi2_safe_rd: waits until read data ready then returns valid byte
+uint8_t spi2_safe_rd(bool lastXfer) {
+
+  //uint8_t tries = 0xFF;
+  uint8_t read_byte;
+
+  while ((read_byte = spi2->read(lastXfer)) < 0);
+
+  return read_byte;
 }
 
 // spi2_cmd: Start a SPI master transfer (read/write) using the provided buffer
 uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd, uint8_t *data_buf, uint16_t num_data) {
 
-  uint8_t cmd_byte, status = 0xFF;
+  uint8_t cmd_byte, status;
 
   // Error checking
   if ((num_data > 0) && (!data_buf)) {
     fprintf_P(stderr, PSTR("\nERROR: Invalid data buffer in spi2_cmd\n"));
+    spi2->read(true); // Toss, release the line
     return SPI2_STS_HALT;
   }
   if (rnw > 1) {
     fprintf_P(stderr, PSTR("\nERROR: Read Not Write bit out of range in spi2_cmd (0 - 1)\n"));
+    spi2->read(true); // Toss, release the line
     return SPI2_STS_HALT;
   }
   //TODO Check if cmd is invalid
 
-  // Generate command byte by inserting RnW bit to MSB
-  cmd_byte = cmd | (rnw << 7);
-
-  // Write out command byte (slave request, skip this)
+  // Generate and write out command byte (slave request, skip this)
   if (!slave_req) {
+    cmd_byte = cmd | (rnw << 7);
     spi2->write(cmd_byte, false);
     spi2->flush();  //TODO: Investigate why flush needed
   }
 
   // Process data bytes if available
   if (rnw && (num_data > 0)) {
-    spi2->read(data_buf, num_data, false);  // No-op = 0x00 (default for this function)
+    spi2->read(data_buf, num_data, false);  //TODO add safe read
   } else if (num_data > 0) {
     spi2->write(data_buf, num_data, false);
+    spi2->read(true, 0xFF); //TODO: Investigate why needed for write -> read for RDRF
   }
 
   // Read and return status byte
-  status = spi2->read(true, 0xFF);  // Send dummy 0xFF byte on MOSI
+  status = spi2_safe_rd(true);
+  return status;
+}
+
+// spi2_slave_handler: Processes SPI2 slave interrupts and executes commands
+uint8_t spi2_slave_handler() {
+
+  uint8_t cmd, status;
+
+  // SPI2 Slave Interrupt received
+  if (spi2_slave_int) {
+
+    // Clear flag
+    spi2_slave_int = false;
+
+    // Disable Interrupts
+	  //__disable_irq();
+
+    // Enable SPI2 slave select
+    spi2->setChannel();
+
+    // Read command
+    cmd = spi2_safe_rd(false);
+
+    // Execute command from master
+    switch (cmd) {
+
+      // Send motor positions (slave requested write)
+      case SPI2_CMD_SND_MTR_POS:
+
+        //TODO implement
+        status = SPI2_STS_OK;
+        break;
+
+      // Else, error (no other valid slave commands)
+      default:
+
+        fprintf_P(stderr, PSTR("\nERROR: Invalid command from SPI2 slave\n"));
+        spi2->read(true); // Toss, release the line
+        status = SPI2_STS_HALT;
+        break;
+    }
+
+    // Enable Interrupts
+    //__enable_irq();
+
+  } else {
+    status = SPI2_STS_OK;
+  }
+
   return status;
 }
 
@@ -64,28 +133,30 @@ void spi2_test() {
   uint8_t buf[16] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-  // Initialize the SPI peripheral and set to this channel
-  spi2.reset(new Motate::SPI<kSocket2_SPISlaveSelectPinNumber>(SPI2_MCK_DIV));
-
   spi2->setChannel();
-
-  // Let's write some DEAD BEEF out on the wire...
-  //spi2->write(buf, 4, true);
-  //spi2->write(buf, 4, true);
-
-  // Reads, ignore what slave sent (Aardvark test)
-  //spi2->read(true);
-  //spi2->read(buf, 4);
 
   // Try a few sample commands (0x00, 0x01, 0x03)
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
-  spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, 16);
+  //spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, 16);
+
+  // Command 0x02
+  spi2_safe_rd(false);
+  spi2_cmd(true, SPI2_WRITE, SPI2_CMD_NULL, buf, 16);
+
+  //TESTING - Fixes Write then Read Issue
+  //while ((cmd = spi2->read(true, 0xFF)) < 0);
+  //spi2->write(buf, 16, false);
+  //spi2->read(true, 0xFF);
+  //while ((status = spi2->read(true, 0xFF)) < 0);
 }
 
 // SPI2 Slave ISR
 void Pin<kSocket3_SPISlaveSelectPinNumber>::interrupt() {
 
+  // Set Slave Interrupt Flag
+  spi2_slave_int = true;
+
   // TEST: Toggle Coolant Enable, status LED (D15)
-  coolant_enable_pin.toggle();
+  //coolant_enable_pin.toggle();
 }

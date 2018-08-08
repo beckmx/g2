@@ -47,6 +47,7 @@
 #include "settings.h"
 #include "spindle.h"
 #include "persistence.h"
+#include "spi2.h"
 
 #ifdef __ARM
 #include "Reset.h"
@@ -73,6 +74,7 @@ static stat_t _sync_to_tx_buffer(void);
 static stat_t _controller_state(void);
 static stat_t _dispatch_command(void);
 static stat_t _dispatch_control(void);
+static stat_t _spi2_slave_handler(void);
 static void _dispatch_kernel(void);
 
 // prep for export to other modules:
@@ -173,6 +175,7 @@ static void _controller_HSM()
 	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
 	DISPATCH(xio_callback());					// 7. manages state changes in the XIO system
 	DISPATCH(_system_assertions());				// 8. system integrity assertions
+	DISPATCH(_spi2_slave_handler());			// 9. SPI2 slave requests
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
@@ -188,7 +191,7 @@ static void _controller_HSM()
 	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
 	DISPATCH(cm_jogging_cycle_callback());		// jog cycle operation
 	DISPATCH(cm_deferred_write_callback());		// persist G10 changes when not in machining cycle
-    
+
     DISPATCH(write_persistent_values_callback());
 
 //----- command readers and parsers --------------------------------------------------//
@@ -451,7 +454,7 @@ static stat_t _interlock_estop_handler(void)
 		cm.estop_state &= ~ESTOP_PRESSED;
 		report = true;
 	}
-    
+
     //if E-Stop and Interlock are both 0, and we're off, go into "ESC Reboot"
     if((cm.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_OFFLINE && (cm.estop_state & ESTOP_PRESSED) == 0 && (cm.safety_state & SAFETY_INTERLOCK_OPEN) == 0) {
         cm.safety_state &= ~SAFETY_ESC_MASK;
@@ -459,7 +462,7 @@ static stat_t _interlock_estop_handler(void)
         cm.esc_boot_timer = SysTickTimer_getValue();
         report = true;
     }
-    
+
     //Check if ESC lockout timer or reboot timer have expired
     uint32_t now = SysTickTimer_getValue();
     if((cm.safety_state & SAFETY_ESC_LOCKOUT) != 0 && (now - cm.esc_lockout_timer) > ESC_LOCKOUT_TIME) {
@@ -500,5 +503,14 @@ stat_t _system_assertions()
 	emergency___everybody_to_get_from_street(stepper_test_assertions());
 	emergency___everybody_to_get_from_street(encoder_test_assertions());
 	emergency___everybody_to_get_from_street(xio_test_assertions());
+	return (STAT_OK);
+}
+
+/*
+ *  _spi2_slave_handler() - process SPI2 slave requests
+ */
+static stat_t _spi2_slave_handler()
+{
+	spi2_slave_handler();
 	return (STAT_OK);
 }

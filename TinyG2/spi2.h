@@ -32,13 +32,17 @@ extern "C" {
 #define SPI2_CMD_RD_ESC_CURR    0x49  // Read ESC Current
 #define SPI2_CMD_FW_VER         0x4A  // Firmware Version
 
+#define SPI2_CMD_NULL           0xFF  // NULL command (placeholder for slave requests)
+
 #define SPI2_STS_OK             0x00  // OK Status
 #define SPI2_STS_ERR            0x01  // Error Status
 #define SPI2_STS_HALT           0x02  // Halt
 
 // Function Prototypes
 void spi2_init(void);
+uint8_t spi2_safe_rd(bool);
 uint8_t spi2_cmd(bool, uint8_t, uint8_t, uint8_t*, uint16_t);
+uint8_t spi2_slave_handler(void);
 void spi2_test(void);
 
 #ifdef __cplusplus
