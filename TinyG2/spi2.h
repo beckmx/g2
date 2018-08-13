@@ -15,10 +15,10 @@ extern "C" {
 #define SPI2_READ  0x01
 
 // SPI2 Command Set
-#define SPI2_CMD_RST_ENC_POS    0x00  // Reset Encoder Positions to Zero
-#define SPI2_CMD_START_TOOL_TIP 0x01  // Start Tool Tip Command
-#define SPI2_CMD_SND_MTR_POS    0x02  // Send Motor Positions
-#define SPI2_CMD_REQ_ENC_POS    0x03  // Request Encoder Positions
+#define SPI2_CMD_RST_ENC_POS    0x01  // Reset Encoder Positions to Zero
+#define SPI2_CMD_START_TOOL_TIP 0x02  // Start Tool Tip Command
+#define SPI2_CMD_SND_MTR_POS    0x03  // Send Motor Positions
+#define SPI2_CMD_REQ_ENC_POS    0x04  // Request Encoder Positions
 
 #define SPI2_CMD_RD_ENC_POS     0x40  // Read Encoder Position
 #define SPI2_CMD_SET_USER_IO    0x41  // Set User IO
@@ -34,9 +34,9 @@ extern "C" {
 
 #define SPI2_CMD_NULL           0xFF  // NULL command (placeholder for slave requests)
 
-#define SPI2_STS_OK             0x00  // OK Status
-#define SPI2_STS_ERR            0x01  // Error Status
-#define SPI2_STS_HALT           0x02  // Halt
+#define SPI2_STS_OK             0x01  // OK Status
+#define SPI2_STS_ERR            0x02  // Error Status
+#define SPI2_STS_HALT           0x03  // Halt
 
 // Function Prototypes
 void spi2_init(void);
