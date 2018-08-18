@@ -8,9 +8,11 @@ extern "C" {
 //#include "integer.h"
 
 // General Definitions
-#define SPI2_MCK_DIV  (SystemCoreClock / 84)  // SPI clock divider to generate baud (based on 84MHz MCK)
+#define SPI2_MCK_DIV    (SystemCoreClock / 168)  // SPI clock divider to generate baud (based on 84MHz MCK)
+#define SPI2_DLYBS_US   3                        // Delay between SS low and SCLK (in us)
+#define SPI2_DLYBCT_US  30                       // Delay between transfers (in us)
 
-// Direction (RnW) Bit
+// Direction
 #define SPI2_WRITE 0x00
 #define SPI2_READ  0x01
 

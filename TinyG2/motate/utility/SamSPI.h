@@ -198,7 +198,7 @@ namespace Motate {
                 spi()->SPI_TDR = value;
 
                 if (lastXfer) {
-                    spi()->SPI_CR = SPI_CR_LASTXFER;
+                  spi()->SPI_CR = SPI_CR_LASTXFER;
                 }
 
                 return 1;
@@ -302,7 +302,33 @@ namespace Motate {
             return spi()->SPI_CSR[spiChannelNumber()]/* & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)*/;
         };
 
-		int16_t read(const bool lastXfer = false, uint8_t toSendAsNoop = 0) {
+        // Set delay between SS low to SCLK transition (in us)
+        void setBSDelay(uint8_t delay_us) {
+
+          uint16_t dlybs = ((SystemCoreClock / 1000000) * delay_us);
+
+          if (dlybs > 255)
+              dlybs = 255;
+          else if (dlybs < 1)
+              dlybs = 1;
+
+          spi()->SPI_CSR[spiChannelNumber()] |= SPI_CSR_DLYBS(dlybs);
+        };
+
+        // Set delay between consecutive transfers (in us)
+        void setBCTDelay(uint8_t delay_us) {
+
+          uint16_t dlybct = (((SystemCoreClock / 1000000) * delay_us) / 32);
+
+          if (dlybct > 255)
+              dlybct = 255;
+          else if (dlybct < 1)
+              dlybct = 1;
+
+          spi()->SPI_CSR[spiChannelNumber()] |= SPI_CSR_DLYBCT(dlybct);
+        };
+
+		int16_t read(const bool lastXfer = false, uint8_t toSendAsNoop = 0xFF) {
             // Activate correct slave select (multi-slave support)
             if (!setChannel()) return -1;
             return hardware.read(lastXfer, toSendAsNoop);

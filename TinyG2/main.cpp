@@ -179,7 +179,7 @@ int main(void)
 	_unit_tests();					// run any unit tests that are enabled
 	run_canned_startup();			// run any pre-loaded commands
 
-	//ms
+	//TEMP: Run SPI2 unit tests
 	spi2_test();
 
 	// main loop

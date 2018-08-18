@@ -22,6 +22,10 @@ void spi2_init() {
   // Initialize the SPI peripheral and set to this channel
   spi2.reset(new Motate::SPI<kSocket2_SPISlaveSelectPinNumber>(SPI2_MCK_DIV));
 
+  // Add delays for 1) SS low to SCLK and 2) between transfers for SPI slave
+  //TODO spi2->setBSDelay(SPI2_DLYBS_US);
+  //TODO spi2->setBCTDelay(SPI2_DLYBCT_US);
+
   // Set up highest priority interrupt on falling edge of SPI_CS2 pin
   spi2_int_pin.setInterrupts(kPinInterruptOnFallingEdge|kPinInterruptPriorityHighest);
 
@@ -31,9 +35,7 @@ void spi2_init() {
 }
 
 // spi2_cmd: Start a SPI master transfer (read/write) using the provided buffer
-uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd, uint8_t *data_buf, uint16_t num_data) {
-
-  uint8_t cmd_byte, status;
+uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_buf, uint16_t num_data) {
 
   // Error checking
   if ((num_data > 0) && (!data_buf)) {
@@ -46,38 +48,42 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd, uint8_t *data_buf, ui
     spi2->read(true); // Toss, release the line
     return SPI2_STS_HALT;
   }
-  //TODO Check if cmd is invalid
+  //TODO Check if cmd_byte is invalid
 
-  // Generate and write out command byte (slave request, skip this)
+  // Write out command byte (slave request, skip this)
   if (!slave_req) {
-    cmd_byte = cmd | (rnw << 7);
-    spi2->write(cmd_byte, false);
-    spi2->flush();  //TODO Understand why needed
+    spi2->write(cmd_byte, true);
+    while(!spi2->is_tx_empty());  // Wait for TXEMPTY to flush - TODO timeout
+    spi2->flush();                // Clear unused RX data without invoking read
+    delay(1);                     //TEMP Delay 1ms
   }
 
   // Process data bytes if available
   if (rnw && (num_data > 0)) {
-    spi2->read(data_buf, num_data, false);
+    spi2->read(data_buf, num_data, true);   // Read RX data (performs dummy writes, doesn't count if RDRF = 0)
+    delay(1);                               //TEMP Delay 1ms
   } else if (num_data > 0) {
-    spi2->write(data_buf, num_data, false);
-    if (!(spi2->is_tx_empty())) {   // WORKAROUND: TX buffer not empty, next read will fail
-      spi2->read(true, 0xFF);
-    }
+    spi2->write(data_buf, num_data, true);
+    while(!spi2->is_tx_empty());            // Wait for TXEMPTY to flush - TODO timeout
+    spi2->flush();                          // Clear unused RX data without invoking read
+    delay(1);                               //TEMP Delay 1ms
   }
 
   // Read and return status byte
-  status = spi2->read(true);  //TODO: Fix Read -> Read, no status byte (RDRF = -1)
+  spi2->write(0xFF, true);    //TODO should not need this
+  while ((spi2->read(true)) < 0); // Waits until RX ready to read (performs dummy writes) - TODO add timeout
+  delay(1); //TEMP Delay 1ms
 
-  return status;
+  // Flush the system in case leftovers in buffers
+  //spi2->flush();
+
+  return SPI2_STS_OK;
 }
 
 // spi2_slave_handler: Processes SPI2 slave interrupts and executes commands
 uint8_t spi2_slave_handler() {
 
   uint8_t cmd, status;
-
-  uint8_t buf[16] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
   // SPI2 Slave Interrupt received
   if (spi2_slave_int) {
@@ -129,17 +135,22 @@ void spi2_test() {
 
   spi2->setChannel();
 
-  // Try a few sample commands (0x00, 0x01, 0x03)
+  // Bogus command
+  //spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
+
+  // Try a few sample commands (0x01, 0x02, 0x04)
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
   //spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, 16);
 
-  // Command 0x02
-  if (!(spi2->is_tx_empty())) { // WORKAROUND: TX buffer not empty, next read will fail
-    spi2->read(true, 0xFF);
-  }
-  spi2->read(false);  // Command byte
-  spi2_cmd(true, SPI2_WRITE, SPI2_CMD_NULL, buf, 16); //TODO Temporary
+  // Command 0x03 triggered by SPI2 slave interrupt request
+
+  // Command 0x03 (OLD)
+  //if (!(spi2->is_tx_empty())) { // WORKAROUND: TX buffer not empty, next read will fail
+  //  spi2->read(true, 0xFF);
+  //}
+  //spi2->read(false);  // Command byte
+  //spi2_cmd(true, SPI2_WRITE, SPI2_CMD_NULL, buf, 16); //TODO Temporary
 }
 
 // SPI2 Slave ISR
