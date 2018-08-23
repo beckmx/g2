@@ -14,6 +14,10 @@ static volatile bool spi2_slave_int = false;
 // Create a SPI instance using CS1 pin for select
 std::shared_ptr<Motate::SPI<kSocket2_SPISlaveSelectPinNumber>> spi2;
 
+//TEMP: Calibrated delay function
+void delay_us(uint32_t us) {
+  for(uint32_t i = 0; i < us * 5; i++); // Calibrated empirically
+}
 // spi2_init: Initializes the SPI2 subsystem
 void spi2_init() {
 
@@ -57,25 +61,26 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
     while(spi2->is_rx_ready()) {  // Clear unused RX data without invoking read
       spi2->read();
     }
-    delay(1);                     //TEMP Delay 1ms
+    delay_us(25);
   }
 
   // Process data bytes if available
   if (rnw && (num_data > 0)) {
     spi2->read(data_buf, num_data, true);   // Read RX data (performs dummy writes, doesn't count if RDRF = 0)
-    delay(1);                               //TEMP Delay 1ms
+    delay_us(25);
   } else if (num_data > 0) {
     spi2->write(data_buf, num_data, true);
     while(!spi2->is_tx_empty());            // Wait for TXEMPTY to flush - TODO timeout
     while(spi2->is_rx_ready()) {            // Clear unused RX data without invoking read
       spi2->read();
     }
-    delay(1);                               //TEMP Delay 1ms
+    delay_us(25);
   }
 
   // Read and return status byte
-  while ((spi2->read(true)) < 0); // Waits until RX ready to read (performs dummy writes) - TODO add timeout
-  delay(1); //TEMP Delay 1ms
+  while ((spi2->read(true)) < 0) {  // Waits until RX ready to read (performs dummy writes) - TODO add timeout
+    delay_us(25);
+  }
 
   // Flush the system in case leftovers in buffers
   spi2->flush();
@@ -95,7 +100,7 @@ uint8_t spi2_slave_handler() {
   // SPI2 Slave Interrupt received
   if (spi2_slave_int) {
 
-    delay(1); //TEMP Delay 1ms
+    delay_us(25);
 
     // Clear flag
     spi2_slave_int = false;
@@ -107,9 +112,9 @@ uint8_t spi2_slave_handler() {
     spi2->setChannel();
 
     // Read command
-    do {
-      ret = spi2->read(true);
-    } while (ret < 0); // Waits until RX ready to read (performs dummy writes) - TODO add timeout
+    while ((ret = spi2->read(true)) < 0){ // Waits until RX ready to read (performs dummy writes) - TODO add timeout
+      delay_us(25);
+    }
 
     // Convert return to command
     cmd = (uint8_t)(ret & 0x00FF);
@@ -120,7 +125,6 @@ uint8_t spi2_slave_handler() {
       case SPI2_CMD_SND_MTR_POS:
 
         //TODO implement
-
         spi2_cmd(true, SPI2_WRITE, SPI2_CMD_NULL, buf, 16); //TEMP
 
         status = SPI2_STS_OK;
@@ -159,6 +163,14 @@ void spi2_test() {
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
   spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, 16);
+
+  // Random commands
+  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
+  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
+  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
+  spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
+  spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, 16);
+  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
 
   // Command 0x03 triggered by SPI2 slave interrupt request
 }
