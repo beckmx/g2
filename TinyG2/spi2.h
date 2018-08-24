@@ -42,9 +42,23 @@ extern "C" {
 
 // Function Prototypes
 void spi2_init(void);
-uint8_t spi2_cmd(bool, uint8_t, uint8_t, uint8_t*, uint16_t);
+stat_t spi2_cmd(bool, uint8_t, uint8_t, uint8_t*, uint16_t);
 uint8_t spi2_slave_handler(void);
 void spi2_test(void);
+
+stat_t spi2_cmd1_set(nvObj_t *);
+stat_t spi2_cmd2_set(nvObj_t *);
+stat_t spi2_cmd4_get(nvObj_t *);
+
+#ifdef __TEXT_MODE
+void spi2_cmd1_print(nvObj_t *);
+void spi2_cmd2_print(nvObj_t *);
+void spi2_cmd4_print(nvObj_t *);
+#else
+#define spi2_cmd1_print tx_print_stub
+#define spi2_cmd2_print tx_print_stub
+#define spi2_cmd4_print tx_print_stub
+#endif
 
 #ifdef __cplusplus
 }

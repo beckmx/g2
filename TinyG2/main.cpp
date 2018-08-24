@@ -180,7 +180,7 @@ int main(void)
 	run_canned_startup();			// run any pre-loaded commands
 
 	//TEMP: Run SPI2 unit tests
-	spi2_test();
+	//spi2_test();
 
 	// main loop
 	for (;;) {

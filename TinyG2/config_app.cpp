@@ -44,6 +44,7 @@
 #include "help.h"
 //#include "network.h"
 #include "xio.h"
+#include "spi2.h"
 
 /*** structures ***/
 
@@ -463,7 +464,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "jid","jidb",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[1], 0},
 	{ "jid","jidc",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[2], 0},
 	{ "jid","jidd",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[3], 0},
-    
+
 	// fixturing information
 	{ "fxa","fxast",_fipc, 0, tx_print_nul, get_ui8, set_ui8,(float *)&cfg.fx_state_a, 0 },
 	{ "fxa","fxa1x",_fipc, 3, tx_print_nul, get_flt, set_flu,(float *)&cfg.fx_coords_a[0][0], 0 },
@@ -698,6 +699,12 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","udb", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
 	{ "","udc", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
 	{ "","udd", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
+
+	// SPI2 Command Set
+	{ "","s21", _f0, 0, spi2_cmd1_print, get_nul, spi2_cmd1_set,(float *)&cs.null,0 },	// reset encoder positions to zero
+	{ "","s22", _f0, 0, spi2_cmd2_print, get_nul, spi2_cmd2_set,(float *)&cs.null,0 },	// start tool tip command
+																																											// send motor positions (slave command)
+	{ "","s24", _f0, 0, spi2_cmd4_print, spi2_cmd4_get, set_nul,(float *)&cs.null,0 },	// request encoder positions
 
 #ifdef __DIAGNOSTIC_PARAMETERS
 	{ "","_te",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// target axis endpoint group

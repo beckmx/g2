@@ -4,6 +4,7 @@
 #include "spi2.h"
 #include "motate/utility/SamSPI.h"
 #include "motate/MotateTimers.h"
+#include "text_parser.h"
 
 #include <stdio.h>
 #include <memory>
@@ -39,7 +40,11 @@ void spi2_init() {
 }
 
 // spi2_cmd: Start a SPI master transfer (read/write) using the provided buffer
-uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_buf, uint16_t num_data) {
+stat_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_buf, uint16_t num_data) {
+
+  int16_t ret;
+  uint8_t sts_byte;
+  stat_t status;
 
   // Error checking
   if ((num_data > 0) && (!data_buf)) {
@@ -53,6 +58,9 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
     return SPI2_STS_HALT;
   }
   //TODO Check if cmd_byte is invalid
+
+  // Select the SS for the SPI2 slave
+  spi2->setChannel();
 
   // Write out command byte (slave request, skip this)
   if (!slave_req) {
@@ -77,15 +85,26 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
     delay_us(25);
   }
 
-  // Read and return status byte
-  while ((spi2->read(true)) < 0) {  // Waits until RX ready to read (performs dummy writes) - TODO add timeout
+  // Read the status
+  while ((ret = spi2->read(true)) < 0) {  // Waits until RX ready to read (performs dummy writes) - TODO add timeout
     delay_us(25);
+  }
+
+  // Convert return to status byte
+  sts_byte = (uint8_t)(ret & 0x00FF);
+
+  // Convert status byte to TinyG status code
+  // (0x00 over SPI2 not in use, potential false OK status) - TODO use TinyG status only
+  switch (sts_byte) {
+    case SPI2_STS_OK: status = STAT_OK; break;
+    default: status = STAT_ERROR; break; // TODO - handle other non-OK statuses
   }
 
   // Flush the system in case leftovers in buffers
   spi2->flush();
 
-  return SPI2_STS_OK;
+  // Return the status code
+  return status;
 }
 
 // spi2_slave_handler: Processes SPI2 slave interrupts and executes commands
@@ -184,3 +203,45 @@ void Pin<kSocket3_SPISlaveSelectPinNumber>::interrupt() {
   // TEST: Toggle Coolant Enable, status LED (D15)
   //coolant_enable_pin.toggle();
 }
+
+
+/////////////////////////////////////////////////////////////
+// Begin SW commands (mostly wrappers for SPI2 functions)
+/////////////////////////////////////////////////////////////
+
+//
+// Commands:
+//
+//  cmd1 - Reset Encoder Positions to Zero
+//  cmd2 - Start Tool Tip Command
+//  cmd4 - Request Encoder Positions
+//
+
+stat_t spi2_cmd1_set(nvObj_t *nv) {
+  return (spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, NULL, 0));
+}
+
+stat_t spi2_cmd2_set(nvObj_t *nv) {
+	return (spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, NULL, 0));
+}
+
+stat_t spi2_cmd4_get(nvObj_t *nv) {
+	//if (fp_TRUE(nv->value)) { cm_homing_cycle_start();}
+	return (0x66);
+}
+
+// Print functions (text-mode only)
+#ifdef __TEXT_MODE
+const char fmt_spi2_cmd1[] PROGMEM = "Reset Encoder Positions to Zero: %s\n";
+const char fmt_spi2_cmd2[] PROGMEM = "Start Tool Tip Command: %s\n";
+const char fmt_spi2_cmd4[] PROGMEM = "Request Encoder Positions: %s\n";
+
+void s2_cmd1_print(nvObj_t *nv) { text_print_str(nv, fmt_spi2_cmd1);}
+void s2_cmd2_print(nvObj_t *nv) { text_print_str(nv, fmt_spi2_cmd2);}
+void s2_cmd4_print(nvObj_t *nv) { text_print_str(nv, fmt_spi2_cmd4);}
+
+#endif
+
+/////////////////////////////////////////////////////////////
+// End SW commands
+/////////////////////////////////////////////////////////////
