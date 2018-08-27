@@ -49,7 +49,7 @@ typedef struct cfgParameters {		// mostly communications variables at this point
 	uint32_t user_data_b[4];
 	uint32_t user_data_c[4];
 	uint32_t user_data_d[4];
-    
+
 	// installed fixturing information
 	float fx_coords_a[4][2];    // x/y coordinates of up to 4 points on fixturing object
 	uint8_t fx_state_a;         // state flag
@@ -57,6 +57,11 @@ typedef struct cfgParameters {		// mostly communications variables at this point
 	uint16_t magic_end;
 } cfgParameters_t;
 extern cfgParameters_t cfg;
+
+/***********************************************************************************
+ **** SPI2 INTERFACE VARIBLES ******************************************************
+ ***********************************************************************************/
+extern uint32_t spi2_encoder_pos[AXES];
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS

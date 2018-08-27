@@ -11,6 +11,7 @@ extern "C" {
 #define SPI2_MCK_DIV    (SystemCoreClock / 84)   // SPI clock divider to generate baud (based on 84MHz MCK)
 #define SPI2_DLYBS_US   3                        // Delay between SS low and SCLK (in us)
 #define SPI2_DLYBCT_US  5                        // Delay between transfers (in us)
+#define SPI2_BUF_SIZE   16                       // Buffer size for passing data
 
 // Direction
 #define SPI2_WRITE 0x00
@@ -48,16 +49,14 @@ void spi2_test(void);
 
 stat_t spi2_cmd1_set(nvObj_t *);
 stat_t spi2_cmd2_set(nvObj_t *);
-stat_t spi2_cmd4_get(nvObj_t *);
+stat_t spi2_cmd4_set(nvObj_t *);
 
 #ifdef __TEXT_MODE
 void spi2_cmd1_print(nvObj_t *);
 void spi2_cmd2_print(nvObj_t *);
-void spi2_cmd4_print(nvObj_t *);
 #else
 #define spi2_cmd1_print tx_print_stub
 #define spi2_cmd2_print tx_print_stub
-#define spi2_cmd4_print tx_print_stub
 #endif
 
 #ifdef __cplusplus

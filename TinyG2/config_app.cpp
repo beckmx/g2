@@ -550,6 +550,15 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "udd","udd2", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[2], USER_DATA_D2 },
 	{ "udd","udd3", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[3], USER_DATA_D3 },
 
+	// SPI2 Command Set
+	{ "","s21", _fi, 0, spi2_cmd1_print, get_nul, spi2_cmd1_set,(float *)&cs.null,0 },	// reset encoder positions to zero
+	{ "","s22", _fi, 0, spi2_cmd2_print, get_nul, spi2_cmd2_set,(float *)&cs.null,0 },	// start tool tip command
+																																											// send motor positions (slave command)
+	{ "s24","s24x", _f0, 0, tx_print_int, get_data, set_nul,(float *)&spi2_encoder_pos[AXIS_X] },	//  x-axis
+	{ "s24","s24y", _f0, 0, tx_print_int, get_data, set_nul,(float *)&spi2_encoder_pos[AXIS_Y] },	//  y-axis
+	{ "s24","s24z", _f0, 0, tx_print_int, get_data, set_nul,(float *)&spi2_encoder_pos[AXIS_Z] },	//  Z-axis
+	{ "s24","s24a", _f0, 0, tx_print_int, get_data, set_nul,(float *)&spi2_encoder_pos[AXIS_A] },	//  a-axis
+
 	// Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS
 	{ "_te","_tex",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_X], 0 },				// X target endpoint
@@ -700,11 +709,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","udc", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
 	{ "","udd", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
 
-	// SPI2 Command Set
-	{ "","s21", _f0, 0, spi2_cmd1_print, get_nul, spi2_cmd1_set,(float *)&cs.null,0 },	// reset encoder positions to zero
-	{ "","s22", _f0, 0, spi2_cmd2_print, get_nul, spi2_cmd2_set,(float *)&cs.null,0 },	// start tool tip command
-																																											// send motor positions (slave command)
-	{ "","s24", _f0, 0, spi2_cmd4_print, spi2_cmd4_get, set_nul,(float *)&cs.null,0 },	// request encoder positions
+	{ "","s24", _f0, 0, tx_print_nul, get_grp, spi2_cmd4_set,(float *)&cs.null,0 },	// request encoder position group
 
 #ifdef __DIAGNOSTIC_PARAMETERS
 	{ "","_te",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// target axis endpoint group
@@ -728,7 +733,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 /***** Make sure these defines line up with any changes in the above table *****/
 
 #define NV_COUNT_UBER_GROUPS 	4 		// count of uber-groups, above
-#define STANDARD_GROUPS 		33		// count of standard groups, excluding diagnostic parameter groups
+#define STANDARD_GROUPS 			35		// count of standard groups, excluding diagnostic parameter groups
 
 #if (MOTORS >= 5)
 #define MOTOR_GROUP_5			1

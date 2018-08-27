@@ -9,6 +9,10 @@
 #include <stdio.h>
 #include <memory>
 
+// Buffer for passing data to SPI2 command processor
+uint8_t buf[SPI2_BUF_SIZE] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                              0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
 // SPI2 Slave Interrupt Flag
 static volatile bool spi2_slave_int = false;
 
@@ -113,8 +117,10 @@ uint8_t spi2_slave_handler() {
   uint8_t cmd, status;
   int16_t ret;
 
-  uint8_t buf[16] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
-                     0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x5A}; //TEMP
+  //TEMP Generate random data for testing
+  for (int i = 0; i < SPI2_BUF_SIZE; i++) {
+    buf[i] = (i + 10) * 2;
+  }
 
   // SPI2 Slave Interrupt received
   if (spi2_slave_int) {
@@ -170,9 +176,6 @@ uint8_t spi2_slave_handler() {
 
 void spi2_test() {
 
-  uint8_t buf[16] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
   spi2->setChannel();
 
   // Bogus command
@@ -217,6 +220,9 @@ void Pin<kSocket3_SPISlaveSelectPinNumber>::interrupt() {
 //  cmd4 - Request Encoder Positions
 //
 
+// Encoder data global variable (for JSON commands)
+uint32_t spi2_encoder_pos[AXES] = {0,0,0,0};
+
 stat_t spi2_cmd1_set(nvObj_t *nv) {
   return (spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, NULL, 0));
 }
@@ -225,21 +231,29 @@ stat_t spi2_cmd2_set(nvObj_t *nv) {
 	return (spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, NULL, 0));
 }
 
-stat_t spi2_cmd4_get(nvObj_t *nv) {
-	//if (fp_TRUE(nv->value)) { cm_homing_cycle_start();}
-	return (0x66);
+stat_t spi2_cmd4_set(nvObj_t *nv) {
+
+  stat_t st;
+  int i;
+
+  // Get the encoder position data as one 16-byte transfer
+	st = spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, 16);
+
+  // Convert the data in the buffer to their approriate array values
+  for (i = 0; i < AXES; i++) {
+    spi2_encoder_pos[i] = (buf[i*4] << 24) + (buf[i*4+1] << 16) + (buf[i*4+2] << 8) + (buf[i*4+3]);
+  }
+
+  return st;
 }
 
 // Print functions (text-mode only)
 #ifdef __TEXT_MODE
-const char fmt_spi2_cmd1[] PROGMEM = "Reset Encoder Positions to Zero: %s\n";
-const char fmt_spi2_cmd2[] PROGMEM = "Start Tool Tip Command: %s\n";
-const char fmt_spi2_cmd4[] PROGMEM = "Request Encoder Positions: %s\n";
+static const char fmt_spi2_cmd1[] PROGMEM = "Reset Encoder Positions to Zero\n";
+static const char fmt_spi2_cmd2[] PROGMEM = "Start Tool Tip Command\n";
 
-void s2_cmd1_print(nvObj_t *nv) { text_print_str(nv, fmt_spi2_cmd1);}
-void s2_cmd2_print(nvObj_t *nv) { text_print_str(nv, fmt_spi2_cmd2);}
-void s2_cmd4_print(nvObj_t *nv) { text_print_str(nv, fmt_spi2_cmd4);}
-
+void s2_cmd1_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd1);}
+void s2_cmd2_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd2);}
 #endif
 
 /////////////////////////////////////////////////////////////
