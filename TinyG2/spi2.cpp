@@ -222,6 +222,7 @@ void Pin<kSocket3_SPISlaveSelectPinNumber>::interrupt() {
 
 // Encoder data global variable (for JSON commands)
 uint32_t spi2_encoder_pos[AXES] = {0,0,0,0};
+uint8_t spi2_text_dummy = 0;
 
 stat_t spi2_cmd1_set(nvObj_t *nv) {
   return (spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, NULL, 0));

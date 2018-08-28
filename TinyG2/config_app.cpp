@@ -551,8 +551,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "udd","udd3", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[3], USER_DATA_D3 },
 
 	// SPI2 Command Set
-	{ "","s21", _f0, 0, spi2_cmd1_print, get_nul, spi2_cmd1_set,(float *)&cs.null,0 },	// reset encoder positions to zero
-	{ "","s22", _f0, 0, spi2_cmd2_print, get_nul, spi2_cmd2_set,(float *)&cs.null,0 },	// start tool tip command
+	{ "","s21", _f0, 0, tx_print_int, get_nul, spi2_cmd1_set,(float *)&spi2_text_dummy,0 },	// reset encoder positions to zero
+	{ "","s22", _f0, 0, tx_print_int, get_nul, spi2_cmd2_set,(float *)&spi2_text_dummy,0 },	// start tool tip command
 																																											// send motor positions (slave command)
 	{ "s24","s24x", _f0, 0, tx_print_int, get_data, set_nul,(float *)&spi2_encoder_pos[AXIS_X] },	//  x-axis
 	{ "s24","s24y", _f0, 0, tx_print_int, get_data, set_nul,(float *)&spi2_encoder_pos[AXIS_Y] },	//  y-axis
