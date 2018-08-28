@@ -54,9 +54,11 @@ stat_t spi2_cmd4_set(nvObj_t *);
 #ifdef __TEXT_MODE
 void spi2_cmd1_print(nvObj_t *);
 void spi2_cmd2_print(nvObj_t *);
+void spi2_cmd4_print(nvObj_t *);
 #else
 #define spi2_cmd1_print tx_print_stub
 #define spi2_cmd2_print tx_print_stub
+#define spi2_cmd4_print tx_print_stub
 #endif
 
 #ifdef __cplusplus

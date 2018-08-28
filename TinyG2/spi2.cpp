@@ -1,5 +1,6 @@
 #include "tinyg2.h"					// #1 There are some dependencies
 #include "config.h"					// #2
+#include "canonical_machine.h"
 #include "hardware.h"
 #include "spi2.h"
 #include "motate/utility/SamSPI.h"
@@ -221,7 +222,7 @@ void Pin<kSocket3_SPISlaveSelectPinNumber>::interrupt() {
 //
 
 // Encoder data global variable (for JSON commands)
-uint32_t spi2_encoder_pos[AXES] = {0,0,0,0};
+float spi2_encoder_pos[AXES] = {0.0,0.0,0.0,0.0};
 
 stat_t spi2_cmd1_set(nvObj_t *nv) {
   return (spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, NULL, 0));
@@ -235,13 +236,15 @@ stat_t spi2_cmd4_set(nvObj_t *nv) {
 
   stat_t st;
   int i;
+  uint32_t temp;
 
   // Get the encoder position data as one 16-byte transfer
 	st = spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, 16);
 
   // Convert the data in the buffer to their approriate array values
   for (i = 0; i < AXES; i++) {
-    spi2_encoder_pos[i] = (buf[i*4] << 24) + (buf[i*4+1] << 16) + (buf[i*4+2] << 8) + (buf[i*4+3]);
+    temp = ((buf[i*4] << 24) + (buf[i*4+1] << 16) + (buf[i*4+2] << 8) + (buf[i*4+3]));
+    spi2_encoder_pos[i] = temp;
   }
 
   return st;
@@ -249,11 +252,42 @@ stat_t spi2_cmd4_set(nvObj_t *nv) {
 
 // Print functions (text-mode only)
 #ifdef __TEXT_MODE
+
+static const char msg_units0[] PROGMEM = " in";	// used by generic print functions
+static const char msg_units1[] PROGMEM = " mm";
+static const char msg_units2[] PROGMEM = " deg";
+static const char *const msg_units[] PROGMEM = { msg_units0, msg_units1, msg_units2 };
+
 static const char fmt_spi2_cmd1[] PROGMEM = "Reset Encoder Positions to Zero\n";
 static const char fmt_spi2_cmd2[] PROGMEM = "Start Tool Tip Command\n";
+static const char fmt_spi2_cmd4[] PROGMEM = "%c Encoder Position:%15.3f%s\n";
+
+static int8_t _get_axis(const index_t index)
+{
+	char_t *ptr;
+	char_t tmp[TOKEN_LEN+1];
+	char_t axes[] = {"xyza"};
+
+	strncpy_P(tmp, cfgArray[index].token, TOKEN_LEN);	// kind of a hack. Looks for an axis
+	if ((ptr = strchr(axes, tmp[0])) == NULL) {			// character in the 0 and 3 positions
+		if ((ptr = strchr(axes, tmp[3])) == NULL) {		// to accommodate 'xam' and 'g54x' styles
+			return (-1);
+		}
+	}
+	return (ptr - axes);
+}
+
+static void _print_enc_pos(nvObj_t *nv, const char *format, uint8_t units)
+{
+	char axes[] = {"XYZA"};
+	uint8_t axis = _get_axis(nv->index);
+	if (axis >= AXIS_A) { units = DEGREES;}
+	fprintf_P(stderr, format, axes[axis], nv->value, GET_TEXT_ITEM(msg_units, units));
+}
 
 void spi2_cmd1_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd1);}
 void spi2_cmd2_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd2);}
+void spi2_cmd4_print(nvObj_t *nv) { _print_enc_pos(nv, fmt_spi2_cmd4, cm_get_units_mode(MODEL));}
 #endif
 
 /////////////////////////////////////////////////////////////
