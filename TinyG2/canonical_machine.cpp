@@ -154,7 +154,7 @@ uint8_t cm_get_combined_state()
         if(cm.motion_state != MOTION_STOP && cm.machine_state != MACHINE_CYCLE)
             rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "machine is in motion but macs is not cycle");
     }
-    
+
     switch(cm.machine_state)
     {
         case MACHINE_INITIALIZING: return COMBINED_INITIALIZING;
@@ -501,8 +501,8 @@ void cm_set_model_target(const float target[], const float flag[])
  *	The target[] arg must be in absolute machine coordinates. Best done after cm_set_model_target().
  *
  *	Tests for soft limit for any homed axis if min and max are different values. You can set min
- *	and max to the same value (e.g. 0,0) to disable soft limits for an axis. Also will not test 
- *	a min or a max if the value is more than +/- 1000000 (plus or minus 1 million ). 
+ *	and max to the same value (e.g. 0,0) to disable soft limits for an axis. Also will not test
+ *	a min or a max if the value is more than +/- 1000000 (plus or minus 1 million ).
  *	This allows a single end to be tested w/the other disabled, should that requirement ever arise.
  */
 
@@ -917,6 +917,7 @@ stat_t cm_straight_traverse(float target[], float flags[])
 
 /*
  * cm_set_g28_position()  - G28.1
+ * cm_get_g28_position()
  * cm_goto_g28_position() - G28
  * cm_set_g30_position()  - G30.1
  * cm_goto_g30_position() - G30
@@ -926,6 +927,16 @@ stat_t cm_set_g28_position(void)
 {
 	copy_vector(cm.gmx.g28_position, cm.gmx.position);
 	return (STAT_OK);
+}
+
+float cm_get_g28_position(uint8_t axis)
+{
+  // Out of range error
+  if (axis < AXIS_X || axis >= AXES) {
+    return 0.0;
+  }
+
+	return cm.gmx.g28_position[axis];
 }
 
 stat_t cm_goto_g28_position(float target[], float flags[])

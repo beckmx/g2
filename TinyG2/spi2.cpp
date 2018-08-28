@@ -117,6 +117,7 @@ uint8_t spi2_slave_handler() {
 
   uint8_t cmd, status;
   int16_t ret;
+  uint32_t u32;
 
   //TEMP Generate random data for testing
   for (int i = 0; i < SPI2_BUF_SIZE; i++) {
@@ -150,8 +151,21 @@ uint8_t spi2_slave_handler() {
       // Send motor positions (slave requested write)
       case SPI2_CMD_SND_MTR_POS:
 
-        //TODO implement
-        spi2_cmd(true, SPI2_WRITE, SPI2_CMD_NULL, buf, 16); //TEMP
+        // Get each motor position, convert to uint32_t and store bytes into buffer
+        for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+
+          // Convert from float to unsigned 32-bit integer
+          u32 = (uint32_t)(cm_get_g28_position(axis));
+
+          // Break 32-bits into separate bytes
+          buf[axis] = (uint8_t)((u32 >> 24) & 0xFF);
+          buf[axis+1] = (uint8_t)((u32 >> 16) & 0xFF);
+          buf[axis+2] = (uint8_t)((u32 >> 8) & 0xFF);
+          buf[axis+3] = (uint8_t)((u32 >> 24) & 0xFF);
+        }
+
+        // Write out buffer with motor position data to SPI slave
+        spi2_cmd(true, SPI2_WRITE, SPI2_CMD_NULL, buf, (AXES*4));
 
         status = SPI2_STS_OK;
         break;
@@ -175,6 +189,7 @@ uint8_t spi2_slave_handler() {
   return status;
 }
 
+// spi2_test: unit testing for SPI2 interface
 void spi2_test() {
 
   spi2->setChannel();
@@ -185,14 +200,14 @@ void spi2_test() {
   // Try a few sample commands (0x01, 0x02, 0x04)
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
-  spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, 16);
+  spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, (AXES*4));
 
   // Random commands
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
   spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
-  spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, 16);
+  spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, (AXES*4));
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
 
   // Command 0x03 triggered by SPI2 slave interrupt request
@@ -204,8 +219,6 @@ void Pin<kSocket3_SPISlaveSelectPinNumber>::interrupt() {
   // Set Slave Interrupt Flag
   spi2_slave_int = true;
 
-  // TEST: Toggle Coolant Enable, status LED (D15)
-  //coolant_enable_pin.toggle();
 }
 
 
@@ -235,16 +248,15 @@ stat_t spi2_cmd2_set(nvObj_t *nv) {
 stat_t spi2_cmd4_set(nvObj_t *nv) {
 
   stat_t st;
-  int i;
   uint32_t temp;
 
   // Get the encoder position data as one 16-byte transfer
-	st = spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, 16);
+	st = spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, (AXES*4));
 
   // Convert the data in the buffer to their approriate array values
-  for (i = 0; i < AXES; i++) {
-    temp = ((buf[i*4] << 24) + (buf[i*4+1] << 16) + (buf[i*4+2] << 8) + (buf[i*4+3]));
-    spi2_encoder_pos[i] = temp;
+  for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+    temp = ((buf[axis*4] << 24) + (buf[axis*4+1] << 16) + (buf[axis*4+2] << 8) + (buf[axis*4+3]));
+    spi2_encoder_pos[axis] = temp;
   }
 
   return st;
