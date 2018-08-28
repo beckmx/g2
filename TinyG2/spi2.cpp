@@ -222,7 +222,6 @@ void Pin<kSocket3_SPISlaveSelectPinNumber>::interrupt() {
 
 // Encoder data global variable (for JSON commands)
 uint32_t spi2_encoder_pos[AXES] = {0,0,0,0};
-uint8_t spi2_text_dummy = 0;
 
 stat_t spi2_cmd1_set(nvObj_t *nv) {
   return (spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, NULL, 0));
@@ -253,8 +252,8 @@ stat_t spi2_cmd4_set(nvObj_t *nv) {
 static const char fmt_spi2_cmd1[] PROGMEM = "Reset Encoder Positions to Zero\n";
 static const char fmt_spi2_cmd2[] PROGMEM = "Start Tool Tip Command\n";
 
-void s2_cmd1_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd1);}
-void s2_cmd2_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd2);}
+void spi2_cmd1_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd1);}
+void spi2_cmd2_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd2);}
 #endif
 
 /////////////////////////////////////////////////////////////

@@ -62,7 +62,6 @@ extern cfgParameters_t cfg;
  **** SPI2 INTERFACE VARIBLES ******************************************************
  ***********************************************************************************/
 extern uint32_t spi2_encoder_pos[AXES];
-extern uint8_t spi2_text_dummy;
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS
