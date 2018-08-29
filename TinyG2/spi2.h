@@ -11,7 +11,8 @@ extern "C" {
 #define SPI2_MCK_DIV    (SystemCoreClock / 84)   // SPI clock divider to generate baud (based on 84MHz MCK)
 #define SPI2_DLYBS_US   3                        // Delay between SS low and SCLK (in us)
 #define SPI2_DLYBCT_US  5                        // Delay between transfers (in us)
-#define SPI2_BUF_SIZE   (AXES*4)                 // Buffer size for passing data
+#define SPI2_NUM_AXES   4                        // Number of axes (XYZA) - DO NOT use AXES for SPI2!
+#define SPI2_BUF_SIZE   (SPI2_NUM_AXES*4)        // Buffer size for passing data
 
 #define FLOAT_TO_U32(n) (uint32_t)(*(uint32_t*)&n)  // Convert from float to uint32_t
 #define U32_TO_FLOAT(n) ((float)(*(float*)&n))      // Convert from uint32_t to float
@@ -46,10 +47,14 @@ extern "C" {
 
 // Function Prototypes
 void spi2_init(void);
-stat_t spi2_cmd(bool, uint8_t, uint8_t, uint8_t*, uint16_t);
+uint8_t spi2_cmd(bool, uint8_t, uint8_t, uint8_t*, uint16_t);
 uint8_t spi2_slave_handler(void);
+uint8_t spi2_reset_encoder_positions(void);
+uint8_t spi2_start_tool_tip(void);
+uint8_t spi2_request_encoder_positions(void);
 void spi2_test(void);
 
+stat_t spi2_cmd_helper(uint8_t);
 stat_t spi2_cmd1_set(nvObj_t *);
 stat_t spi2_cmd2_set(nvObj_t *);
 stat_t spi2_cmd4_set(nvObj_t *);

@@ -45,11 +45,10 @@ void spi2_init() {
 }
 
 // spi2_cmd: Start a SPI master transfer (read/write) using the provided buffer
-stat_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_buf, uint16_t num_data) {
+uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_buf, uint16_t num_data) {
 
   int16_t ret;
   uint8_t sts_byte;
-  stat_t status;
 
   // Error checking
   if ((num_data > 0) && (!data_buf)) {
@@ -98,18 +97,11 @@ stat_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_buf
   // Convert return to status byte
   sts_byte = (uint8_t)(ret & 0x00FF);
 
-  // Convert status byte to TinyG status code
-  // (0x00 over SPI2 not in use, potential false OK status) - TODO use TinyG status only
-  switch (sts_byte) {
-    case SPI2_STS_OK: status = STAT_OK; break;
-    default: status = STAT_ERROR; break; // TODO - handle other non-OK statuses
-  }
-
   // Flush the system in case leftovers in buffers
   spi2->flush();
 
   // Return the status code
-  return status;
+  return sts_byte;
 }
 
 // spi2_slave_handler: Processes SPI2 slave interrupts and executes commands
@@ -153,7 +145,7 @@ uint8_t spi2_slave_handler() {
       case SPI2_CMD_SND_MTR_POS:
 
         // Get each motor position, convert to uint32_t and store bytes into buffer
-        for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+        for (uint8_t axis = AXIS_X; axis < SPI2_NUM_AXES; axis++) {
 
           // Convert from float to unsigned 32-bit integer
           temp = cm_get_g28_position(axis);
@@ -167,7 +159,7 @@ uint8_t spi2_slave_handler() {
         }
 
         // Write out buffer with motor position data to SPI slave
-        spi2_cmd(true, SPI2_WRITE, SPI2_CMD_NULL, buf, (AXES*4));
+        spi2_cmd(true, SPI2_WRITE, SPI2_CMD_NULL, buf, (SPI2_NUM_AXES*4));
 
         status = SPI2_STS_OK;
         break;
@@ -191,6 +183,34 @@ uint8_t spi2_slave_handler() {
   return status;
 }
 
+// spi2_reset_encoder_positions: reset encoder positions (command 0x01)
+uint8_t spi2_reset_encoder_positions() {
+  return (spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, NULL, 0));
+}
+
+// spi2_start_tool_tip: start tool tip command (command 0x02)
+uint8_t spi2_start_tool_tip() {
+  return (spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, NULL, 0));
+}
+
+// spi2_request_encoder_positions: request encoder positions (command 0x04)
+uint8_t spi2_request_encoder_positions() {
+
+  uint8_t st;
+  uint32_t temp;
+
+  // Get the encoder position data as one 16-byte transfer
+	st = spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, (SPI2_NUM_AXES*4));
+
+  // Convert the data in the buffer to their approriate array values
+  for (uint8_t axis = AXIS_X; axis < SPI2_NUM_AXES; axis++) {
+    temp = ((buf[axis*4] << 24) + (buf[axis*4+1] << 16) + (buf[axis*4+2] << 8) + (buf[axis*4+3]));
+    spi2_encoder_pos[axis] = U32_TO_FLOAT(temp);
+  }
+
+  return st;
+}
+
 // spi2_test: unit testing for SPI2 interface
 void spi2_test() {
 
@@ -202,14 +222,14 @@ void spi2_test() {
   // Try a few sample commands (0x01, 0x02, 0x04)
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
-  spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, (AXES*4));
+  spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, (SPI2_NUM_AXES*4));
 
   // Random commands
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
   spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
-  spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, (AXES*4));
+  spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, (SPI2_NUM_AXES*4));
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
 
   // Command 0x03 triggered by SPI2 slave interrupt request
@@ -237,31 +257,33 @@ void Pin<kSocket3_SPISlaveSelectPinNumber>::interrupt() {
 //
 
 // Encoder data global variable (for JSON commands)
-float spi2_encoder_pos[AXES] = {0.0,0.0,0.0,0.0};
+float spi2_encoder_pos[SPI2_NUM_AXES] = {0.0,0.0,0.0,0.0};
+
+// spi2_cmd_helper: helper function to return proper status
+stat_t spi2_cmd_helper(uint8_t sts_byte) {
+
+  stat_t status;
+
+  // Convert status byte to TinyG status code
+  // (0x00 over SPI2 not in use, potential false OK status) - TODO use TinyG status only
+  switch (sts_byte) {
+    case SPI2_STS_OK: status = STAT_OK; break;
+    default: status = STAT_ERROR; break; // TODO - handle other non-OK statuses
+  }
+
+  return status;
+}
 
 stat_t spi2_cmd1_set(nvObj_t *nv) {
-  return (spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, NULL, 0));
+  return (spi2_cmd_helper(spi2_reset_encoder_positions()));
 }
 
 stat_t spi2_cmd2_set(nvObj_t *nv) {
-	return (spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, NULL, 0));
+	return (spi2_cmd_helper(spi2_start_tool_tip()));
 }
 
 stat_t spi2_cmd4_set(nvObj_t *nv) {
-
-  stat_t st;
-  uint32_t temp;
-
-  // Get the encoder position data as one 16-byte transfer
-	st = spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, (AXES*4));
-
-  // Convert the data in the buffer to their approriate array values
-  for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-    temp = ((buf[axis*4] << 24) + (buf[axis*4+1] << 16) + (buf[axis*4+2] << 8) + (buf[axis*4+3]));
-    spi2_encoder_pos[axis] = U32_TO_FLOAT(temp);
-  }
-
-  return st;
+  return (spi2_cmd_helper(spi2_request_encoder_positions()));
 }
 
 // Print functions (text-mode only)
