@@ -555,10 +555,10 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","s22", _f0, 0, spi2_cmd2_print, get_nul, spi2_cmd2_set,(float *)&cs.null,0 },							// start tool tip command
 
 																																																	// request encoder position
-	{ "s24","s24x", _f0, 0, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_X] },	//  x-axis
-	{ "s24","s24y", _f0, 0, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_Y] },	//  y-axis
-	{ "s24","s24z", _f0, 0, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_Z] },	//  Z-axis
-	{ "s24","s24a", _f0, 0, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_A] },	//  a-axis
+	{ "s24","s24x", _f0, 3, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_X] },	//  x-axis
+	{ "s24","s24y", _f0, 3, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_Y] },	//  y-axis
+	{ "s24","s24z", _f0, 3, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_Z] },	//  Z-axis
+	{ "s24","s24a", _f0, 3, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_A] },	//  a-axis
 
 	// Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS
