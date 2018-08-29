@@ -51,6 +51,7 @@ uint8_t spi2_cmd(bool, uint8_t, uint8_t, uint8_t*, uint16_t);
 uint8_t spi2_slave_handler(void);
 uint8_t spi2_reset_encoder_positions(void);
 uint8_t spi2_start_tool_tip(void);
+uint8_t spi2_send_motor_positions(void);
 uint8_t spi2_request_encoder_positions(void);
 void spi2_test(void);
 
