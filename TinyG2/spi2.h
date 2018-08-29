@@ -13,6 +13,9 @@ extern "C" {
 #define SPI2_DLYBCT_US  5                        // Delay between transfers (in us)
 #define SPI2_BUF_SIZE   (AXES*4)                 // Buffer size for passing data
 
+#define FLOAT_TO_U32(n) (uint32_t)(*(uint32_t*)&n)  // Convert from float to uint32_t
+#define U32_TO_FLOAT(n) ((float)(*(float*)&n))      // Convert from uint32_t to float
+
 // Direction
 #define SPI2_WRITE 0x00
 #define SPI2_READ  0x01

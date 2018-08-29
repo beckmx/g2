@@ -117,6 +117,7 @@ uint8_t spi2_slave_handler() {
 
   uint8_t cmd, status;
   int16_t ret;
+  float temp;
   uint32_t u32;
 
   //TEMP Generate random data for testing
@@ -155,7 +156,8 @@ uint8_t spi2_slave_handler() {
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 
           // Convert from float to unsigned 32-bit integer
-          u32 = (uint32_t)(cm_get_g28_position(axis));
+          temp = cm_get_g28_position(axis);
+          u32 = FLOAT_TO_U32(temp);
 
           // Break 32-bits into separate bytes
           buf[axis] = (uint8_t)((u32 >> 24) & 0xFF);
@@ -256,7 +258,7 @@ stat_t spi2_cmd4_set(nvObj_t *nv) {
   // Convert the data in the buffer to their approriate array values
   for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
     temp = ((buf[axis*4] << 24) + (buf[axis*4+1] << 16) + (buf[axis*4+2] << 8) + (buf[axis*4+3]));
-    spi2_encoder_pos[axis] = temp;
+    spi2_encoder_pos[axis] = U32_TO_FLOAT(temp);
   }
 
   return st;
@@ -293,7 +295,6 @@ static void _print_enc_pos(nvObj_t *nv, const char *format, uint8_t units)
 {
 	char axes[] = {"XYZA"};
 	uint8_t axis = _get_axis(nv->index);
-	if (axis >= AXIS_A) { units = DEGREES;}
 	fprintf_P(stderr, format, axes[axis], nv->value, GET_TEXT_ITEM(msg_units, units));
 }
 
