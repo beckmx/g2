@@ -73,7 +73,12 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
     while(spi2->is_rx_ready()) {  // Clear unused RX data without invoking read
       spi2->read();
     }
-    delay_us(25);
+    // Request Encoder Positions command requires time for SPI2 to prep data - TODO fix performance
+    if (cmd_byte == SPI2_CMD_REQ_ENC_POS) {
+      delay(4);
+    } else {
+      delay_us(25);
+    }
   }
 
   // Process data bytes if available
