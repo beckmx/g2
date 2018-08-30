@@ -1,7 +1,7 @@
 /*
  * cycle_probing.c - probing cycle extension to canonical_machine.c
  * Part of TinyG project
- * 
+ *
  * Copyright (c) 2010 - 2014 Alden S Hart, Jr., Sarah Tappon, Tom Cauchois
  * With contributions from Other Machine Company.
  *
@@ -35,6 +35,7 @@
 #include "switch.h"
 #include "planner.h"
 #include "util.h"
+#include "spi2.h"
 
 /**** Probe singleton structure ****/
 
@@ -105,12 +106,12 @@ uint8_t _set_pb_func(uint8_t (*func)())
  *  it is an error for the limit or homing switches to fire, or for some other configuration error.
  *
  *	Note: When coding a cycle (like this one) you get to perform one queued
- *	move per entry into the continuation, then you must exit. 
+ *	move per entry into the continuation, then you must exit.
  *
- *	Another Note: When coding a cycle (like this one) you must wait until 
+ *	Another Note: When coding a cycle (like this one) you must wait until
  *	the last move has actually been queued (or has finished) before declaring
- *	the cycle to be done. Otherwise there is a nasty race condition in the 
- *	tg_controller() that will accept the next command before the position of 
+ *	the cycle to be done. Otherwise there is a nasty race condition in the
+ *	tg_controller() that will accept the next command before the position of
  *	the final move has been recorded in the Gcode model. That's what the call
  *	to cm_get_runtime_busy() is about.
  */
@@ -189,7 +190,7 @@ static uint8_t _probing_init()
 	pb.saved_distance_mode = cm_get_distance_mode(ACTIVE_MODEL);
     pb.saved_feed_rate_mode = cm_get_feed_rate_mode(ACTIVE_MODEL);
     pb.saved_feed_rate = (ACTIVE_MODEL)->feed_rate;
-    
+
 	// set working values
 	cm_set_distance_mode(ABSOLUTE_MODE);
 	cm_set_coord_system(ABSOLUTE_COORDS);	// probing is done in machine coordinates
@@ -272,7 +273,7 @@ static stat_t _probing_backoff()
     if (cm.probe_state == PROBE_WAITING) {
         cm.probe_state = (_read_switch() == SW_CLOSED) ? PROBE_SUCCEEDED : PROBE_FAILED;
     }
-    
+
     // if the switch is still closed, back off until it opens again.
     // if the switch has reopened (e.g. if the probe connection was flaky or the object
     // being probed has moved), we don't back off - treat current position as final.
@@ -292,12 +293,17 @@ static stat_t _probing_finish()
 {
 	for( uint8_t axis=0; axis<AXES; axis++ ) {
 		float position = cm_get_absolute_position(RUNTIME, axis);
-        
+
 		// if we got here because of a feed hold we need to keep the model position correct
 		cm_set_position(axis, position);
-        
+
 		// store the probe results
 		cm.probe_results[axis] = position;
+	}
+
+	// Start tool tip location
+	if (spi2_cmd_helper(spi2_start_tool_tip()) != STAT_OK) {
+		cm.probe_state = PROBE_FAILED;	// Set error if transaction fails
 	}
 
 	// If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error

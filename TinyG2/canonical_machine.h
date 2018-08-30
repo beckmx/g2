@@ -743,6 +743,8 @@ stat_t cm_set_am(nvObj_t *nv);			// set axis mode
 stat_t cm_set_xjm(nvObj_t *nv);			// set jerk max with 1,000,000 correction
 stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 
+stat_t cm_set_g55c(nvObj_t *nv);		// set c-axis offset (spi2 special handling)
+
 /*--- text_mode support functions ---*/
 
 #ifdef __TEXT_MODE

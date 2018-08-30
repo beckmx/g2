@@ -104,6 +104,7 @@
 #include "hardware.h"
 #include "util.h"
 #include "xio.h"			// for serial queue flush
+#include "spi2.h"
 
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS ********************************************************
@@ -737,6 +738,18 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
 			}
 			cm.deferred_write_flag = true;                  // persist offsets once machining cycle is over
 		}
+    // Storing location to C-Axis, request and store XYZA encoder positions
+    if (axis == AXIS_C) {
+      if (spi2_cmd_helper(spi2_request_encoder_positions()) != STAT_OK) { // Request positions, return errors
+        return STAT_ERROR;
+      }
+
+      // Store encoder positions in G30 position location
+      // NOTE: Not using copy_vector() as axes vary for TinyG (6) and SPI2 (4)
+      for (uint8_t i = AXIS_X; i < SPI2_NUM_AXES; i++) {
+        cm.gmx.g30_position[i] = spi2_encoder_pos[i];
+      }
+    }
 	}
 	return (STAT_OK);
 }
@@ -1992,6 +2005,26 @@ stat_t cm_run_joga(nvObj_t *nv)
 	set_flt(nv);
 	cm_jogging_cycle_start(AXIS_A);
 	return (STAT_OK);
+}
+
+/***********************************************************************************
+ * G55C Special Handling for SPI2
+ ***********************************************************************************/
+
+stat_t cm_set_g55c(nvObj_t *nv) {
+  set_flu(nv);
+
+  // Storing location to C-Axis, request and store XYZA encoder positions
+  if (spi2_cmd_helper(spi2_request_encoder_positions()) != STAT_OK) { // Request positions, return errors
+    return STAT_ERROR;
+  }
+
+  // Store encoder positions in G30 position location
+  // NOTE: Not using copy_vector() as axes vary for TinyG (6) and SPI2 (4)
+  for (uint8_t i = AXIS_X; i < SPI2_NUM_AXES; i++) {
+    cm.gmx.g30_position[i] = spi2_encoder_pos[i];
+  }
+  return STAT_OK;
 }
 
 /***********************************************************************************
