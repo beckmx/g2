@@ -581,6 +581,9 @@ char *get_status_message(stat_t status);
 #define STAT_PROBE_ENDPOINT_IS_STARTING_POINT 251
 #define	STAT_JOGGING_CYCLE_FAILED 252					// jogging cycle did not complete
 
+// SPI2 additional status messages
+#define	STAT_HOMING_ERROR_RST_ENC_FAILED 253  // reset encoders to zero failed
+
 // !!! Do not exceed 255 without also changing stat_t typedef
 
 #endif // End of include guard: TINYG2_H_ONCE
