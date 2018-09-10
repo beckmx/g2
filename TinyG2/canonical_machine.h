@@ -87,6 +87,7 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
 	float feed_rate; 					// F - normalized to millimeters/minute or in inverse time mode
 
 	float spindle_speed;				// in RPM
+	float prev_spindle_speed;		// in RPM
 	float parameter;					// P - parameter used for dwell time in seconds, G10 coord select...
 
 	uint8_t feed_rate_mode;				// See cmFeedRateMode for settings
@@ -170,6 +171,7 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 
 	uint8_t spindle_mode;				// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
 	float spindle_speed;				// in RPM
+	float prev_spindle_speed;		// in RPM
 	float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
 	uint8_t	spindle_override_enable;	// TRUE = override enabled
 
@@ -253,7 +255,7 @@ typedef struct cmSingleton {			// struct to manage cm globals and cycles
 	uint8_t end_hold_requested;		// cycle start character has been received (flag to end feedhold)
 	float jogging_dest;					// jogging direction as a relative move from current position
 	struct GCodeState *am;				// active Gcode model is maintained by state management
-    
+
 	uint8_t waiting_for_gcode_resume;   // are we waiting on an M2 or M30 after a queue flush?
                                         // see explanation in gcode_parser.cpp::wait_for_gcode_resume
 
@@ -768,6 +770,7 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_estp(nvObj_t *nv);
 	void cm_print_spc(nvObj_t *nv);
 	void cm_print_sps(nvObj_t *nv);
+	void cm_print_spps(nvObj_t *nv);
 
 	void cm_print_gpl(nvObj_t *nv);		// Gcode defaults
 	void cm_print_gun(nvObj_t *nv);
@@ -832,6 +835,7 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_estp tx_print_stub
 	#define cm_print_spc tx_print_stub
 	#define cm_print_sps tx_print_stub
+	#define cm_print_spps tx_print_stub
 
 	#define cm_print_gpl tx_print_stub		// Gcode defaults
 	#define cm_print_gun tx_print_stub

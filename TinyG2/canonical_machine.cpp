@@ -154,7 +154,7 @@ uint8_t cm_get_combined_state()
         if(cm.motion_state != MOTION_STOP && cm.machine_state != MACHINE_CYCLE)
             rpt_exception(STAT_GENERIC_ASSERTION_FAILURE, "machine is in motion but macs is not cycle");
     }
-    
+
     switch(cm.machine_state)
     {
         case MACHINE_INITIALIZING: return COMBINED_INITIALIZING;
@@ -240,7 +240,7 @@ float cm_get_feed_rate(GCodeState_t *gcode_state) { return gcode_state->feed_rat
 
 void cm_set_motion_mode(GCodeState_t *gcode_state, uint8_t motion_mode) { gcode_state->motion_mode = motion_mode;}
 void cm_set_spindle_mode(GCodeState_t *gcode_state, uint8_t spindle_mode) { gcode_state->spindle_mode = spindle_mode;}
-void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed) { gcode_state->spindle_speed = speed;}
+void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed) { gcode_state->prev_spindle_speed = gcode_state->spindle_speed; gcode_state->spindle_speed = speed;}
 void cm_set_tool_number(GCodeState_t *gcode_state, uint8_t tool) { gcode_state->tool = tool;}
 
 void cm_set_absolute_override(GCodeState_t *gcode_state, uint8_t absolute_override)
@@ -501,8 +501,8 @@ void cm_set_model_target(const float target[], const float flag[])
  *	The target[] arg must be in absolute machine coordinates. Best done after cm_set_model_target().
  *
  *	Tests for soft limit for any homed axis if min and max are different values. You can set min
- *	and max to the same value (e.g. 0,0) to disable soft limits for an axis. Also will not test 
- *	a min or a max if the value is more than +/- 1000000 (plus or minus 1 million ). 
+ *	and max to the same value (e.g. 0,0) to disable soft limits for an axis. Also will not test
+ *	a min or a max if the value is more than +/- 1000000 (plus or minus 1 million ).
  *	This allows a single end to be tested w/the other disabled, should that requirement ever arise.
  */
 
@@ -2014,6 +2014,7 @@ const char fmt_estp[] PROGMEM = "Emergency Stop:      %s\n";
 
 const char fmt_spc[] PROGMEM = "Spindle Control:     %d [0=OFF,1=CW,2=CCW]\n";
 const char fmt_sps[] PROGMEM = "Spindle Speed: %8.f rpm\n";
+const char fmt_spps[] PROGMEM = "Previous Spindle Speed: %8.f rpm\n";
 
 const char fmt_pos[] PROGMEM = "%c position:%15.3f%s\n";
 const char fmt_mpo[] PROGMEM = "%c machine posn:%11.3f%s\n";
@@ -2047,6 +2048,7 @@ void cm_print_safe(nvObj_t *nv) { text_print_str(nv, fmt_safe);}
 void cm_print_estp(nvObj_t *nv) { text_print_str(nv, fmt_estp);}
 void cm_print_spc(nvObj_t *nv) { text_print_int(nv, fmt_spc);}
 void cm_print_sps(nvObj_t *nv) { text_print_flt(nv, fmt_sps);}
+void cm_print_spps(nvObj_t *nv) { text_print_flt(nv, fmt_spps);}
 
 void cm_print_gpl(nvObj_t *nv) { text_print_int(nv, fmt_gpl);}
 void cm_print_gun(nvObj_t *nv) { text_print_int(nv, fmt_gun);}

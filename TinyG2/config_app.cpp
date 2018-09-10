@@ -130,6 +130,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "",   "estpc",_f0, 0, cm_print_estp, cm_ack_estop, cm_ack_estop,(float *)&cs.null, 0 },          // E-stop status clear (GET to ack)
 //	{ "",   "tick",_f0, 0, tx_print_int,  get_int,     set_int,(float *)&rtc.sys_ticks, 0 },	// tick count
 	{ "",   "spc", _f0, 0, cm_print_spc,  get_ui8,     set_nul,(float *)&cm.gm.spindle_mode, 0 },          // spindle control
+	{ "",   "spps", _fi, 0, cm_print_spps,  get_flt,   set_nul,(float *)&cm.gm.prev_spindle_speed, 0 },    // previous spindle speed
 	{ "",   "sps", _f0, 0, cm_print_sps,  get_flt,     set_nul,(float *)&cm.gm.spindle_speed, 0 },         // spindle speed
 
 	{ "mpo","mpox",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },			// X machine position
@@ -463,7 +464,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "jid","jidb",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[1], 0},
 	{ "jid","jidc",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[2], 0},
 	{ "jid","jidd",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[3], 0},
-    
+
 	// fixturing information
 	{ "fxa","fxast",_fipc, 0, tx_print_nul, get_ui8, set_ui8,(float *)&cfg.fx_state_a, 0 },
 	{ "fxa","fxa1x",_fipc, 3, tx_print_nul, get_flt, set_flu,(float *)&cfg.fx_coords_a[0][0], 0 },
