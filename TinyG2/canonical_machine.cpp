@@ -240,7 +240,8 @@ float cm_get_feed_rate(GCodeState_t *gcode_state) { return gcode_state->feed_rat
 
 void cm_set_motion_mode(GCodeState_t *gcode_state, uint8_t motion_mode) { gcode_state->motion_mode = motion_mode;}
 void cm_set_spindle_mode(GCodeState_t *gcode_state, uint8_t spindle_mode) { gcode_state->spindle_mode = spindle_mode;}
-void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed) { gcode_state->prev_spindle_speed = gcode_state->spindle_speed; gcode_state->spindle_speed = speed;}
+void cm_set_prev_spindle_speed_parameter(GCodeState_t *gcode_state, float prev_speed) { gcode_state->prev_spindle_speed = prev_speed;}
+void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed) { gcode_state->spindle_speed = speed;}
 void cm_set_tool_number(GCodeState_t *gcode_state, uint8_t tool) { gcode_state->tool = tool;}
 
 void cm_set_absolute_override(GCodeState_t *gcode_state, uint8_t absolute_override)
