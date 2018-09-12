@@ -41,8 +41,8 @@
 pwmSingleton_t pwm;
 
 #ifdef __ARM
-static volatile bool soft_start_int = false;
-Timer<soft_start_timer_num> soft_start_timer(kTimerUpToMatch, FREQUENCY_SS);
+static volatile uint32_t soft_start_count = 0;																// soft-start delay counter
+Timer<soft_start_timer_num> soft_start_timer(kTimerUpToMatch, FREQUENCY_SS);	// soft-start timer, 1kHz (1ms)
 #endif // __ARM
 
 // defines common to all PWM channels
@@ -107,8 +107,8 @@ void pwm_init()
 #ifdef __ARM
 	// initialize the soft-start timer
 	soft_start_timer.setInterrupts(kInterruptOnOverflow | kInterruptOnMatchA | kInterruptPriorityHighest);
-	soft_start_timer.setDutyCycleA(1.0);		// This is a 100% duty cycle on the ON step part
-	soft_start_timer.start();
+  soft_start_timer.setDutyCycleA(1.0);	// This is a 100% duty cycle on the ON step part
+	soft_start_timer.stop();							// Make sure we haven't started yet
 #endif // __ARM
 }
 
@@ -226,12 +226,21 @@ stat_t pwm_set_duty(uint8_t chan, float duty)
 }
 
 #ifdef __ARM
-// pwm_check_soft_start: check the soft-start interrupt
-stat_t pwm_check_soft_start() {
-	if (soft_start_int) {
-		delay_test_pin.toggle();
-		soft_start_int = false;
-	}
+// pwm_soft_start_delay: set a delay for pwm soft start
+stat_t pwm_soft_start_delay(uint32_t msec) {
+
+	// reset counter
+	soft_start_count = 0;
+
+	// start timer
+	soft_start_timer.start();
+
+	// wait for requested number of milliseconds (**BLOCKING**)
+	while (soft_start_count < msec);
+
+	// stop timer
+	soft_start_timer.stop();
+
 	return (STAT_OK);
 }
 
@@ -239,7 +248,7 @@ stat_t pwm_check_soft_start() {
 namespace Motate {	// Must define timer interrupts inside the Motate namespace
 	MOTATE_TIMER_INTERRUPT(soft_start_timer_num) {
 		soft_start_timer.getInterruptCause();	// read SR to clear interrupt condition
-    soft_start_int = true;
+		soft_start_count++;
 	}
 } // namespace Motate
 #endif // __ARM

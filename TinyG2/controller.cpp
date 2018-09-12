@@ -192,10 +192,6 @@ static void _controller_HSM()
 
     DISPATCH(write_persistent_values_callback());
 
-#ifdef __ARM
-	DISPATCH(pwm_check_soft_start());
-#endif
-
 //----- command readers and parsers --------------------------------------------------//
 
 	DISPATCH(_sync_to_planner());				// ensure there is at least one free buffer in planning queue

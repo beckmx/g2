@@ -55,13 +55,18 @@ typedef struct pwmSingleton {
 
 extern pwmSingleton_t pwm;
 
+/*** definitions ***/
+
+#define PWM_RPM_INCREMENT     100 // RPM
+#define PWM_DLY_PER_RPM_INCR  13  // ms per RPM increment (above)
+
 /*** function prototypes ***/
 
 void pwm_init(void);
 stat_t pwm_set_freq(uint8_t channel, float freq);
 stat_t pwm_set_duty(uint8_t channel, float duty);
 #ifdef __ARM
-stat_t pwm_check_soft_start(void);
+stat_t pwm_soft_start_delay(uint32_t);
 #endif
 
 #ifdef __TEXT_MODE

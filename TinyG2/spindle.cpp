@@ -177,7 +177,8 @@ static void _exec_spindle_control(float *value, float *flag)
 	for (float f = (cm.gm.prev_spindle_speed + PWM_RPM_INCREMENT);
 		f <= cm.gm.spindle_speed; f += PWM_RPM_INCREMENT) {
 		pwm_set_duty(PWM_1, cm_get_spindle_pwm(raw_spindle_mode));
-		delay(PWM_DLY_PER_RPM_INCR);
+		pwm_soft_start_delay(PWM_DLY_PER_RPM_INCR);
+		delay_test_pin.toggle();	//TEMP
 		// Correct if partial last loop
 		//if ((f + PWM_RPM_INCREMENT) > cm.gm.spindle_speed) {
 		//	f = (cm.gm.spindle_speed - PWM_RPM_INCREMENT);
@@ -221,7 +222,8 @@ static void _exec_spindle_speed(float *value, float *flag)
 	for (float f = (cm.gm.prev_spindle_speed + PWM_RPM_INCREMENT);
 		f <= cm.gm.spindle_speed; f += PWM_RPM_INCREMENT) {
 		pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode) ); // update spindle speed if we're running
-		delay(PWM_DLY_PER_RPM_INCR);
+		pwm_soft_start_delay(PWM_DLY_PER_RPM_INCR);
+		delay_test_pin.toggle();	//TEMP
 		// Correct if partial last loop
 		//if ((f + PWM_RPM_INCREMENT) > cm.gm.spindle_speed) {
 		//	f = (cm.gm.spindle_speed - PWM_RPM_INCREMENT);
