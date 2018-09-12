@@ -60,6 +60,9 @@ extern pwmSingleton_t pwm;
 void pwm_init(void);
 stat_t pwm_set_freq(uint8_t channel, float freq);
 stat_t pwm_set_duty(uint8_t channel, float duty);
+#ifdef __ARM
+stat_t pwm_check_soft_start(void);
+#endif
 
 #ifdef __TEXT_MODE
 

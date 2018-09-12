@@ -47,6 +47,7 @@
 #include "settings.h"
 #include "spindle.h"
 #include "persistence.h"
+#include "pwm.h"
 
 #ifdef __ARM
 #include "Reset.h"
@@ -188,8 +189,12 @@ static void _controller_HSM()
 	DISPATCH(cm_probing_cycle_callback());		// probing cycle operation (G38.2)
 	DISPATCH(cm_jogging_cycle_callback());		// jog cycle operation
 	DISPATCH(cm_deferred_write_callback());		// persist G10 changes when not in machining cycle
-    
+
     DISPATCH(write_persistent_values_callback());
+
+#ifdef __ARM
+	DISPATCH(pwm_check_soft_start());
+#endif
 
 //----- command readers and parsers --------------------------------------------------//
 
@@ -451,7 +456,7 @@ static stat_t _interlock_estop_handler(void)
 		cm.estop_state &= ~ESTOP_PRESSED;
 		report = true;
 	}
-    
+
     //if E-Stop and Interlock are both 0, and we're off, go into "ESC Reboot"
     if((cm.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_OFFLINE && (cm.estop_state & ESTOP_PRESSED) == 0 && (cm.safety_state & SAFETY_INTERLOCK_OPEN) == 0) {
         cm.safety_state &= ~SAFETY_ESC_MASK;
@@ -459,7 +464,7 @@ static stat_t _interlock_estop_handler(void)
         cm.esc_boot_timer = SysTickTimer_getValue();
         report = true;
     }
-    
+
     //Check if ESC lockout timer or reboot timer have expired
     uint32_t now = SysTickTimer_getValue();
     if((cm.safety_state & SAFETY_ESC_LOCKOUT) != 0 && (now - cm.esc_lockout_timer) > ESC_LOCKOUT_TIME) {

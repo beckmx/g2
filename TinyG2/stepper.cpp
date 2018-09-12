@@ -58,8 +58,6 @@ static void _set_motor_power_level(const uint8_t motor, const float power_level)
 
 #ifdef __ARM
 
-static volatile bool soft_start_int = false;
-
 using namespace Motate;
 
 OutputPin<kGRBL_CommonEnablePinNumber> common_enable;	// shorter form of the above
@@ -73,7 +71,6 @@ Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);			// stepper pul
 Timer<dwell_timer_num> dwell_timer(kTimerUpToMatch, FREQUENCY_DWELL);	// dwell timer
 Timer<load_timer_num> load_timer;		// triggers load of next stepper segment
 Timer<exec_timer_num> exec_timer;		// triggers calculation of next+1 stepper segment
-Timer<soft_start_timer_num> soft_start_timer(kTimerUpToMatch, FREQUENCY_SS);	//1ms timer
 
 // Motor structures
 template<const uint8_t motor,
@@ -299,11 +296,6 @@ void stepper_init()
 	for (uint8_t motor=0; motor<MOTORS; motor++) {
 		_set_motor_power_level(motor, st_cfg.mot[motor].power_level_idle);
 	}
-
-  // initialize the soft-start timer
-  soft_start_timer.setInterrupts(kInterruptOnOverflow | kInterruptOnMatchA | kInterruptPriorityHighest);
-	soft_start_timer.setDutyCycleA(1.0);		// This is a 100% duty cycle on the ON step part
-  soft_start_timer.start();
 #endif // __ARM
 }
 
@@ -542,12 +534,6 @@ stat_t st_motor_power_callback() 	// called by controller
 			}
 		}
 	}
-
-  // check the soft-start interrupt
-  if (soft_start_int) {
-    delay_test_pin.toggle();
-    soft_start_int = false;
-  }
 	return (STAT_OK);
 }
 
@@ -809,15 +795,6 @@ namespace Motate {	// Define timer inside Motate namespace
 		load_timer.getInterruptCause();							// read SR to clear interrupt condition
 		_load_move();
 		st_pre.exec_isbusy &= ~LOAD_BUSY_FLAG;
-	}
-} // namespace Motate
-#endif // __ARM
-
-#ifdef __ARM
-namespace Motate {	// Must define timer interrupts inside the Motate namespace
-	MOTATE_TIMER_INTERRUPT(soft_start_timer_num) {
-		soft_start_timer.getInterruptCause();	// read SR to clear interrupt condition
-    soft_start_int = true;
 	}
 } // namespace Motate
 #endif // __ARM
