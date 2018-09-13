@@ -57,8 +57,10 @@ extern pwmSingleton_t pwm;
 
 /*** definitions ***/
 
-#define PWM_RPM_INCREMENT     100 // RPM
-#define PWM_DLY_PER_RPM_INCR  13  // ms per RPM increment (above)
+// PWM soft-start: original estimate 13ms/100RPM, but tweaked for slipping
+
+#define PWM_RPM_INCREMENT     1000 // RPM
+#define PWM_DLY_PER_RPM_INCR  175  // ms per RPM increment (above)
 
 /*** function prototypes ***/
 
