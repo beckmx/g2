@@ -34,6 +34,7 @@
 #include "pwm.h"
 #include "report.h"
 #include "util.h"
+#include "math.h"
 
 static void _exec_spindle_control(float *value, float *flag);
 static void _exec_spindle_speed(float *value, float *flag);
@@ -127,7 +128,7 @@ stat_t cm_spindle_control_immediate(uint8_t spindle_mode)
 static void _exec_spindle_control(float *value, float *flag)
 {
 	uint8_t spindle_mode = (uint8_t)value[0];
-	float prev_speed;
+	float prev_speed, pwm_rpm_delta, f;
 
 	bool paused = spindle_mode & SPINDLE_PAUSED;
 	uint8_t raw_spindle_mode = spindle_mode & (~SPINDLE_PAUSED);
@@ -171,42 +172,44 @@ static void _exec_spindle_control(float *value, float *flag)
 	}
 #endif // __ARM
 
-	// Spindle OFF (M5), run straight pwm command without ramp
-	if (spindle_mode == SPINDLE_OFF) {
+	// Spindle OFF (M5) or same speed, run straight pwm command without ramp
+	if ((spindle_mode == SPINDLE_OFF) || (cm.gm.spindle_speed == cm.gm.prev_spindle_speed)) {
 
 		pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, cm.gm.spindle_speed) ); // update spindle speed if we're running
 
 		// Set previous speed for next time
-		prev_speed = 0.0;
+		if (spindle_mode == SPINDLE_OFF) {
+			prev_speed = 0.0;
+		} else {
+			prev_speed = cm.gm.spindle_speed;
+		}
 
-	// Ramp up PWM using soft-start delay
+	// Ramp up PWM using soft-start delay if there's a change
 	} else {
 
-		// Ramp up/down to the final RPM value, setting the PWM with delays in between
-		if (cm.gm.spindle_speed >= cm.gm.prev_spindle_speed) {	// Increase speed
-			for (float f = (cm.gm.prev_spindle_speed + PWM_RPM_INCREMENT);
-				f <= cm.gm.spindle_speed; f += PWM_RPM_INCREMENT) {
-				if (pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, f)) == STAT_OK) { // update spindle speed if we're running; delay on valid duty
-					pwm_soft_start_delay(PWM_DLY_PER_RPM_INCR);
-					delay_test_pin.toggle();	//TEMP
-				}
-				// Correct if partial last loop
-				//if ((f + PWM_RPM_INCREMENT) > cm.gm.spindle_speed) {
-				//	f = (cm.gm.spindle_speed - PWM_RPM_INCREMENT);
-				//}
-			}
+		// Set increment/decrement based on whether increasing or decreasing speed
+		if (cm.gm.spindle_speed > cm.gm.prev_spindle_speed) {	// Increase speed
+			pwm_rpm_delta = PWM_RPM_INCREMENT;
 		} else {	// Decrease speed
-			for (float f = (cm.gm.prev_spindle_speed - PWM_RPM_INCREMENT);
-				f >= cm.gm.spindle_speed; f -= PWM_RPM_INCREMENT) {
-				pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, f) ); // update spindle speed if we're running
-				if (pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, f)) == STAT_OK) { // update spindle speed if we're running; delay on valid duty
-					pwm_soft_start_delay(PWM_DLY_PER_RPM_INCR);
-					delay_test_pin.toggle();	//TEMP
-				}
-				// Correct if partial last loop
-				//if ((f + PWM_RPM_INCREMENT) > cm.gm.spindle_speed) {
-				//	f = (cm.gm.spindle_speed - PWM_RPM_INCREMENT);
-				//}
+			pwm_rpm_delta = (-1.0 * PWM_RPM_INCREMENT);
+		}
+
+		// Ramp up/down to the final RPM value, setting the PWM with delays in between
+		for (f = (cm.gm.prev_spindle_speed + pwm_rpm_delta);;) {	// Exit condition, increment below
+
+			// Update spindle speed if we're running; delay on valid duty cycle (cubic)
+			if (pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, f)) == STAT_OK) {
+				pwm_soft_start_delay(PWM_DLY_PER_RPM_INCR);
+				delay_test_pin.toggle();	//TODO - remove
+			}
+
+			// Last loop, exit.  Correct for partial loop, otherwise normal increment/decrement
+			if (f == cm.gm.spindle_speed) {
+				break;
+			} else if (fabs(cm.gm.spindle_speed - f) < fabs(pwm_rpm_delta)) {
+				f = cm.gm.spindle_speed;
+			} else {
+				f += pwm_rpm_delta;
 			}
 		}
 
@@ -235,48 +238,51 @@ static void _exec_spindle_speed(float *value, float *flag)
 {
 	uint8_t spindle_mode = cm.gm.spindle_mode & (~SPINDLE_PAUSED);
 	bool paused = cm.gm.spindle_mode & SPINDLE_PAUSED;
-	float prev_speed;
+	float prev_speed, pwm_rpm_delta, f;
 
 	if(cm.estop_state != 0 || cm.safety_state != 0 || paused)
 		spindle_mode = SPINDLE_OFF;
 
 	cm_set_spindle_speed_parameter(MODEL, value[0]);
 
-	// Spindle OFF (M5), run straight pwm command without ramp
-	if (spindle_mode == SPINDLE_OFF) {
+	// Spindle OFF (M5) or same speed, run straight pwm command without ramp
+	if ((spindle_mode == SPINDLE_OFF) || (cm.gm.spindle_speed == cm.gm.prev_spindle_speed)) {
 
 		pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, cm.gm.spindle_speed) ); // update spindle speed if we're running
 
 		// Set previous speed for next time
-		prev_speed = 0.0;
+		if (spindle_mode == SPINDLE_OFF) {
+			prev_speed = 0.0;
+		} else {
+			prev_speed = cm.gm.spindle_speed;
+		}
 
-	// Ramp up PWM using soft-start delay
+	// Ramp up PWM using soft-start delay if there's a change
 	} else {
 
-		// Ramp up/down to the final RPM value, setting the PWM with delays in between
-		if (cm.gm.prev_spindle_speed <= cm.gm.spindle_speed) {	// Increase speed
-			for (float f = (cm.gm.prev_spindle_speed + PWM_RPM_INCREMENT);
-				f <= cm.gm.spindle_speed; f += PWM_RPM_INCREMENT) {
-				if (pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, f)) == STAT_OK) { // update spindle speed if we're running; delay on valid duty
-					pwm_soft_start_delay(PWM_DLY_PER_RPM_INCR);
-					delay_test_pin.toggle();	//TEMP
-				}
-				// Correct if partial last loop
-				//if ((f + PWM_RPM_INCREMENT) > cm.gm.spindle_speed) {
-				//	f = (cm.gm.spindle_speed - PWM_RPM_INCREMENT);
-				//}
-			}
+		// Set increment/decrement based on whether increasing or decreasing speed
+		if (cm.gm.spindle_speed >= cm.gm.prev_spindle_speed) {	// Increase speed
+			pwm_rpm_delta = PWM_RPM_INCREMENT;
 		} else {	// Decrease speed
-			for (float f = (cm.gm.prev_spindle_speed - PWM_RPM_INCREMENT);
-				f >= cm.gm.spindle_speed; f -= PWM_RPM_INCREMENT) {
-				if (pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, f)) == STAT_OK) { // update spindle speed if we're running; delay on valid duty
-					pwm_soft_start_delay(PWM_DLY_PER_RPM_INCR);
-					delay_test_pin.toggle();	//TEMP
-				}
-				// Correct if partial last loop
-				//if ((f + PWM_RPM_INCREMENT) > cm.gm.spindle_speed) {
-				//	f = (cm.gm.spindle_speed - PWM_RPM_INCREMENT);
-				//}
+			pwm_rpm_delta = (-1.0 * PWM_RPM_INCREMENT);
+		}
+
+		// Ramp up/down to the final RPM value, setting the PWM with delays in between
+		for (f = (cm.gm.prev_spindle_speed + pwm_rpm_delta);;) {	// Exit condition, increment below
+
+			// Update spindle speed if we're running; delay on valid duty cycle (cubic)
+			if (pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, f)) == STAT_OK) {
+				pwm_soft_start_delay(PWM_DLY_PER_RPM_INCR);
+				delay_test_pin.toggle();	//TODO - remove
+			}
+
+			// Last loop, exit.  Correct for partial loop, otherwise normal increment/decrement
+			if (f == cm.gm.spindle_speed) {
+				break;
+			} else if (fabs(cm.gm.spindle_speed - f) < fabs(pwm_rpm_delta)) {
+				f = cm.gm.spindle_speed;
+			} else {
+				f += pwm_rpm_delta;
 			}
 		}
 
