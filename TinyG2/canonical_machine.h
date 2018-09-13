@@ -88,6 +88,8 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
 
 	float spindle_speed;				// in RPM
 	float prev_spindle_speed;		// in RPM
+	float rpm_increment;			// in RPM
+	float dly_per_rpm_incr;		// in milliseconds
 	float parameter;					// P - parameter used for dwell time in seconds, G10 coord select...
 
 	uint8_t feed_rate_mode;				// See cmFeedRateMode for settings
@@ -172,6 +174,8 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 	uint8_t spindle_mode;				// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
 	float spindle_speed;				// in RPM
 	float prev_spindle_speed;		// in RPM
+	float rpm_increment;			// in RPM
+	float dly_per_rpm_incr;		// in milliseconds
 	float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
 	uint8_t	spindle_override_enable;	// TRUE = override enabled
 
@@ -772,6 +776,8 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	void cm_print_spc(nvObj_t *nv);
 	void cm_print_sps(nvObj_t *nv);
 	void cm_print_spps(nvObj_t *nv);
+	void cm_print_sprpm(nvObj_t *nv);
+	void cm_print_spdly(nvObj_t *nv);
 
 	void cm_print_gpl(nvObj_t *nv);		// Gcode defaults
 	void cm_print_gun(nvObj_t *nv);
@@ -837,6 +843,8 @@ stat_t cm_set_xjh(nvObj_t *nv);			// set jerk homing with 1,000,000 correction
 	#define cm_print_spc tx_print_stub
 	#define cm_print_sps tx_print_stub
 	#define cm_print_spps tx_print_stub
+	#define cm_print_sprpm tx_print_stub
+	#define cm_print_spdly tx_print_stub
 
 	#define cm_print_gpl tx_print_stub		// Gcode defaults
 	#define cm_print_gun tx_print_stub

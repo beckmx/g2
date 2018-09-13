@@ -49,6 +49,10 @@ void cm_spindle_init()
 
     pwm_set_freq(PWM_1, pwm.c[PWM_1].frequency);
     pwm_set_duty(PWM_1, pwm.c[PWM_1].phase_off);
+
+		// Set initial RPM increment and delay - TODO config.cpp should handle this, not initializing
+		cm.gm.rpm_increment 		= SP_RPM_INCREMENT;
+		cm.gm.dly_per_rpm_incr 	= SP_DLY_PER_RPM_INCR;
 }
 
 /*
@@ -189,9 +193,9 @@ static void _exec_spindle_control(float *value, float *flag)
 
 		// Set increment/decrement based on whether increasing or decreasing speed
 		if (cm.gm.spindle_speed > cm.gm.prev_spindle_speed) {	// Increase speed
-			pwm_rpm_delta = PWM_RPM_INCREMENT;
+			pwm_rpm_delta = cm.gm.rpm_increment;
 		} else {	// Decrease speed
-			pwm_rpm_delta = (-1.0 * PWM_RPM_INCREMENT);
+			pwm_rpm_delta = (-1.0 * cm.gm.rpm_increment);
 		}
 
 		// Ramp up/down to the final RPM value, setting the PWM with delays in between
@@ -199,7 +203,7 @@ static void _exec_spindle_control(float *value, float *flag)
 
 			// Update spindle speed if we're running; delay on valid duty cycle (cubic)
 			if (pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, f)) == STAT_OK) {
-				pwm_soft_start_delay(PWM_DLY_PER_RPM_INCR);
+				pwm_soft_start_delay(cm.gm.dly_per_rpm_incr);
 				delay_test_pin.toggle();	//TODO - remove
 			}
 
@@ -262,9 +266,9 @@ static void _exec_spindle_speed(float *value, float *flag)
 
 		// Set increment/decrement based on whether increasing or decreasing speed
 		if (cm.gm.spindle_speed >= cm.gm.prev_spindle_speed) {	// Increase speed
-			pwm_rpm_delta = PWM_RPM_INCREMENT;
+			pwm_rpm_delta = cm.gm.rpm_increment;
 		} else {	// Decrease speed
-			pwm_rpm_delta = (-1.0 * PWM_RPM_INCREMENT);
+			pwm_rpm_delta = (-1.0 * cm.gm.rpm_increment);
 		}
 
 		// Ramp up/down to the final RPM value, setting the PWM with delays in between
@@ -272,7 +276,7 @@ static void _exec_spindle_speed(float *value, float *flag)
 
 			// Update spindle speed if we're running; delay on valid duty cycle (cubic)
 			if (pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, f)) == STAT_OK) {
-				pwm_soft_start_delay(PWM_DLY_PER_RPM_INCR);
+				pwm_soft_start_delay(cm.gm.dly_per_rpm_incr);
 				delay_test_pin.toggle();	//TODO - remove
 			}
 

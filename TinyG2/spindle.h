@@ -29,6 +29,14 @@
 #define SPINDLE_H_ONCE
 
 /*
+ * Definitions
+ */
+
+ // PWM soft-start: original estimate 13ms/100RPM, but tweaked for slipping
+ #define SP_RPM_INCREMENT     1000.0  // RPM
+ #define SP_DLY_PER_RPM_INCR  175.0   // ms per RPM increment (above)
+
+/*
  * Global Scope Functions
  */
 
