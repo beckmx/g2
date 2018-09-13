@@ -191,6 +191,11 @@ static void _exec_spindle_control(float *value, float *flag)
 	// Ramp up PWM using soft-start delay if there's a change
 	} else {
 
+		// Check valid RPM and increment settings
+		if ((cm.gm.rpm_increment <= 0) || (cm.gm.dly_per_rpm_incr <= 0)) {
+			return;	//TODO - add error status
+		}
+
 		// Set increment/decrement based on whether increasing or decreasing speed
 		if (cm.gm.spindle_speed > cm.gm.prev_spindle_speed) {	// Increase speed
 			pwm_rpm_delta = cm.gm.rpm_increment;
@@ -204,7 +209,7 @@ static void _exec_spindle_control(float *value, float *flag)
 			// Update spindle speed if we're running; delay on valid duty cycle (cubic)
 			if (pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, f)) == STAT_OK) {
 				pwm_soft_start_delay(cm.gm.dly_per_rpm_incr);
-				delay_test_pin.toggle();	//TODO - remove
+				//delay_test_pin.toggle();	//TODO - remove
 			}
 
 			// Last loop, exit.  Correct for partial loop, otherwise normal increment/decrement
@@ -264,6 +269,11 @@ static void _exec_spindle_speed(float *value, float *flag)
 	// Ramp up PWM using soft-start delay if there's a change
 	} else {
 
+		// Check valid RPM and increment settings
+		if ((cm.gm.rpm_increment <= 0) || (cm.gm.dly_per_rpm_incr <= 0)) {
+			return;	//TODO - add error status
+		}
+
 		// Set increment/decrement based on whether increasing or decreasing speed
 		if (cm.gm.spindle_speed >= cm.gm.prev_spindle_speed) {	// Increase speed
 			pwm_rpm_delta = cm.gm.rpm_increment;
@@ -277,7 +287,7 @@ static void _exec_spindle_speed(float *value, float *flag)
 			// Update spindle speed if we're running; delay on valid duty cycle (cubic)
 			if (pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, f)) == STAT_OK) {
 				pwm_soft_start_delay(cm.gm.dly_per_rpm_incr);
-				delay_test_pin.toggle();	//TODO - remove
+				//delay_test_pin.toggle();	//TODO - remove
 			}
 
 			// Last loop, exit.  Correct for partial loop, otherwise normal increment/decrement
