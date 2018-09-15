@@ -35,6 +35,7 @@
 #include "report.h"
 #include "util.h"
 #include "math.h"
+#include "settings.h"
 
 static void _exec_spindle_control(float *value, float *flag);
 static void _exec_spindle_speed(float *value, float *flag);

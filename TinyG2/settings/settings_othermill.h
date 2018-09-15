@@ -31,6 +31,9 @@
  *		 to be changed are in tinyg.h
  */
 
+ #ifndef SETTINGS_OTHERMILL_H_ONCE
+ #define SETTINGS_OTHERMILL_H_ONCE
+
 /***********************************************************************/
 /**** Otherlab OtherMill profile ***************************************/
 /***********************************************************************/
@@ -349,3 +352,5 @@
 #define G59_A_OFFSET 0
 #define G59_B_OFFSET 0
 #define G59_C_OFFSET 0
+
+#endif  //  SETTINGS_OTHERMILL_H_ONCE

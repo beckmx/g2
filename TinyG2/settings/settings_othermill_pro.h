@@ -31,6 +31,9 @@
  *		 to be changed are in tinyg.h
  */
 
+ #ifndef SETTINGS_OTHERMILL_PRO_H_ONCE
+ #define SETTINGS_OTHERMILL_PRO_H_ONCE
+
 /***********************************************************************/
 /**** OtherMill Pro profile ***************************************/
 /***********************************************************************/
@@ -55,3 +58,5 @@
 #undef MOTOR_POWER_LEVEL_Z
 #define MOTOR_POWER_LEVEL 0.275
 #define MOTOR_POWER_LEVEL_Z 0.375
+
+#endif  // SETTINGS_OTHERMILL_PRO_H_ONCE
