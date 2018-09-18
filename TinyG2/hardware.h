@@ -125,7 +125,7 @@ extern "C"{
 /**** Motate Definitions ****/
 
 // Timer definitions. See stepper.h and other headers for setup
-timer_number soft_start_timer_num	= 1;	// pwm soft-start in spindle.cpp
+timer_number soft_start_timer_num	= 0;	// pwm soft-start in spindle.cpp
 timer_number dda_timer_num   			= 2;	// stepper pulse generation in stepper.cpp
 timer_number dwell_timer_num 			= 3;	// dwell timing in stepper.cpp
 timer_number load_timer_num  			= 4;	// request load timer in stepper.cpp

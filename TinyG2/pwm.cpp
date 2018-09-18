@@ -41,7 +41,7 @@
 pwmSingleton_t pwm;
 
 #ifdef __ARM
-static volatile uint32_t soft_start_count = 0;																// soft-start delay counter
+static volatile uint32_t soft_start_count = 0;																				// soft-start delay counter
 Timer<soft_start_timer_num> soft_start_timer(kTimerUpToMatch, FREQUENCY_SS);	// soft-start timer, 1kHz (1ms)
 #endif // __ARM
 
@@ -106,8 +106,7 @@ void pwm_init()
 
 #ifdef __ARM
 	// initialize the soft-start timer
-	soft_start_timer.setInterrupts(kInterruptOnOverflow | kInterruptOnMatchA | kInterruptPriorityHighest);
-  soft_start_timer.setDutyCycleA(1.0);	// This is a 100% duty cycle on the ON step part
+	soft_start_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
 	soft_start_timer.stop();							// Make sure we haven't started yet
 #endif // __ARM
 }
