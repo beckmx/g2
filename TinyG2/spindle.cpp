@@ -192,8 +192,8 @@ static void _exec_spindle_control(float *value, float *flag)
 	// Ramp up PWM using soft-start delay if there's a change
 	} else {
 
-		// Check valid RPM and increment settings
-		if ((cm.gm.rpm_increment <= 0) || (cm.gm.dly_per_rpm_incr <= 0)) {
+		// Check valid RPM setting
+		if (cm.gm.rpm_increment <= 0) {
 			return;	//TODO - add error status
 		}
 
@@ -270,8 +270,8 @@ static void _exec_spindle_speed(float *value, float *flag)
 	// Ramp up PWM using soft-start delay if there's a change
 	} else {
 
-		// Check valid RPM and increment settings
-		if ((cm.gm.rpm_increment <= 0) || (cm.gm.dly_per_rpm_incr <= 0)) {
+		// Check valid RPM setting
+		if (cm.gm.rpm_increment <= 0) {
 			return;	//TODO - add error status
 		}
 

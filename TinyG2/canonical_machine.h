@@ -89,7 +89,7 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
 	float spindle_speed;				// in RPM
 	float prev_spindle_speed;		// in RPM
 	float rpm_increment;			// in RPM
-	float dly_per_rpm_incr;		// in milliseconds
+	uint32_t dly_per_rpm_incr;		// in milliseconds
 	float parameter;					// P - parameter used for dwell time in seconds, G10 coord select...
 
 	uint8_t feed_rate_mode;				// See cmFeedRateMode for settings
@@ -175,7 +175,7 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 	float spindle_speed;				// in RPM
 	float prev_spindle_speed;		// in RPM
 	float rpm_increment;			// in RPM
-	float dly_per_rpm_incr;		// in milliseconds
+	uint32_t dly_per_rpm_incr;		// in milliseconds
 	float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
 	uint8_t	spindle_override_enable;	// TRUE = override enabled
 

@@ -131,7 +131,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "",   "estpc",_f0, 0, cm_print_estp, cm_ack_estop, cm_ack_estop,(float *)&cs.null, 0 },          // E-stop status clear (GET to ack)
 //	{ "",   "tick",_f0, 0, tx_print_int,  get_int,     set_int,(float *)&rtc.sys_ticks, 0 },	// tick count
 	{ "", "sprpm"	, _fip, 3, cm_print_sprpm, get_flt, set_flt,(float *)&cm.gm.rpm_increment,	SP_RPM_INCREMENT },	 			// spindle rpm increment
-	{ "", "spdly"	, _fip, 3, cm_print_spdly, get_flt, set_flt,(float *)&cm.gm.dly_per_rpm_incr, SP_DLY_PER_RPM_INCR },	// spindle delay per increment
+	{ "", "spdly"	, _fip, 3, cm_print_spdly, get_int, set_int,(float *)&cm.gm.dly_per_rpm_incr, SP_DLY_PER_RPM_INCR },	// spindle delay per increment
 	{ "", "spps"	, _fip, 3, cm_print_spps,  get_flt, set_nul,(float *)&cm.gm.prev_spindle_speed, 0 },    				 			// previous spindle speed
 	{ "", "spc"		, _f0 , 0, cm_print_spc,  	get_ui8, set_nul,(float *)&cm.gm.spindle_mode, 0 },          				 			// spindle control
 	{ "", "sps"		, _f0 , 0, cm_print_sps,  	get_flt, set_nul,(float *)&cm.gm.spindle_speed, 0 },         				 			// spindle speed

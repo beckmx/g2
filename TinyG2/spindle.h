@@ -34,7 +34,7 @@
 
  // PWM soft-start: original estimate 13ms/100RPM, but tweaked for slipping and cubic
  #define SP_RPM_INCREMENT     250.0  // RPM
- #define SP_DLY_PER_RPM_INCR  75.0   // ms per RPM increment (above)
+ #define SP_DLY_PER_RPM_INCR  75     // ms per RPM increment (above)
 
 /*
  * Global Scope Functions
