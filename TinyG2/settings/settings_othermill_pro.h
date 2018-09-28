@@ -52,7 +52,7 @@
 #define Y_VELOCITY_MAX 2600
 #define P1_CW_SPEED_HI 26000
 #define P1_CW_SPEED_LO 8000
-#define P1_CW_PHASE_HI 0.18
+#define P1_CW_PHASE_HI 0.19
 #define P1_CW_PHASE_LO 0.135
 
 #undef PAUSE_DWELL_TIME

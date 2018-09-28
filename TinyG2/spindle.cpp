@@ -195,13 +195,13 @@ static void _exec_spindle_control(float *value, float *flag)
 		if( cm.gm.spindle_speed > speed_hi ) cm.gm.spindle_speed = speed_hi;
 	}
 
-	// Spindle OFF (M5) or same speed, run straight pwm command without ramp
-	if ((spindle_mode == SPINDLE_OFF) || (cm.gm.spindle_speed == cm.gm.prev_spindle_speed)) {
+	// Spindle turning off (M5/Hold) or same speed, run straight pwm command without ramp
+	if ((raw_spindle_mode == SPINDLE_OFF) || (cm.gm.spindle_speed == cm.gm.prev_spindle_speed)) {
 
-		pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, cm.gm.spindle_speed) ); // update spindle speed if we're running
+		pwm_set_duty(PWM_1, cm_get_spindle_pwm(raw_spindle_mode, cm.gm.spindle_speed) ); // update spindle speed if we're running
 
 		// Set previous speed for next time
-		if (spindle_mode == SPINDLE_OFF) {
+		if (raw_spindle_mode == SPINDLE_OFF) {
 			prev_speed = 0.0;
 		} else {
 			prev_speed = cm.gm.spindle_speed;
@@ -226,7 +226,7 @@ static void _exec_spindle_control(float *value, float *flag)
 		for (f = (cm.gm.prev_spindle_speed + pwm_rpm_delta);;) {	// Exit condition, increment below
 
 			// Update spindle speed if we're running; delay on valid duty cycle (cubic)
-			if (pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, f)) == STAT_OK) {
+			if (pwm_set_duty(PWM_1, cm_get_spindle_pwm(raw_spindle_mode, f)) == STAT_OK) {
 				pwm_soft_start_delay(cm.gm.dly_per_rpm_incr);
 				//delay_test_pin.toggle();	//TODO - remove
 			}
