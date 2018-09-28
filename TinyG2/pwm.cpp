@@ -41,6 +41,7 @@
 pwmSingleton_t pwm;
 
 #ifdef __ARM
+static volatile bool soft_start_enabled = false;
 static volatile uint32_t soft_start_count = 0;																				// soft-start delay counter
 Timer<soft_start_timer_num> soft_start_timer(kTimerUpToMatch, FREQUENCY_SS);	// soft-start timer, 1kHz (1ms)
 #endif // __ARM
@@ -107,7 +108,7 @@ void pwm_init()
 #ifdef __ARM
 	// initialize the soft-start timer
 	soft_start_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
-	soft_start_timer.stop();							// Make sure we haven't started yet
+	pwm_soft_start_end();	// Make sure the counter is stopped and reset
 #endif // __ARM
 }
 
@@ -225,7 +226,9 @@ stat_t pwm_set_duty(uint8_t chan, float duty)
 }
 
 #ifdef __ARM
-// pwm_soft_start_delay: set a delay for pwm soft start
+
+
+// pwm_soft_start_delay: set a delay for pwm soft start (**BLOCKING**)
 stat_t pwm_soft_start_delay(uint32_t msec) {
 
 	// reset counter
@@ -241,6 +244,46 @@ stat_t pwm_soft_start_delay(uint32_t msec) {
 	soft_start_timer.stop();
 
 	return (STAT_OK);
+}
+
+// pwm_soft_start_begin: starts soft start delay
+stat_t pwm_soft_start_begin() {
+
+	// start timer
+	soft_start_timer.start();
+
+	// set flag
+	soft_start_enabled = true;
+
+	return STAT_OK;
+}
+
+// pwm_soft_start_end stops the soft start delay and resets the counter
+stat_t pwm_soft_start_end() {
+
+	// stop timer
+	soft_start_timer.stop();
+
+	// reset counter and flag
+	soft_start_count = 0;
+	soft_start_enabled = false;
+
+	return STAT_OK;
+}
+
+// pwm_is_soft_start_done: checks if the soft start delay has met or exceeded the provided delay
+bool pwm_is_soft_start_done(uint32_t msec) {
+
+	if (soft_start_count >= msec) {
+		return true;
+	}
+
+	return false;
+}
+
+// pwm_is_soft_start_enabled: checks if the soft start delay is running
+bool pwm_is_soft_start_enabled() {
+	return soft_start_enabled;
 }
 
 // soft-start timer isr
