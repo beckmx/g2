@@ -3,6 +3,7 @@
 #include "canonical_machine.h"
 #include "hardware.h"
 #include "spi2.h"
+#include "util.h"
 #include "motate/utility/SamSPI.h"
 #include "motate/MotateTimers.h"
 #include "text_parser.h"
@@ -49,6 +50,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
 
   int16_t ret;
   uint8_t sts_byte = SPI2_STS_ERR;
+  uint32_t start_time;
 
   // Check that incoming buffer properly initialized if needed
   if ((num_data > 0) && (!data_buf || ((sizeof(data_buf) / sizeof(uint8_t)) < num_data))) {
@@ -108,8 +110,10 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
     // Write out command byte (slave request, skip this)
     if (!slave_req) {
       spi2->write(cmd_byte, true);
-      while(!spi2->is_tx_empty());  // Wait for TXEMPTY to flush - TODO timeout
-      while(spi2->is_rx_ready()) {  // Clear unused RX data without invoking read
+      // Wait for TXEMPTY to flush, then clear unused RX data without invoking read
+      start_time = SysTickTimer_getValue();
+      while(!spi2->is_tx_empty() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT));
+      while(spi2->is_rx_ready() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {
         spi2->read();
       }
       // Request Encoder Positions command requires time for SPI2 to prep data - TODO fix performance
@@ -126,15 +130,18 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
       delay_us(25);
     } else if (num_data > 0) {
       spi2->write(data_buf, num_data, true);
-      while(!spi2->is_tx_empty());            // Wait for TXEMPTY to flush - TODO timeout
-      while(spi2->is_rx_ready()) {            // Clear unused RX data without invoking read
+      // Wait for TXEMPTY to flush, then clear unused RX data without invoking read
+      start_time = SysTickTimer_getValue();
+      while(!spi2->is_tx_empty() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT));
+      while(spi2->is_rx_ready() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {
         spi2->read();
       }
       delay_us(25);
     }
 
     // Read the status
-    while ((ret = spi2->read(true)) < 0) {  // Waits until RX ready to read (performs dummy writes) - TODO add timeout
+    start_time = SysTickTimer_getValue();
+    while (((ret = spi2->read(true)) < 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
       delay_us(25);
     }
 
@@ -153,6 +160,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
 uint8_t spi2_slave_handler() {
 
   uint8_t cmd, status;
+  uint32_t start_time;
   int16_t ret;
 
   //TEMP Generate random data for testing
@@ -175,7 +183,8 @@ uint8_t spi2_slave_handler() {
     spi2->setChannel();
 
     // Read command
-    while ((ret = spi2->read(true)) < 0){ // Waits until RX ready to read (performs dummy writes) - TODO add timeout
+    start_time = SysTickTimer_getValue();
+    while (((ret = spi2->read(true)) < 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
       delay_us(25);
     }
 

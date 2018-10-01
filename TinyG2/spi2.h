@@ -14,6 +14,7 @@ extern "C" {
 #define SPI2_NUM_AXES     4                        // Number of axes (XYZA) - DO NOT use AXES for SPI2!
 #define SPI2_BUF_SIZE     (SPI2_NUM_AXES*4)        // Buffer size for passing data
 #define SPI2_NUM_RETRIES  3                        // Number of retries on error condition
+#define SPI2_TIMEOUT      100                      // SPI2 bus timeout (in ms)
 
 #define FLOAT_TO_U32(n) (uint32_t)(*(uint32_t*)&n)  // Convert from float to uint32_t
 #define U32_TO_FLOAT(n) ((float)(*(float*)&n))      // Convert from uint32_t to float
