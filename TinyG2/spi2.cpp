@@ -48,62 +48,102 @@ void spi2_init() {
 uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_buf, uint16_t num_data) {
 
   int16_t ret;
-  uint8_t sts_byte;
+  uint8_t sts_byte = SPI2_STS_ERR;
 
-  // Error checking
-  if ((num_data > 0) && (!data_buf)) {
-    fprintf_P(stderr, PSTR("\nERROR: Invalid data buffer in spi2_cmd\n"));
+  // Check that incoming buffer properly initialized if needed
+  if ((num_data > 0) && (!data_buf || ((sizeof(data_buf) / sizeof(uint8_t)) < num_data))) {
+    fprintf_P(stderr, PSTR("\nERROR: Data buffer not initialized properly\n"));
     spi2->read(true); // Toss, release the line
-    return SPI2_STS_HALT;
+    return SPI2_STS_ERR;
   }
-  if (rnw > 1) {
-    fprintf_P(stderr, PSTR("\nERROR: Read Not Write bit out of range in spi2_cmd (0 - 1)\n"));
-    spi2->read(true); // Toss, release the line
-    return SPI2_STS_HALT;
+
+  // Command error checking, immediately return error on malformed command
+  switch (cmd_byte) {
+
+    // Single byte master write commands (0x01, 0x02, 0x04)
+    case SPI2_CMD_RST_ENC_POS:
+    case SPI2_CMD_START_TOOL_TIP:
+
+      if ((slave_req) || (rnw != SPI2_WRITE) || (num_data > 0)) {
+        fprintf_P(stderr, PSTR("\nERROR: Malformed single byte write (0x01, 0x02)\n"));
+        spi2->read(true); // Toss, release the line
+        return SPI2_STS_ERR;
+      }
+      break;
+
+    // Multi byte master read commands (0x04)
+    case SPI2_CMD_REQ_ENC_POS:
+
+      if ((slave_req) || (rnw != SPI2_READ) || (num_data != (SPI2_NUM_AXES * 4))) {
+        fprintf_P(stderr, PSTR("\nERROR: Malformed multi byte read (0x04)\n"));
+        spi2->read(true); // Toss, release the line
+        return SPI2_STS_ERR;
+      }
+      break;
+
+    // Slave-requested write commands (0x03)
+    case SPI2_CMD_SND_MTR_POS:
+
+      if ((!slave_req) || (rnw != SPI2_WRITE) || (num_data != (SPI2_NUM_AXES * 4))) {
+        fprintf_P(stderr, PSTR("\nERROR: Malformed slave-requested write (0x03)\n"));
+        spi2->read(true); // Toss, release the line
+        return SPI2_STS_ERR;
+      }
+      break;
+
+    // Not a command, default to error
+    default:
+
+      fprintf_P(stderr, PSTR("\nERROR: Invalid command\n"));
+      spi2->read(true); // Toss, release the line
+      return SPI2_STS_ERR;
   }
-  //TODO Check if cmd_byte is invalid
 
-  // Select the SS for the SPI2 slave
-  spi2->setChannel();
+  // Attempt command up to the specified number of retries or when OK status
+  for (int i = 0; (i < SPI2_NUM_RETRIES && sts_byte != SPI2_STS_OK); i++) {
 
-  // Write out command byte (slave request, skip this)
-  if (!slave_req) {
-    spi2->write(cmd_byte, true);
-    while(!spi2->is_tx_empty());  // Wait for TXEMPTY to flush - TODO timeout
-    while(spi2->is_rx_ready()) {  // Clear unused RX data without invoking read
-      spi2->read();
+    // Select the SS for the SPI2 slave
+    spi2->setChannel();
+
+    // Write out command byte (slave request, skip this)
+    if (!slave_req) {
+      spi2->write(cmd_byte, true);
+      while(!spi2->is_tx_empty());  // Wait for TXEMPTY to flush - TODO timeout
+      while(spi2->is_rx_ready()) {  // Clear unused RX data without invoking read
+        spi2->read();
+      }
+      // Request Encoder Positions command requires time for SPI2 to prep data - TODO fix performance
+      if (cmd_byte == SPI2_CMD_REQ_ENC_POS) {
+        delay(4);
+      } else {
+        delay_us(25);
+      }
     }
-    // Request Encoder Positions command requires time for SPI2 to prep data - TODO fix performance
-    if (cmd_byte == SPI2_CMD_REQ_ENC_POS) {
-      delay(4);
-    } else {
+
+    // Process data bytes if available
+    if (rnw && (num_data > 0)) {
+      spi2->read(data_buf, num_data, true);   // Read RX data (performs dummy writes, doesn't count if RDRF = 0)
+      delay_us(25);
+    } else if (num_data > 0) {
+      spi2->write(data_buf, num_data, true);
+      while(!spi2->is_tx_empty());            // Wait for TXEMPTY to flush - TODO timeout
+      while(spi2->is_rx_ready()) {            // Clear unused RX data without invoking read
+        spi2->read();
+      }
       delay_us(25);
     }
-  }
 
-  // Process data bytes if available
-  if (rnw && (num_data > 0)) {
-    spi2->read(data_buf, num_data, true);   // Read RX data (performs dummy writes, doesn't count if RDRF = 0)
-    delay_us(25);
-  } else if (num_data > 0) {
-    spi2->write(data_buf, num_data, true);
-    while(!spi2->is_tx_empty());            // Wait for TXEMPTY to flush - TODO timeout
-    while(spi2->is_rx_ready()) {            // Clear unused RX data without invoking read
-      spi2->read();
+    // Read the status
+    while ((ret = spi2->read(true)) < 0) {  // Waits until RX ready to read (performs dummy writes) - TODO add timeout
+      delay_us(25);
     }
-    delay_us(25);
+
+    // Convert return to status byte
+    sts_byte = (uint8_t)(ret & 0x00FF);
+
+    // Flush the system in case leftovers in buffers
+    spi2->flush();
   }
-
-  // Read the status
-  while ((ret = spi2->read(true)) < 0) {  // Waits until RX ready to read (performs dummy writes) - TODO add timeout
-    delay_us(25);
-  }
-
-  // Convert return to status byte
-  sts_byte = (uint8_t)(ret & 0x00FF);
-
-  // Flush the system in case leftovers in buffers
-  spi2->flush();
 
   // Return the status code
   return sts_byte;
@@ -155,7 +195,7 @@ uint8_t spi2_slave_handler() {
 
         fprintf_P(stderr, PSTR("\nERROR: Invalid command from SPI2 slave\n"));
         spi2->read(true); // Toss, release the line
-        status = SPI2_STS_HALT;
+        status = SPI2_STS_ERR;
         break;
     }
 
@@ -201,7 +241,7 @@ uint8_t spi2_send_motor_positions() {
   }
 
   // Write out buffer with motor position data to SPI slave and return status
-  return(spi2_cmd(true, SPI2_WRITE, SPI2_CMD_NULL, buf, (SPI2_NUM_AXES*4)));
+  return(spi2_cmd(true, SPI2_WRITE, SPI2_CMD_SND_MTR_POS, buf, (SPI2_NUM_AXES*4)));
 }
 
 // spi2_request_encoder_positions: request encoder positions (command 0x04)

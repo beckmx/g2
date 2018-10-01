@@ -8,11 +8,12 @@ extern "C" {
 //#include "integer.h"
 
 // General Definitions
-#define SPI2_MCK_DIV    (SystemCoreClock / 84)   // SPI clock divider to generate baud (based on 84MHz MCK)
-#define SPI2_DLYBS_US   3                        // Delay between SS low and SCLK (in us)
-#define SPI2_DLYBCT_US  5                        // Delay between transfers (in us)
-#define SPI2_NUM_AXES   4                        // Number of axes (XYZA) - DO NOT use AXES for SPI2!
-#define SPI2_BUF_SIZE   (SPI2_NUM_AXES*4)        // Buffer size for passing data
+#define SPI2_MCK_DIV      (SystemCoreClock / 84)   // SPI clock divider to generate baud (based on 84MHz MCK)
+#define SPI2_DLYBS_US     3                        // Delay between SS low and SCLK (in us)
+#define SPI2_DLYBCT_US    5                        // Delay between transfers (in us)
+#define SPI2_NUM_AXES     4                        // Number of axes (XYZA) - DO NOT use AXES for SPI2!
+#define SPI2_BUF_SIZE     (SPI2_NUM_AXES*4)        // Buffer size for passing data
+#define SPI2_NUM_RETRIES  3                        // Number of retries on error condition
 
 #define FLOAT_TO_U32(n) (uint32_t)(*(uint32_t*)&n)  // Convert from float to uint32_t
 #define U32_TO_FLOAT(n) ((float)(*(float*)&n))      // Convert from uint32_t to float
@@ -43,7 +44,6 @@ extern "C" {
 
 #define SPI2_STS_OK             0x01  // OK Status
 #define SPI2_STS_ERR            0x02  // Error Status
-#define SPI2_STS_HALT           0x03  // Halt
 
 // Function Prototypes
 void spi2_init(void);
