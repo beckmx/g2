@@ -53,9 +53,8 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
   uint32_t start_time;
 
   // Check that incoming buffer properly initialized if needed
-  if ((num_data > 0) && (!data_buf || ((sizeof(data_buf) / sizeof(uint8_t)) < num_data))) {
+  if ((num_data > 0) && (!data_buf)) {
     fprintf_P(stderr, PSTR("\nERROR: Data buffer not initialized properly\n"));
-    spi2->read(true); // Toss, release the line
     return SPI2_STS_ERR;
   }
 
@@ -68,7 +67,6 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
 
       if ((slave_req) || (rnw != SPI2_WRITE) || (num_data > 0)) {
         fprintf_P(stderr, PSTR("\nERROR: Malformed single byte write (0x01, 0x02)\n"));
-        spi2->read(true); // Toss, release the line
         return SPI2_STS_ERR;
       }
       break;
@@ -78,7 +76,6 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
 
       if ((slave_req) || (rnw != SPI2_READ) || (num_data != (SPI2_NUM_AXES * 4))) {
         fprintf_P(stderr, PSTR("\nERROR: Malformed multi byte read (0x04)\n"));
-        spi2->read(true); // Toss, release the line
         return SPI2_STS_ERR;
       }
       break;
@@ -88,7 +85,6 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
 
       if ((!slave_req) || (rnw != SPI2_WRITE) || (num_data != (SPI2_NUM_AXES * 4))) {
         fprintf_P(stderr, PSTR("\nERROR: Malformed slave-requested write (0x03)\n"));
-        spi2->read(true); // Toss, release the line
         return SPI2_STS_ERR;
       }
       break;
@@ -97,7 +93,6 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
     default:
 
       fprintf_P(stderr, PSTR("\nERROR: Invalid command\n"));
-      spi2->read(true); // Toss, release the line
       return SPI2_STS_ERR;
   }
 
@@ -203,7 +198,6 @@ uint8_t spi2_slave_handler() {
       default:
 
         fprintf_P(stderr, PSTR("\nERROR: Invalid command from SPI2 slave\n"));
-        spi2->read(true); // Toss, release the line
         status = SPI2_STS_ERR;
         break;
     }
@@ -276,7 +270,11 @@ void spi2_test() {
 
   spi2->setChannel();
 
-  // Bogus command
+  // Bogus commands
+  spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
+  spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
+  spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
+  spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
   spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
 
   // Try a few sample commands (0x01, 0x02, 0x04)
