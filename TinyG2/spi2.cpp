@@ -270,12 +270,19 @@ void spi2_test() {
 
   spi2->setChannel();
 
-  // Bogus commands
+  // Bogus commands (shouldn't appear on bus)
   spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
-  spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
-  spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
-  spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
-  spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
+  spi2_cmd(false, SPI2_WRITE, 0xAF, buf, 10);
+  spi2_cmd(false, SPI2_WRITE, 0x23, buf, 255);
+  spi2_cmd(false, SPI2_READ,  0x7A, buf, 0);
+  spi2_cmd(false, SPI2_READ,  0xFF, buf, 10);
+  spi2_cmd(false, SPI2_READ,  0x30, buf, 255);
+  spi2_cmd(true,  SPI2_WRITE, 0x4B, buf, 0);
+  spi2_cmd(true,  SPI2_WRITE, 0x5A, buf, 10);
+  spi2_cmd(true,  SPI2_WRITE, 0x88, buf, 255);
+  spi2_cmd(true,  SPI2_READ,  0x95, buf, 0);
+  spi2_cmd(true,  SPI2_READ,  0x05, buf, 10);
+  spi2_cmd(true,  SPI2_READ,  0x12, buf, 255);
 
   // Try a few sample commands (0x01, 0x02, 0x04)
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
