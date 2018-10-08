@@ -24,6 +24,7 @@
 #include "test.h"
 #include "util.h"
 #include "xio.h"
+#include "spi2.h"
 
 // regression test files
 #ifdef __CANNED_TESTS
@@ -54,13 +55,14 @@
 /*
  * run_test() - system tests from FLASH invoked by $test=n command
  *
- * 	By convention the character array containing the test must have the same 
+ * 	By convention the character array containing the test must have the same
  *	name as the file name.
  */
 uint8_t run_test(nvObj_t *nv)
 {
 	switch ((uint8_t)nv->value) {
 		case 0: { return (STAT_OK);}
+		case 20: { spi2_test(); break; }
 #ifdef __CANNED_TESTS
 /*
 		case 1: { xio_open(XIO_DEV_PGM, PGMFILE(&test_smoke),PGM_FLAGS); break;}
@@ -96,7 +98,7 @@ uint8_t run_test(nvObj_t *nv)
 /*
  * run_canned_startup() - run a string on startup
  *
- *	Pre-load the USB RX (input) buffer with some test strings that will be called 
+ *	Pre-load the USB RX (input) buffer with some test strings that will be called
  *	on startup. Be mindful of the char limit on the read buffer (RX_BUFFER_SIZE).
  *	It's best to create a test file for really complicated things.
  */
@@ -202,4 +204,3 @@ void run_canned_startup()	// uncomment in tinyg.h if you want to run this
 
 #endif // __CANNED_STARTUP
 }
-

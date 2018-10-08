@@ -48,6 +48,7 @@ void spi2_init() {
 // spi2_cmd: Start a SPI master transfer (read/write) using the provided buffer
 uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_buf, uint16_t num_data) {
 
+  int i = 0;
   int16_t ret;
   uint8_t sts_byte = SPI2_STS_ERR;
   uint32_t start_time;
@@ -61,12 +62,12 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
   // Command error checking, immediately return error on malformed command
   switch (cmd_byte) {
 
-    // Single byte master write commands (0x01, 0x02, 0x04)
+    // Single byte master write commands (0x01, 0x02)
     case SPI2_CMD_RST_ENC_POS:
     case SPI2_CMD_START_TOOL_TIP:
 
       if ((slave_req) || (rnw != SPI2_WRITE) || (num_data > 0)) {
-        fprintf_P(stderr, PSTR("\nERROR: Malformed single byte write (0x01, 0x02)\n"));
+        fprintf_P(stderr, PSTR("\nERROR: Malformed single byte write (Command 0x%02X)\n"),cmd_byte);
         return SPI2_STS_ERR;
       }
       break;
@@ -75,7 +76,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
     case SPI2_CMD_REQ_ENC_POS:
 
       if ((slave_req) || (rnw != SPI2_READ) || (num_data != (SPI2_NUM_AXES * 4))) {
-        fprintf_P(stderr, PSTR("\nERROR: Malformed multi byte read (0x04)\n"));
+        fprintf_P(stderr, PSTR("\nERROR: Malformed multi byte read (Command 0x%02X)\n"),cmd_byte);
         return SPI2_STS_ERR;
       }
       break;
@@ -84,7 +85,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
     case SPI2_CMD_SND_MTR_POS:
 
       if ((!slave_req) || (rnw != SPI2_WRITE) || (num_data != (SPI2_NUM_AXES * 4))) {
-        fprintf_P(stderr, PSTR("\nERROR: Malformed slave-requested write (0x03)\n"));
+        fprintf_P(stderr, PSTR("\nERROR: Malformed slave-requested write (Command 0x%02X)\n"),cmd_byte);
         return SPI2_STS_ERR;
       }
       break;
@@ -92,12 +93,12 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
     // Not a command, default to error
     default:
 
-      fprintf_P(stderr, PSTR("\nERROR: Invalid command\n"));
+      fprintf_P(stderr, PSTR("\nERROR: Invalid command 0x%02X\n"),cmd_byte);
       return SPI2_STS_ERR;
   }
 
   // Attempt command up to the specified number of retries or when OK status
-  for (int i = 0; (i < SPI2_NUM_RETRIES && sts_byte != SPI2_STS_OK); i++) {
+  for (i = 0; (i < SPI2_NUM_RETRIES && sts_byte != SPI2_STS_OK); i++) {
 
     // Select the SS for the SPI2 slave
     spi2->setChannel();
@@ -110,6 +111,11 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
       while(!spi2->is_tx_empty() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT));
       while(spi2->is_rx_ready() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {
         spi2->read();
+      }
+      // Timed out, report and exit with timeout status
+      if ((SysTickTimer_getValue() - start_time) >= SPI2_TIMEOUT) {
+        fprintf_P(stderr, PSTR("\nERROR: Timed out waiting on command byte\n"));
+        return SPI2_STS_TIMEOUT;
       }
       // Request Encoder Positions command requires time for SPI2 to prep data - TODO fix performance
       if (cmd_byte == SPI2_CMD_REQ_ENC_POS) {
@@ -131,6 +137,11 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
       while(spi2->is_rx_ready() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {
         spi2->read();
       }
+      // Timed out, report and exit with timeout status
+      if ((SysTickTimer_getValue() - start_time) >= SPI2_TIMEOUT) {
+        fprintf_P(stderr, PSTR("\nERROR: Timed out waiting on data bytes\n"));
+        return SPI2_STS_TIMEOUT;
+      }
       delay_us(25);
     }
 
@@ -139,12 +150,23 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
     while (((ret = spi2->read(true)) < 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
       delay_us(25);
     }
+    // Timed out, report and exit with timeout status
+    if ((SysTickTimer_getValue() - start_time) >= SPI2_TIMEOUT) {
+      fprintf_P(stderr, PSTR("\nERROR: Timed out waiting on status byte\n"));
+      return SPI2_STS_TIMEOUT;
+    }
 
     // Convert return to status byte
     sts_byte = (uint8_t)(ret & 0x00FF);
 
     // Flush the system in case leftovers in buffers
     spi2->flush();
+  }
+
+  // Exceeded number of retries, report and exit with retries status
+  if (i >= SPI2_NUM_RETRIES) {
+    fprintf_P(stderr, PSTR("\nERROR: Maximum number of retries exceeded\n"));
+    return SPI2_STS_RETRIES;
   }
 
   // Return the status code
@@ -157,11 +179,6 @@ uint8_t spi2_slave_handler() {
   uint8_t cmd, status;
   uint32_t start_time;
   int16_t ret;
-
-  //TEMP Generate random data for testing
-  for (int i = 0; i < SPI2_BUF_SIZE; i++) {
-    buf[i] = (i + 10) * 2;
-  }
 
   // SPI2 Slave Interrupt received
   if (spi2_slave_int) {
@@ -181,6 +198,11 @@ uint8_t spi2_slave_handler() {
     start_time = SysTickTimer_getValue();
     while (((ret = spi2->read(true)) < 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
       delay_us(25);
+    }
+    // Timed out, report and exit with timeout status
+    if ((SysTickTimer_getValue() - start_time) >= SPI2_TIMEOUT) {
+      fprintf_P(stderr, PSTR("\nERROR: Timed out waiting on slave command byte\n"));
+      return SPI2_STS_TIMEOUT;
     }
 
     // Convert return to command
@@ -270,7 +292,38 @@ void spi2_test() {
 
   spi2->setChannel();
 
+  uint8_t *null_buf = 0;
+
+  fprintf_P(stderr, PSTR("\n*** SPI2 Test BEGIN ***\n"));
+
+  // NULL Buffer
+  fprintf_P(stderr, PSTR("\nSending command w/ NULL buffer...\n"));
+  spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, null_buf, (SPI2_NUM_AXES*4));
+
+  // Malformed commands (shouldn't appear on bus)
+  fprintf_P(stderr, PSTR("\nSending malformed commands...\n"));
+  spi2_cmd(true,  SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
+  spi2_cmd(false, SPI2_READ,  SPI2_CMD_RST_ENC_POS, buf, 0);
+  spi2_cmd(false, 0x99,       SPI2_CMD_RST_ENC_POS, buf, 0);
+  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 10);
+
+  spi2_cmd(true,  SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
+  spi2_cmd(false, SPI2_READ,  SPI2_CMD_START_TOOL_TIP, buf, 0);
+  spi2_cmd(false, 0x99,       SPI2_CMD_START_TOOL_TIP, buf, 0);
+  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 10);
+
+  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_SND_MTR_POS, buf, (SPI2_NUM_AXES*4));
+  spi2_cmd(true,  SPI2_READ,  SPI2_CMD_SND_MTR_POS, buf, (SPI2_NUM_AXES*4));
+  spi2_cmd(true,  0x99,       SPI2_CMD_SND_MTR_POS, buf, (SPI2_NUM_AXES*4));
+  spi2_cmd(true,  SPI2_WRITE, SPI2_CMD_SND_MTR_POS, buf, 10);
+
+  spi2_cmd(true,  SPI2_READ,  SPI2_CMD_REQ_ENC_POS, buf, (SPI2_NUM_AXES*4));
+  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_REQ_ENC_POS, buf, (SPI2_NUM_AXES*4));
+  spi2_cmd(false, 0x99,       SPI2_CMD_REQ_ENC_POS, buf, (SPI2_NUM_AXES*4));
+  spi2_cmd(false, SPI2_READ,  SPI2_CMD_REQ_ENC_POS, buf, 10);
+
   // Bogus commands (shouldn't appear on bus)
+  fprintf_P(stderr, PSTR("\nSending bogus commands...\n"));
   spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
   spi2_cmd(false, SPI2_WRITE, 0xAF, buf, 10);
   spi2_cmd(false, SPI2_WRITE, 0x23, buf, 255);
@@ -285,11 +338,13 @@ void spi2_test() {
   spi2_cmd(true,  SPI2_READ,  0x12, buf, 255);
 
   // Try a few sample commands (0x01, 0x02, 0x04)
+  fprintf_P(stderr, PSTR("\nSending commands 0x01-0x02 and 0x04 in sequence...\n"));
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
   spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, (SPI2_NUM_AXES*4));
 
   // Random commands
+  fprintf_P(stderr, PSTR("\nSending random good/bad commands...\n"));
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
@@ -297,7 +352,11 @@ void spi2_test() {
   spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, (SPI2_NUM_AXES*4));
   spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
 
+  // Additional Manual Tests:
+  // Disconnect MOSI, MISO to test retry 3x and timeouts
   // Command 0x03 triggered by SPI2 slave interrupt request
+
+  fprintf_P(stderr, PSTR("\n*** SPI2 Test END ***\n"));
 }
 
 // SPI2 Slave ISR
@@ -330,10 +389,12 @@ stat_t spi2_cmd_helper(uint8_t sts_byte) {
   stat_t status;
 
   // Convert status byte to TinyG status code
-  // (0x00 over SPI2 not in use, potential false OK status) - TODO use TinyG status only
+  // (0x00 over SPI2 not in use, potential false OK status)
   switch (sts_byte) {
-    case SPI2_STS_OK: status = STAT_OK; break;
-    default: status = STAT_ERROR; break; // TODO - handle other non-OK statuses
+    case SPI2_STS_OK:       status = STAT_OK; break;
+    case SPI2_STS_TIMEOUT:  status = STAT_EAGAIN; break;
+    case SPI2_STS_RETRIES:  status = STAT_EAGAIN; break;
+    default:                status = STAT_ERROR; break;
   }
 
   return status;

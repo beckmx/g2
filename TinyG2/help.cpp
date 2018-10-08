@@ -126,6 +126,7 @@ Invoke self test by entering $test=N where N is one of:\n\
   $test=11 small moves test\n\
   $test=12 slow moves test\n\
   $test=13 coordinate system offset test (G92, G54-G59)\n\
+  $test=20 spi2 interface test\n\
 \n\
 Tests assume a centered XY origin and at least 80mm clearance in all directions\n\
 Tests assume Z has at least 40mm posiitive clearance\n\

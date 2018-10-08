@@ -45,6 +45,8 @@ extern "C" {
 
 #define SPI2_STS_OK             0x01  // OK Status
 #define SPI2_STS_ERR            0x02  // Error Status
+#define SPI2_STS_TIMEOUT        0x03  // Timeout Status
+#define SPI2_STS_RETRIES        0x04  // Exceeded Retries Status
 
 // Function Prototypes
 void spi2_init(void);
