@@ -144,6 +144,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
       }
       delay_us(25);
     }
+    delay_us(25);
 
     // Read the status
     start_time = SysTickTimer_getValue();
