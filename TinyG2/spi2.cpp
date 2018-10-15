@@ -97,6 +97,89 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       }
       break;
 
+    // Read Encoder Position command (0x40)
+    case SPI2_CMD_RD_ENC_POS:
+
+      if ((slave_req) || (wr_buf[0] > SPI2_A_ENC) || (wr_cnt != 1) || (rd_cnt != 4)) {
+        fprintf_P(stderr, PSTR("\nERROR: Malformed Read Encoder Position command (Command 0x%02X)\n"),cmd_byte);
+        return SPI2_STS_ERR;
+      }
+      break;
+
+    // User IO commands (0x41, 0x42)
+    case SPI2_CMD_SET_USER_IO:
+    case SPI2_CMD_CLR_USER_IO:
+
+      if ((slave_req) || (wr_buf[0] > 6) || (wr_cnt != 1) || (rd_cnt > 0)) {
+
+        fprintf_P(stderr, PSTR("\nERROR: Malformed User IO command (Command 0x%02X)\n"),cmd_byte);
+        return SPI2_STS_ERR;
+      }
+      break;
+
+    // Read User IO command (0x43)
+    case SPI2_CMD_RD_USER_IO:
+
+      if ((slave_req) || (wr_buf[0] > 6) || (wr_cnt != 1) || (rd_cnt != 1)) {
+
+        fprintf_P(stderr, PSTR("\nERROR: Malformed Read User IO command (Command 0x%02X)\n"),cmd_byte);
+        return SPI2_STS_ERR;
+      }
+      break;
+
+    // User LED commands (0x44, 0x45)
+    case SPI2_CMD_SET_USER_LED:
+    case SPI2_CMD_CLR_USER_LED:
+
+      if ((slave_req) || (wr_buf[0] > 2) || (wr_cnt != 1) || (rd_cnt > 0)) {
+
+        fprintf_P(stderr, PSTR("\nERROR: Malformed User LED command (Command 0x%02X)\n"),cmd_byte);
+        return SPI2_STS_ERR;
+      }
+      break;
+
+    // Read Interlock Loop command (0x46)
+    case SPI2_CMD_RD_ITR_LOOP:
+
+      if ((slave_req) || (wr_buf[0] > 1) || (wr_cnt != 1) || (rd_cnt != 1)) {
+
+        fprintf_P(stderr, PSTR("\nERROR: Malformed Read Interlock Loop command (Command 0x%02X)\n"),cmd_byte);
+        return SPI2_STS_ERR;
+      }
+      break;
+
+    // Set Spindle LED command (0x47)
+    case SPI2_CMD_SET_SPIN_LED:
+
+      if ((slave_req) || (wr_buf[0] > 2) || (wr_cnt != 5) || (rd_cnt > 0)) {
+
+        fprintf_P(stderr, PSTR("\nERROR: Malformed Set Spindle LED command (Command 0x%02X)\n"),cmd_byte);
+        return SPI2_STS_ERR;
+      }
+      break;
+
+    // Set Epsilon Command (0x48)
+    case SPI2_CMD_SET_EPS:
+
+      if ((slave_req) || (wr_cnt != 4) || (rd_cnt > 0)) {
+
+        fprintf_P(stderr, PSTR("\nERROR: Malformed Set Epsilon command (Command 0x%02X)\n"),cmd_byte);
+        return SPI2_STS_ERR;
+      }
+      break;
+
+    // Read ESC Current command (0x49) skipped (TODO - implement)
+
+    // Firmware Version command (0x4A)
+    case SPI2_CMD_FW_VER:
+
+      if ((slave_req) || (wr_cnt > 0) || (rd_cnt != 3)) {
+
+        fprintf_P(stderr, PSTR("\nERROR: Malformed Firmware Version command (Command 0x%02X)\n"),cmd_byte);
+        return SPI2_STS_ERR;
+      }
+      break;
+
     // Not a command, default to error
     default:
 
@@ -146,7 +229,12 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
         fprintf_P(stderr, PSTR("\nERROR: Timed out waiting on data bytes\n"));
         return SPI2_STS_TIMEOUT;
       }
-      delay_us(25);
+      // Read Encoder Positions command requires time for SPI2 to prep data - TODO fix performance
+      if (cmd_byte == SPI2_CMD_RD_ENC_POS) {
+        delay(1);
+      } else {
+        delay_us(25);
+      }
     }
     if (rd_cnt > 0) {
       spi2->read(rd_buf, rd_cnt, true);   // Read RX data (performs dummy writes, doesn't count if RDRF = 0)
@@ -348,8 +436,64 @@ void spi2_test() {
   spi2_cmd(false, SPI2_CMD_REQ_ENC_POS, wbuf, 0, rbuf, (SPI2_NUM_AXES*4));
 
   // Try the remaining user commands (0x40-0x4A) in sequence
-  //fprintf_P(stderr, PSTR("\nSending commands 0x40-0x4A in sequence...\n"));
-  //spi2_cmd(false, SPI2_READ, SPI2_CMD_RD_ENC_POS, buf, (SPI2_NUM_AXES*4));
+  fprintf_P(stderr, PSTR("\nSending commands 0x40-0x4A in sequence...\n"));
+
+  // Read all the encoder axes (0x40)
+  wbuf[0] = SPI2_X_ENC;
+  spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
+  wbuf[0] = SPI2_Y_ENC;
+  spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
+  wbuf[0] = SPI2_Z_ENC;
+  spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
+  wbuf[0] = SPI2_A_ENC;
+  spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
+
+  // Set and clear USER_IO6, reading after both steps (0x41-0x43)
+  wbuf[0] = 6;
+  spi2_cmd(false, SPI2_CMD_SET_USER_IO, wbuf, 1, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_RD_USER_IO,  wbuf, 1, rbuf, 1);
+  delay(500);
+  spi2_cmd(false, SPI2_CMD_CLR_USER_IO, wbuf, 1, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_RD_USER_IO,  wbuf, 1, rbuf, 1);
+
+  // Set and clear USER_LED2 (0x44-0x45)
+  wbuf[0] = 2;
+  spi2_cmd(false, SPI2_CMD_SET_USER_LED, wbuf, 1, rbuf, 0);
+  delay(500);
+  spi2_cmd(false, SPI2_CMD_CLR_USER_LED,  wbuf, 1, rbuf, 0);
+
+  // Read both interlock loops (0x46)
+  wbuf[0] = 0;
+  spi2_cmd(false, SPI2_CMD_RD_ITR_LOOP,  wbuf, 1, rbuf, 1);
+  wbuf[0] = 1;
+  spi2_cmd(false, SPI2_CMD_RD_ITR_LOOP,  wbuf, 1, rbuf, 1);
+
+  // Set Spindle LEDs on LED_DOUT0 to R, G, B and W (0x47)
+  wbuf[0] = 0;
+  wbuf[1] = 0xFF; wbuf[2] = 0x00; wbuf[3] = 0x00; wbuf[4] = 0x00; // Red
+  spi2_cmd(false, SPI2_CMD_SET_SPIN_LED,  wbuf, 5, rbuf, 0);
+  delay(500);
+  wbuf[1] = 0x00; wbuf[2] = 0xFF; wbuf[3] = 0x00; wbuf[4] = 0x00; // Blue
+  spi2_cmd(false, SPI2_CMD_SET_SPIN_LED,  wbuf, 5, rbuf, 0);
+  delay(500);
+  wbuf[1] = 0x00; wbuf[2] = 0x00; wbuf[3] = 0xFF; wbuf[4] = 0x00; // Green
+  spi2_cmd(false, SPI2_CMD_SET_SPIN_LED,  wbuf, 5, rbuf, 0);
+  delay(500);
+  wbuf[1] = 0x00; wbuf[2] = 0x00; wbuf[3] = 0x00; wbuf[4] = 0xFF; // White
+  spi2_cmd(false, SPI2_CMD_SET_SPIN_LED,  wbuf, 5, rbuf, 0);
+  delay(500);
+
+  // Set Epsilon to a random value (0x48)
+  wbuf[0] = 0x03;
+  wbuf[1] = 0x0A;
+  wbuf[2] = 0x07;
+  wbuf[3] = 0x0E;
+  spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 4, rbuf, 0);
+
+  // Read Current (0x49) - TODO implement
+
+  // Get Firmware Version (0x4A)
+  spi2_cmd(false, SPI2_CMD_FW_VER,  wbuf, 0, rbuf, 3);
 
   // Random commands
   fprintf_P(stderr, PSTR("\nSending random good/bad commands...\n"));

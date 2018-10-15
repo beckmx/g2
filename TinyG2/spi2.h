@@ -16,6 +16,12 @@ extern "C" {
 #define SPI2_NUM_RETRIES  3                        // Number of retries on error condition
 #define SPI2_TIMEOUT      100                      // SPI2 bus timeout (in ms)
 
+// Encoder Axes
+#define SPI2_X_ENC 0
+#define SPI2_Y_ENC 1
+#define SPI2_Z_ENC 2
+#define SPI2_A_ENC 3
+
 #define FLOAT_TO_U32(n) (uint32_t)(*(uint32_t*)&n)  // Convert from float to uint32_t
 #define U32_TO_FLOAT(n) ((float)(*(float*)&n))      // Convert from uint32_t to float
 
