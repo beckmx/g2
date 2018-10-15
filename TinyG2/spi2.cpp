@@ -11,9 +11,12 @@
 #include <stdio.h>
 #include <memory>
 
-// Buffer for passing data to SPI2 command processor
-uint8_t buf[SPI2_BUF_SIZE] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                              0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+// Buffers for passing data to SPI2 command processor
+uint8_t wbuf[SPI2_BUF_SIZE] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+uint8_t rbuf[SPI2_BUF_SIZE] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 // SPI2 Slave Interrupt Flag
 static volatile bool spi2_slave_int = false;
@@ -45,17 +48,20 @@ void spi2_init() {
 
 }
 
-// spi2_cmd: Start a SPI master transfer (read/write) using the provided buffer
-uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_buf, uint16_t num_data) {
+// spi2_cmd: Start a SPI master transfer (read/write) using the provided buffers
+uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_cnt, uint8_t *rd_buf, uint16_t rd_cnt) {
 
   int i = 0;
   int16_t ret;
   uint8_t sts_byte = SPI2_STS_ERR;
   uint32_t start_time;
 
-  // Check that incoming buffer properly initialized if needed
-  if ((num_data > 0) && (!data_buf)) {
-    fprintf_P(stderr, PSTR("\nERROR: Data buffer not initialized properly\n"));
+  // Check that incoming buffers properly initialized if needed
+  if ((wr_cnt > 0) && (!wr_buf)) {
+    fprintf_P(stderr, PSTR("\nERROR: Write data buffer not initialized properly\n"));
+    return SPI2_STS_ERR;
+  } else if ((rd_cnt > 0) && (!rd_buf)) {
+    fprintf_P(stderr, PSTR("\nERROR: Read data buffer not initialized properly\n"));
     return SPI2_STS_ERR;
   }
 
@@ -66,7 +72,8 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
     case SPI2_CMD_RST_ENC_POS:
     case SPI2_CMD_START_TOOL_TIP:
 
-      if ((slave_req) || (rnw != SPI2_WRITE) || (num_data > 0)) {
+      if ((slave_req) || (wr_cnt > 0) || (rd_cnt > 0)) {
+
         fprintf_P(stderr, PSTR("\nERROR: Malformed single byte write (Command 0x%02X)\n"),cmd_byte);
         return SPI2_STS_ERR;
       }
@@ -75,7 +82,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
     // Multi byte master read commands (0x04)
     case SPI2_CMD_REQ_ENC_POS:
 
-      if ((slave_req) || (rnw != SPI2_READ) || (num_data != (SPI2_NUM_AXES * 4))) {
+      if ((slave_req) || (wr_cnt > 0) || (rd_cnt != (SPI2_NUM_AXES * 4))) {
         fprintf_P(stderr, PSTR("\nERROR: Malformed multi byte read (Command 0x%02X)\n"),cmd_byte);
         return SPI2_STS_ERR;
       }
@@ -84,7 +91,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
     // Slave-requested write commands (0x03)
     case SPI2_CMD_SND_MTR_POS:
 
-      if ((!slave_req) || (rnw != SPI2_WRITE) || (num_data != (SPI2_NUM_AXES * 4))) {
+      if ((!slave_req) || (wr_cnt != (SPI2_NUM_AXES * 4)) || (rd_cnt > 0)) {
         fprintf_P(stderr, PSTR("\nERROR: Malformed slave-requested write (Command 0x%02X)\n"),cmd_byte);
         return SPI2_STS_ERR;
       }
@@ -125,12 +132,9 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
       }
     }
 
-    // Process data bytes if available
-    if (rnw && (num_data > 0)) {
-      spi2->read(data_buf, num_data, true);   // Read RX data (performs dummy writes, doesn't count if RDRF = 0)
-      delay_us(25);
-    } else if (num_data > 0) {
-      spi2->write(data_buf, num_data, true);
+    // Process data bytes if available; process write data, then read data
+    if (wr_cnt > 0) {
+      spi2->write(wr_buf, wr_cnt, true);
       // Wait for TXEMPTY to flush, then clear unused RX data without invoking read
       start_time = SysTickTimer_getValue();
       while(!spi2->is_tx_empty() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT));
@@ -142,6 +146,10 @@ uint8_t spi2_cmd(bool slave_req, uint8_t rnw, uint8_t cmd_byte, uint8_t *data_bu
         fprintf_P(stderr, PSTR("\nERROR: Timed out waiting on data bytes\n"));
         return SPI2_STS_TIMEOUT;
       }
+      delay_us(25);
+    }
+    if (rd_cnt > 0) {
+      spi2->read(rd_buf, rd_cnt, true);   // Read RX data (performs dummy writes, doesn't count if RDRF = 0)
       delay_us(25);
     }
     delay_us(25);
@@ -237,12 +245,12 @@ uint8_t spi2_slave_handler() {
 
 // spi2_reset_encoder_positions: reset encoder positions (command 0x01)
 uint8_t spi2_reset_encoder_positions() {
-  return (spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, NULL, 0));
+  return (spi2_cmd(false, SPI2_CMD_RST_ENC_POS, NULL, 0, NULL, 0));
 }
 
 // spi2_start_tool_tip: start tool tip command (command 0x02)
 uint8_t spi2_start_tool_tip() {
-  return (spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, NULL, 0));
+  return (spi2_cmd(false, SPI2_CMD_START_TOOL_TIP, NULL, 0, NULL, 0));
 }
 
 // spi2_send_motor_positions: send motor positions (command 0x03)
@@ -259,15 +267,15 @@ uint8_t spi2_send_motor_positions() {
     u = FLOAT_TO_U32(f);
 
     // Break 32-bits into separate bytes
-    buf[axis*4] = (uint8_t)((u >> 24) & 0xFF);
-    buf[axis*4+1] = (uint8_t)((u >> 16) & 0xFF);
-    buf[axis*4+2] = (uint8_t)((u >> 8) & 0xFF);
-    buf[axis*4+3] = (uint8_t)(u & 0xFF);
+    wbuf[axis*4] = (uint8_t)((u >> 24) & 0xFF);
+    wbuf[axis*4+1] = (uint8_t)((u >> 16) & 0xFF);
+    wbuf[axis*4+2] = (uint8_t)((u >> 8) & 0xFF);
+    wbuf[axis*4+3] = (uint8_t)(u & 0xFF);
 
   }
 
   // Write out buffer with motor position data to SPI slave and return status
-  return(spi2_cmd(true, SPI2_WRITE, SPI2_CMD_SND_MTR_POS, buf, (SPI2_NUM_AXES*4)));
+  return(spi2_cmd(true, SPI2_CMD_SND_MTR_POS, wbuf, (SPI2_NUM_AXES*4), NULL, 0));
 }
 
 // spi2_request_encoder_positions: request encoder positions (command 0x04)
@@ -277,11 +285,11 @@ uint8_t spi2_request_encoder_positions() {
   uint32_t u;
 
   // Get the encoder position data as one 16-byte transfer
-	st = spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, (SPI2_NUM_AXES*4));
+  st = spi2_cmd(false, SPI2_CMD_REQ_ENC_POS, NULL, 0, rbuf, (SPI2_NUM_AXES*4));
 
   // Convert the data in the buffer to their approriate array values
   for (uint8_t axis = AXIS_X; axis < SPI2_NUM_AXES; axis++) {
-    u = ((buf[axis*4] << 24) + (buf[axis*4+1] << 16) + (buf[axis*4+2] << 8) + (buf[axis*4+3]));
+    u = ((rbuf[axis*4] << 24) + (rbuf[axis*4+1] << 16) + (rbuf[axis*4+2] << 8) + (rbuf[axis*4+3]));
     spi2_encoder_pos[axis] = U32_TO_FLOAT(u);
   }
 
@@ -297,61 +305,62 @@ void spi2_test() {
 
   fprintf_P(stderr, PSTR("\n*** SPI2 Test BEGIN ***\n"));
 
-  // NULL Buffer
-  fprintf_P(stderr, PSTR("\nSending command w/ NULL buffer...\n"));
-  spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, null_buf, (SPI2_NUM_AXES*4));
+  // NULL Buffers
+  fprintf_P(stderr, PSTR("\nSending commands w/ NULL buffers...\n"));
+  spi2_cmd(false, SPI2_CMD_SND_MTR_POS, null_buf, (SPI2_NUM_AXES*4), rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_REQ_ENC_POS, wbuf, 0, null_buf, (SPI2_NUM_AXES*4));
 
   // Malformed commands (shouldn't appear on bus)
   fprintf_P(stderr, PSTR("\nSending malformed commands...\n"));
-  spi2_cmd(true,  SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
-  spi2_cmd(false, SPI2_READ,  SPI2_CMD_RST_ENC_POS, buf, 0);
-  spi2_cmd(false, 0x99,       SPI2_CMD_RST_ENC_POS, buf, 0);
-  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 10);
+  spi2_cmd(true,  SPI2_CMD_RST_ENC_POS, wbuf, 0, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_RST_ENC_POS, wbuf, 10, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_RST_ENC_POS, wbuf, 0, rbuf, 10);
 
-  spi2_cmd(true,  SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
-  spi2_cmd(false, SPI2_READ,  SPI2_CMD_START_TOOL_TIP, buf, 0);
-  spi2_cmd(false, 0x99,       SPI2_CMD_START_TOOL_TIP, buf, 0);
-  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 10);
+  spi2_cmd(true,  SPI2_CMD_START_TOOL_TIP, wbuf, 0, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_START_TOOL_TIP, wbuf, 10, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_START_TOOL_TIP, wbuf, 0, rbuf, 10);
 
-  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_SND_MTR_POS, buf, (SPI2_NUM_AXES*4));
-  spi2_cmd(true,  SPI2_READ,  SPI2_CMD_SND_MTR_POS, buf, (SPI2_NUM_AXES*4));
-  spi2_cmd(true,  0x99,       SPI2_CMD_SND_MTR_POS, buf, (SPI2_NUM_AXES*4));
-  spi2_cmd(true,  SPI2_WRITE, SPI2_CMD_SND_MTR_POS, buf, 10);
+  spi2_cmd(false, SPI2_CMD_SND_MTR_POS, wbuf, (SPI2_NUM_AXES*4), rbuf, 0);
+  spi2_cmd(true,  SPI2_CMD_SND_MTR_POS, wbuf, 0, rbuf, (SPI2_NUM_AXES*4));
+  spi2_cmd(true,  SPI2_CMD_SND_MTR_POS, wbuf, (SPI2_NUM_AXES*4), rbuf, (SPI2_NUM_AXES*4));
 
-  spi2_cmd(true,  SPI2_READ,  SPI2_CMD_REQ_ENC_POS, buf, (SPI2_NUM_AXES*4));
-  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_REQ_ENC_POS, buf, (SPI2_NUM_AXES*4));
-  spi2_cmd(false, 0x99,       SPI2_CMD_REQ_ENC_POS, buf, (SPI2_NUM_AXES*4));
-  spi2_cmd(false, SPI2_READ,  SPI2_CMD_REQ_ENC_POS, buf, 10);
+  spi2_cmd(true,  SPI2_CMD_REQ_ENC_POS, wbuf, 0, rbuf, (SPI2_NUM_AXES*4));
+  spi2_cmd(false, SPI2_CMD_REQ_ENC_POS, wbuf, (SPI2_NUM_AXES*4), rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_REQ_ENC_POS, wbuf, (SPI2_NUM_AXES*4), rbuf, (SPI2_NUM_AXES*4));
+
+  //TODO Add malformed for 0x40-0x4A
 
   // Bogus commands (shouldn't appear on bus)
   fprintf_P(stderr, PSTR("\nSending bogus commands...\n"));
-  spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
-  spi2_cmd(false, SPI2_WRITE, 0xAF, buf, 10);
-  spi2_cmd(false, SPI2_WRITE, 0x23, buf, 255);
-  spi2_cmd(false, SPI2_READ,  0x7A, buf, 0);
-  spi2_cmd(false, SPI2_READ,  0xFF, buf, 10);
-  spi2_cmd(false, SPI2_READ,  0x30, buf, 255);
-  spi2_cmd(true,  SPI2_WRITE, 0x4B, buf, 0);
-  spi2_cmd(true,  SPI2_WRITE, 0x5A, buf, 10);
-  spi2_cmd(true,  SPI2_WRITE, 0x88, buf, 255);
-  spi2_cmd(true,  SPI2_READ,  0x95, buf, 0);
-  spi2_cmd(true,  SPI2_READ,  0x05, buf, 10);
-  spi2_cmd(true,  SPI2_READ,  0x12, buf, 255);
+  spi2_cmd(false, 0x00, wbuf, 0, rbuf, 0);
+  spi2_cmd(false, 0xAF, wbuf, 0, rbuf, 10);
+  spi2_cmd(false, 0x23, wbuf, 255, rbuf, 0);
+  spi2_cmd(false, 0x7A, wbuf, 255, rbuf, 10);
+  spi2_cmd(true,  0x4B, wbuf, 0, rbuf, 0);
+  spi2_cmd(true,  0x5A, wbuf, 0, rbuf, 10);
+  spi2_cmd(true,  0x88, wbuf, 255, rbuf, 0);
+  spi2_cmd(true,  0x95, wbuf, 255, rbuf, 10);
 
-  // Try a few sample commands (0x01, 0x02, 0x04)
+  // Try the primary commands (0x01, 0x02, 0x04) in sequence
   fprintf_P(stderr, PSTR("\nSending commands 0x01-0x02 and 0x04 in sequence...\n"));
-  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
-  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
-  spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, (SPI2_NUM_AXES*4));
+  spi2_cmd(false, SPI2_CMD_RST_ENC_POS, wbuf, 0, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_START_TOOL_TIP, wbuf, 0, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_REQ_ENC_POS, wbuf, 0, rbuf, (SPI2_NUM_AXES*4));
+
+  // Try the remaining user commands (0x40-0x4A) in sequence
+  //fprintf_P(stderr, PSTR("\nSending commands 0x40-0x4A in sequence...\n"));
+  //spi2_cmd(false, SPI2_READ, SPI2_CMD_RD_ENC_POS, buf, (SPI2_NUM_AXES*4));
 
   // Random commands
   fprintf_P(stderr, PSTR("\nSending random good/bad commands...\n"));
-  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_START_TOOL_TIP, buf, 0);
-  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
-  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
-  spi2_cmd(false, SPI2_WRITE, 0x00, buf, 0);
-  spi2_cmd(false, SPI2_READ, SPI2_CMD_REQ_ENC_POS, buf, (SPI2_NUM_AXES*4));
-  spi2_cmd(false, SPI2_WRITE, SPI2_CMD_RST_ENC_POS, buf, 0);
+  spi2_cmd(false, SPI2_CMD_START_TOOL_TIP, wbuf, 0, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_RST_ENC_POS, wbuf, 0, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_RST_ENC_POS, wbuf, 0, rbuf, 0);
+  spi2_cmd(false, 0x00, wbuf, 0, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_REQ_ENC_POS, wbuf, 0, rbuf, (SPI2_NUM_AXES*4));
+  spi2_cmd(false, SPI2_CMD_RST_ENC_POS, wbuf, 0, rbuf, 0);
+
+  //TODO Add random 0x40-0x4A commands
 
   // Additional Manual Tests:
   // Disconnect MOSI, MISO to test retry 3x and timeouts

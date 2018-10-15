@@ -19,10 +19,6 @@ extern "C" {
 #define FLOAT_TO_U32(n) (uint32_t)(*(uint32_t*)&n)  // Convert from float to uint32_t
 #define U32_TO_FLOAT(n) ((float)(*(float*)&n))      // Convert from uint32_t to float
 
-// Direction
-#define SPI2_WRITE 0x00
-#define SPI2_READ  0x01
-
 // SPI2 Command Set
 #define SPI2_CMD_RST_ENC_POS    0x01  // Reset Encoder Positions to Zero
 #define SPI2_CMD_START_TOOL_TIP 0x02  // Start Tool Tip Command
@@ -50,7 +46,7 @@ extern "C" {
 
 // Function Prototypes
 void spi2_init(void);
-uint8_t spi2_cmd(bool, uint8_t, uint8_t, uint8_t*, uint16_t);
+uint8_t spi2_cmd(bool, uint8_t, uint8_t*, uint16_t, uint8_t *, uint16_t);
 uint8_t spi2_slave_handler(void);
 uint8_t spi2_reset_encoder_positions(void);
 uint8_t spi2_start_tool_tip(void);
