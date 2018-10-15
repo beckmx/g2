@@ -416,7 +416,69 @@ void spi2_test() {
   spi2_cmd(false, SPI2_CMD_REQ_ENC_POS, wbuf, (SPI2_NUM_AXES*4), rbuf, 0);
   spi2_cmd(false, SPI2_CMD_REQ_ENC_POS, wbuf, (SPI2_NUM_AXES*4), rbuf, (SPI2_NUM_AXES*4));
 
-  //TODO Add malformed for 0x40-0x4A
+  wbuf[0] = 0;
+  spi2_cmd(true,  SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
+  spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 10, rbuf, 4);
+  spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 10);
+  wbuf[0] = 0x80;
+  spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
+
+  wbuf[0] = 0;
+  spi2_cmd(true,  SPI2_CMD_SET_USER_IO, wbuf, 1, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_SET_USER_IO, wbuf, 10, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_SET_USER_IO, wbuf, 1, rbuf, 10);
+  wbuf[0] = 0x80;
+  spi2_cmd(false, SPI2_CMD_SET_USER_IO, wbuf, 1, rbuf, 0);
+
+  wbuf[0] = 0;
+  spi2_cmd(true,  SPI2_CMD_CLR_USER_IO, wbuf, 1, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_CLR_USER_IO, wbuf, 10, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_CLR_USER_IO, wbuf, 1, rbuf, 10);
+  wbuf[0] = 0x80;
+  spi2_cmd(false, SPI2_CMD_CLR_USER_IO, wbuf, 1, rbuf, 0);
+
+  wbuf[0] = 0;
+  spi2_cmd(true,  SPI2_CMD_RD_USER_IO,  wbuf, 1, rbuf, 1);
+  spi2_cmd(false, SPI2_CMD_RD_USER_IO,  wbuf, 10, rbuf, 1);
+  spi2_cmd(false, SPI2_CMD_RD_USER_IO,  wbuf, 1, rbuf, 10);
+  wbuf[0] = 0x80;
+  spi2_cmd(false, SPI2_CMD_RD_USER_IO,  wbuf, 1, rbuf, 1);
+
+  wbuf[0] = 0;
+  spi2_cmd(true,  SPI2_CMD_SET_USER_LED, wbuf, 1, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_SET_USER_LED, wbuf, 10, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_SET_USER_LED, wbuf, 1, rbuf, 10);
+  wbuf[0] = 0x80;
+  spi2_cmd(false, SPI2_CMD_SET_USER_LED, wbuf, 1, rbuf, 0);
+
+  wbuf[0] = 0;
+  spi2_cmd(true,  SPI2_CMD_CLR_USER_LED,  wbuf, 1, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_CLR_USER_LED,  wbuf, 10, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_CLR_USER_LED,  wbuf, 1, rbuf, 10);
+  wbuf[0] = 0x80;
+  spi2_cmd(false, SPI2_CMD_CLR_USER_LED,  wbuf, 1, rbuf, 0);
+
+  wbuf[0] = 0;
+  spi2_cmd(true, SPI2_CMD_RD_ITR_LOOP,  wbuf, 1, rbuf, 1);
+  spi2_cmd(false, SPI2_CMD_RD_ITR_LOOP,  wbuf, 10, rbuf, 1);
+  spi2_cmd(false, SPI2_CMD_RD_ITR_LOOP,  wbuf, 1, rbuf, 10);
+  wbuf[0] = 0x80;
+  spi2_cmd(false, SPI2_CMD_RD_ITR_LOOP,  wbuf, 1, rbuf, 1);
+
+  wbuf[0] = 0;
+  spi2_cmd(true,  SPI2_CMD_SET_SPIN_LED,  wbuf, 5, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_SET_SPIN_LED,  wbuf, 10, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_SET_SPIN_LED,  wbuf, 5, rbuf, 10);
+  wbuf[0] = 0x80;
+  spi2_cmd(false, SPI2_CMD_SET_SPIN_LED,  wbuf, 5, rbuf, 0);
+
+  spi2_cmd(true,  SPI2_CMD_SET_EPS,  wbuf, 4, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 10, rbuf, 0);
+  spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 4, rbuf, 10);
+
+  spi2_cmd(true,  SPI2_CMD_FW_VER,  wbuf, 0, rbuf, 3);
+  spi2_cmd(false, SPI2_CMD_FW_VER,  wbuf, 10, rbuf, 3);
+  spi2_cmd(false, SPI2_CMD_FW_VER,  wbuf, 0, rbuf, 10);
 
   // Bogus commands (shouldn't appear on bus)
   fprintf_P(stderr, PSTR("\nSending bogus commands...\n"));
@@ -473,10 +535,10 @@ void spi2_test() {
   wbuf[1] = 0xFF; wbuf[2] = 0x00; wbuf[3] = 0x00; wbuf[4] = 0x00; // Red
   spi2_cmd(false, SPI2_CMD_SET_SPIN_LED,  wbuf, 5, rbuf, 0);
   delay(500);
-  wbuf[1] = 0x00; wbuf[2] = 0xFF; wbuf[3] = 0x00; wbuf[4] = 0x00; // Blue
+  wbuf[1] = 0x00; wbuf[2] = 0xFF; wbuf[3] = 0x00; wbuf[4] = 0x00; // Green
   spi2_cmd(false, SPI2_CMD_SET_SPIN_LED,  wbuf, 5, rbuf, 0);
   delay(500);
-  wbuf[1] = 0x00; wbuf[2] = 0x00; wbuf[3] = 0xFF; wbuf[4] = 0x00; // Green
+  wbuf[1] = 0x00; wbuf[2] = 0x00; wbuf[3] = 0xFF; wbuf[4] = 0x00; // Blue
   spi2_cmd(false, SPI2_CMD_SET_SPIN_LED,  wbuf, 5, rbuf, 0);
   delay(500);
   wbuf[1] = 0x00; wbuf[2] = 0x00; wbuf[3] = 0x00; wbuf[4] = 0xFF; // White
@@ -499,12 +561,23 @@ void spi2_test() {
   fprintf_P(stderr, PSTR("\nSending random good/bad commands...\n"));
   spi2_cmd(false, SPI2_CMD_START_TOOL_TIP, wbuf, 0, rbuf, 0);
   spi2_cmd(false, SPI2_CMD_RST_ENC_POS, wbuf, 0, rbuf, 0);
+  wbuf[0] = 0;
+  wbuf[1] = 0x00; wbuf[2] = 0xFF; wbuf[3] = 0x00; wbuf[4] = 0x00; // Green
+  spi2_cmd(false, SPI2_CMD_SET_SPIN_LED,  wbuf, 5, rbuf, 0);
+  delay(500);
   spi2_cmd(false, SPI2_CMD_RST_ENC_POS, wbuf, 0, rbuf, 0);
   spi2_cmd(false, 0x00, wbuf, 0, rbuf, 0);
+  wbuf[0] = 2;
+  spi2_cmd(false, SPI2_CMD_SET_USER_LED, wbuf, 1, rbuf, 0);
   spi2_cmd(false, SPI2_CMD_REQ_ENC_POS, wbuf, 0, rbuf, (SPI2_NUM_AXES*4));
+  wbuf[0] = 0x03;
+  wbuf[1] = 0x0A;
+  wbuf[2] = 0x07;
+  wbuf[3] = 0x0E;
+  spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 4, rbuf, 0);
   spi2_cmd(false, SPI2_CMD_RST_ENC_POS, wbuf, 0, rbuf, 0);
-
-  //TODO Add random 0x40-0x4A commands
+  wbuf[0] = SPI2_Z_ENC;
+  spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
 
   // Additional Manual Tests:
   // Disconnect MOSI, MISO to test retry 3x and timeouts
