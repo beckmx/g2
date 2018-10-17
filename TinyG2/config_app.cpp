@@ -567,8 +567,16 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","s268", _f0, 0, spi2_cmd68_print, get_nul, spi2_cmd68_set,(float *)&cs.null,0 },						// set user led
 	{ "","s269", _f0, 0, spi2_cmd69_print, get_nul, spi2_cmd69_set,(float *)&cs.null,0 },						// clear user led
 	{ "","s270", _f0, 0, spi2_cmd70_print, get_ui8, spi2_cmd70_set,(float *)&spi2_itr_val },  			// read interlock loop
-	{ "","s271", _f0, 0, spi2_cmd71_print, get_nul, spi2_cmd71_set,(float *)&cs.null,0 },						// set spindle led
+
+																																																	// set spindle led
+	{ "s271","s271l", _f0, 0, tx_print_nul, get_nul, set_nul,(float *)&cs.null,0 },									// strip index
+	{ "s271","s271r", _f0, 0, tx_print_nul, get_nul, set_nul,(float *)&cs.null,0 },									// red
+	{ "s271","s271g", _f0, 0, tx_print_nul, get_nul, set_nul,(float *)&cs.null,0 },									// green
+	{ "s271","s271b", _f0, 0, tx_print_nul, get_nul, set_nul,(float *)&cs.null,0 },									// blue
+	{ "s271","s271w", _f0, 0, tx_print_nul, get_nul, set_nul,(float *)&cs.null,0 },									// white
+
 	{ "","s272", _f0, 0, spi2_cmd72_print, get_nul, spi2_cmd72_set,(float *)&cs.null,0 },						// set epsilon
+
 																																																	// read firmware version
 	{ "s274","s274a", _f0, 0, spi2_cmd74_print, get_ui8, set_nul,(float *)&spi2_fw_ver.major },	 	  // major
 	{ "s274","s274i", _f0, 0, spi2_cmd74_print, get_ui8, set_nul,(float *)&spi2_fw_ver.minor },			// minor
@@ -725,6 +733,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","udd", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
 
 	{ "","s24", _f0, 0, tx_print_nul, get_grp, spi2_cmd4_set,(float *)&cs.null,0 },		// request encoder position group
+	{ "","s271", _f0, 0, tx_print_nul, get_nul, spi2_cmd71_set,(float *)&cs.null,0 },	// spindle led group
 	{ "","s274", _f0, 0, tx_print_nul, get_grp, spi2_cmd74_set,(float *)&cs.null,0 },	// firmware version group
 
 #ifdef __DIAGNOSTIC_PARAMETERS
@@ -749,7 +758,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 /***** Make sure these defines line up with any changes in the above table *****/
 
 #define NV_COUNT_UBER_GROUPS 	4 		// count of uber-groups, above
-#define STANDARD_GROUPS 			36		// count of standard groups, excluding diagnostic parameter groups
+#define STANDARD_GROUPS 			37		// count of standard groups, excluding diagnostic parameter groups
 
 #if (MOTORS >= 5)
 #define MOTOR_GROUP_5			1

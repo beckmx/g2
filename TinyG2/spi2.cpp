@@ -720,6 +720,13 @@ static const char fw_ver1[] PROGMEM = "MINOR Version";
 static const char fw_ver2[] PROGMEM = "REVISION";
 static const char *const fw_vers[] PROGMEM = { fw_ver0, fw_ver1, fw_ver2 };
 
+/*static const char spd_led_desc0[] PROGMEM = "Index";
+static const char spd_led_desc1[] PROGMEM = "Red Value";
+static const char spd_led_desc2[] PROGMEM = "Green Value";
+static const char spd_led_desc3[] PROGMEM = "Blue Value";
+static const char spd_led_desc4[] PROGMEM = "White Value";
+static const char *const spd_led_descs[] PROGMEM = { spd_led_desc0, spd_led_desc1, spd_led_desc2, spd_led_desc3, spd_led_desc4 };
+*/
 static const char fmt_spi2_cmd1[] PROGMEM  = "Reset Encoder Positions to Zero\n";
 static const char fmt_spi2_cmd2[] PROGMEM  = "Start Tool Tip Command\n";
 static const char fmt_spi2_cmd4[] PROGMEM  = "%c Encoder Position:%15.3f%s\n";
@@ -730,7 +737,7 @@ static const char fmt_spi2_cmd67[] PROGMEM = "User IO value: %u\n";
 static const char fmt_spi2_cmd68[] PROGMEM = "Set User LED %u\n";
 static const char fmt_spi2_cmd69[] PROGMEM = "Clear User LED %u\n";
 static const char fmt_spi2_cmd70[] PROGMEM = "Interlock Loop value: %u\n";
-static const char fmt_spi2_cmd71[] PROGMEM = "Set Spindle LED %d to %2X %2X %2X %2X (RGBW)\n";
+static const char fmt_spi2_cmd71[] PROGMEM = "Spindle LED %s: %X\n";
 static const char fmt_spi2_cmd72[] PROGMEM = "Set Epsilon to %5.3f\n";
 static const char fmt_spi2_cmd74[] PROGMEM = "Firmware %s Number: %u\n";
 
@@ -762,6 +769,19 @@ static int8_t _get_fw_ver(const index_t index)
 	return (ptr - fw_ver_tokens);
 }
 
+/*static int8_t _get_spd_led_desc(const index_t index)
+{
+	char_t *ptr;
+	char_t tmp[TOKEN_LEN+1];
+	char_t spd_led_tokens[] = {"lrgbw"};
+
+	strncpy_P(tmp, cfgArray[index].token, TOKEN_LEN);	// kind of a hack. Looks for a description type
+	if ((ptr = strchr(spd_led_tokens, tmp[4])) == NULL) {
+	   return -1;
+	}
+	return (ptr - spd_led_tokens);
+}*/
+
 static void _print_enc_pos(nvObj_t *nv, const char *format, uint8_t units)
 {
 	char axes[] = {"XYZA"};
@@ -779,10 +799,11 @@ static void _print_interlock(nvObj_t *nv, const char *format)
   fprintf_P(stderr, format, spi2_itr_val);
 }
 
-static void _print_spindle_led(nvObj_t *nv, const char *format)
+/*static void _print_spindle_led(nvObj_t *nv, const char *format)
 {
-
-}
+  uint8_t spd_led_idx = _get_spd_led_desc(nv->index);
+  fprintf_P(stderr, format, GET_TEXT_ITEM(spd_led_descs, spd_led_idx), (uint8_t)nv->value);
+}*/
 
 static void _print_fw_version(nvObj_t *nv, const char *format)
 {
@@ -800,7 +821,7 @@ void spi2_cmd67_print(nvObj_t *nv) { _print_user_io(nv, fmt_spi2_cmd67);}
 void spi2_cmd68_print(nvObj_t *nv) { text_print_ui8(nv, fmt_spi2_cmd68);}
 void spi2_cmd69_print(nvObj_t *nv) { text_print_ui8(nv, fmt_spi2_cmd69);}
 void spi2_cmd70_print(nvObj_t *nv) { _print_interlock(nv, fmt_spi2_cmd70);}
-void spi2_cmd71_print(nvObj_t *nv) { _print_spindle_led(nv, fmt_spi2_cmd71);}
+//void spi2_cmd71_print(nvObj_t *nv) { _print_spindle_led(nv, fmt_spi2_cmd71);}
 void spi2_cmd72_print(nvObj_t *nv) { text_print_flt(nv, fmt_spi2_cmd72);}
 void spi2_cmd74_print(nvObj_t *nv) { _print_fw_version(nv, fmt_spi2_cmd74);}
 #endif

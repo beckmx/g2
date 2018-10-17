@@ -92,7 +92,7 @@ void spi2_cmd67_print(nvObj_t *);
 void spi2_cmd68_print(nvObj_t *);
 void spi2_cmd69_print(nvObj_t *);
 void spi2_cmd70_print(nvObj_t *);
-void spi2_cmd71_print(nvObj_t *);
+//void spi2_cmd71_print(nvObj_t *);
 void spi2_cmd72_print(nvObj_t *);
 void spi2_cmd74_print(nvObj_t *);
 #else
@@ -106,7 +106,7 @@ void spi2_cmd74_print(nvObj_t *);
 #define spi2_cmd68_print tx_print_stub
 #define spi2_cmd69_print tx_print_stub
 #define spi2_cmd70_print tx_print_stub
-#define spi2_cmd71_print tx_print_stub
+//#define spi2_cmd71_print tx_print_stub
 #define spi2_cmd72_print tx_print_stub
 #define spi2_cmd74_print tx_print_stub
 #endif
