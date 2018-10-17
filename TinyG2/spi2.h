@@ -7,6 +7,12 @@ extern "C" {
 
 //#include "integer.h"
 
+// Structures
+struct spi2_fw_type
+{
+   uint8_t major, minor, rev;
+};
+
 // General Definitions
 #define SPI2_MCK_DIV      (SystemCoreClock / 84)   // SPI clock divider to generate baud (based on 84MHz MCK)
 #define SPI2_DLYBS_US     3                        // Delay between SS low and SCLK (in us)
@@ -64,15 +70,45 @@ stat_t spi2_cmd_helper(uint8_t);
 stat_t spi2_cmd1_set(nvObj_t *);
 stat_t spi2_cmd2_set(nvObj_t *);
 stat_t spi2_cmd4_set(nvObj_t *);
+stat_t spi2_cmd64_set(nvObj_t *);
+stat_t spi2_cmd65_set(nvObj_t *);
+stat_t spi2_cmd66_set(nvObj_t *);
+stat_t spi2_cmd67_set(nvObj_t *);
+stat_t spi2_cmd68_set(nvObj_t *);
+stat_t spi2_cmd69_set(nvObj_t *);
+stat_t spi2_cmd70_set(nvObj_t *);
+stat_t spi2_cmd71_set(nvObj_t *);
+stat_t spi2_cmd72_set(nvObj_t *);
+stat_t spi2_cmd74_set(nvObj_t *);
 
 #ifdef __TEXT_MODE
 void spi2_cmd1_print(nvObj_t *);
 void spi2_cmd2_print(nvObj_t *);
 void spi2_cmd4_print(nvObj_t *);
+void spi2_cmd64_print(nvObj_t *);
+void spi2_cmd65_print(nvObj_t *);
+void spi2_cmd66_print(nvObj_t *);
+void spi2_cmd67_print(nvObj_t *);
+void spi2_cmd68_print(nvObj_t *);
+void spi2_cmd69_print(nvObj_t *);
+void spi2_cmd70_print(nvObj_t *);
+void spi2_cmd71_print(nvObj_t *);
+void spi2_cmd72_print(nvObj_t *);
+void spi2_cmd74_print(nvObj_t *);
 #else
 #define spi2_cmd1_print tx_print_stub
 #define spi2_cmd2_print tx_print_stub
 #define spi2_cmd4_print tx_print_stub
+#define spi2_cmd64_print tx_print_stub
+#define spi2_cmd65_print tx_print_stub
+#define spi2_cmd66_print tx_print_stub
+#define spi2_cmd67_print tx_print_stub
+#define spi2_cmd68_print tx_print_stub
+#define spi2_cmd69_print tx_print_stub
+#define spi2_cmd70_print tx_print_stub
+#define spi2_cmd71_print tx_print_stub
+#define spi2_cmd72_print tx_print_stub
+#define spi2_cmd74_print tx_print_stub
 #endif
 
 #ifdef __cplusplus

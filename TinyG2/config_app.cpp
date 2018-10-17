@@ -560,6 +560,20 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "s24","s24z", _f0, 3, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_Z] },	//  Z-axis
 	{ "s24","s24a", _f0, 3, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_A] },	//  a-axis
 
+	{ "","s264", _f0, 0, spi2_cmd64_print, get_nul, spi2_cmd64_set,(float *)&cs.null,0 },						// read encoder position
+	{ "","s265", _f0, 0, spi2_cmd65_print, get_nul, spi2_cmd65_set,(float *)&cs.null,0 },						// set user io
+	{ "","s266", _f0, 0, spi2_cmd66_print, get_nul, spi2_cmd66_set,(float *)&cs.null,0 },						// clear user io
+	{ "","s267", _f0, 0, spi2_cmd67_print, get_ui8, spi2_cmd67_set,(float *)&spi2_io_val },					// read user io
+	{ "","s268", _f0, 0, spi2_cmd68_print, get_nul, spi2_cmd68_set,(float *)&cs.null,0 },						// set user led
+	{ "","s269", _f0, 0, spi2_cmd69_print, get_nul, spi2_cmd69_set,(float *)&cs.null,0 },						// clear user led
+	{ "","s270", _f0, 0, spi2_cmd70_print, get_ui8, spi2_cmd70_set,(float *)&spi2_itr_val },  			// read interlock loop
+	{ "","s271", _f0, 0, spi2_cmd71_print, get_nul, spi2_cmd71_set,(float *)&cs.null,0 },						// set spindle led
+	{ "","s272", _f0, 0, spi2_cmd72_print, get_nul, spi2_cmd72_set,(float *)&cs.null,0 },						// set epsilon
+																																																	// read firmware version
+	{ "s274","s274a", _f0, 0, spi2_cmd74_print, get_ui8, set_nul,(float *)&spi2_fw_ver.major },	 	  // major
+	{ "s274","s274i", _f0, 0, spi2_cmd74_print, get_ui8, set_nul,(float *)&spi2_fw_ver.minor },			// minor
+	{ "s274","s274r", _f0, 0, spi2_cmd74_print, get_ui8, set_nul,(float *)&spi2_fw_ver.rev },				// revision
+
 	// Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS
 	{ "_te","_tex",_f0, 2, tx_print_flt, get_flt, set_nul,(float *)&mr.target[AXIS_X], 0 },				// X target endpoint
@@ -710,7 +724,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","udc", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
 	{ "","udd", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
 
-	{ "","s24", _f0, 0, tx_print_nul, get_grp, spi2_cmd4_set,(float *)&cs.null,0 },	// request encoder position group
+	{ "","s24", _f0, 0, tx_print_nul, get_grp, spi2_cmd4_set,(float *)&cs.null,0 },		// request encoder position group
+	{ "","s274", _f0, 0, tx_print_nul, get_grp, spi2_cmd74_set,(float *)&cs.null,0 },	// firmware version group
 
 #ifdef __DIAGNOSTIC_PARAMETERS
 	{ "","_te",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// target axis endpoint group
@@ -734,7 +749,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 /***** Make sure these defines line up with any changes in the above table *****/
 
 #define NV_COUNT_UBER_GROUPS 	4 		// count of uber-groups, above
-#define STANDARD_GROUPS 			35		// count of standard groups, excluding diagnostic parameter groups
+#define STANDARD_GROUPS 			36		// count of standard groups, excluding diagnostic parameter groups
 
 #if (MOTORS >= 5)
 #define MOTOR_GROUP_5			1

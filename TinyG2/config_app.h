@@ -62,6 +62,9 @@ extern cfgParameters_t cfg;
  **** SPI2 INTERFACE VARIBLES ******************************************************
  ***********************************************************************************/
 extern float spi2_encoder_pos[4];
+extern uint8_t spi2_io_val;
+extern uint8_t spi2_itr_val;
+extern struct spi2_fw_type spi2_fw_ver;
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS
