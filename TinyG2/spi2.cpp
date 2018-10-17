@@ -24,6 +24,22 @@ static volatile bool spi2_slave_int = false;
 // Create a SPI instance using CS1 pin for select
 std::shared_ptr<Motate::SPI<kSocket2_SPISlaveSelectPinNumber>> spi2;
 
+// Encoder data global variable (for JSON commands)
+float spi2_encoder_pos[SPI2_NUM_AXES] = {0.0,0.0,0.0,0.0};
+
+// Encoder, User IO and Interlock value global variables (for JSON commands)
+uint8_t spi2_enc_idx = 0;
+uint8_t spi2_io_idx = 0;
+uint8_t spi2_io_val = 0;
+uint8_t spi2_itr_idx = 0;
+uint8_t spi2_itr_val = 0;
+
+// Spindle LED global variable (for JSON commands)
+uint8_t spi2_spd_led[5] = {0,0,0,0,0};
+
+// Firmware version global variable (for JSON commands)
+struct spi2_fw_type spi2_fw_ver = {0, 0, 0};
+
 //TEMP: Calibrated delay function
 void delay_us(uint32_t us) {
   for(uint32_t i = 0; i < us * 5; i++); // Calibrated empirically
@@ -100,7 +116,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
     // Read Encoder Position command (0x40)
     case SPI2_CMD_RD_ENC_POS:
 
-      if ((slave_req) || (wr_buf[0] > SPI2_A_ENC) || (wr_cnt != 1) || (rd_cnt != 4)) {
+      if ((slave_req) || (wr_buf[0] > AXIS_A) || (wr_cnt != 1) || (rd_cnt != 4)) {
         fprintf_P(stderr, PSTR("\nERROR: Malformed Read Encoder Position command (Command 0x%02X)\n"),cmd_byte);
         return SPI2_STS_ERR;
       }
@@ -384,6 +400,122 @@ uint8_t spi2_request_encoder_positions() {
   return st;
 }
 
+// spi2_read_encoder_position: read single encoder position (command 0x40 / 64)
+uint8_t spi2_read_encoder_position(uint8_t axis) {
+
+  uint8_t st;
+  uint32_t u;
+
+  // Save off index for text mode print
+  spi2_enc_idx = axis;
+
+  // Get the encoder position data as one 4-byte transfer
+  wbuf[0] = axis;
+  st = spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
+
+  // Convert the data in the buffer to their approriate array value
+  u = ((rbuf[axis*4] << 24) + (rbuf[axis*4+1] << 16) + (rbuf[axis*4+2] << 8) + (rbuf[axis*4+3]));
+  spi2_encoder_pos[axis] = U32_TO_FLOAT(u);
+
+  return st;
+}
+
+// spi2_set_user_io: set user io (command 0x41 / 65)
+uint8_t spi2_set_user_io(uint8_t idx) {
+  wbuf[0] = idx;
+  return(spi2_cmd(false, SPI2_CMD_SET_USER_IO, wbuf, 1, rbuf, 0));
+}
+
+// spi2_clear_user_io: clear user io (command 0x42 / 66)
+uint8_t spi2_clear_user_io(uint8_t idx) {
+  wbuf[0] = idx;
+  return(spi2_cmd(false, SPI2_CMD_CLR_USER_IO, wbuf, 1, rbuf, 0));
+}
+
+// spi2_read_user_io: read user io (command 0x43 / 67)
+uint8_t spi2_read_user_io(uint8_t idx) {
+
+  uint8_t st;
+
+  // Save off index for text mode print
+  spi2_io_idx = idx;
+
+  // Read IO value and store in global variable
+  wbuf[0] = idx;
+  st = spi2_cmd(false, SPI2_CMD_RD_USER_IO, wbuf, 1, rbuf, 1);
+
+  spi2_io_val = rbuf[0];
+
+  return st;
+}
+
+// spi2_set_user_led: set user led (command 0x44 / 68)
+uint8_t spi2_set_user_led(uint8_t idx) {
+  wbuf[0] = idx;
+  return(spi2_cmd(false, SPI2_CMD_SET_USER_LED, wbuf, 1, rbuf, 0));
+}
+
+// spi2_clear_user_led: clear user led (command 0x45 / 69)
+uint8_t spi2_clear_user_led(uint8_t idx) {
+  wbuf[0] = idx;
+  return(spi2_cmd(false, SPI2_CMD_CLR_USER_LED, wbuf, 1, rbuf, 0));
+}
+
+// spi2_read_itr_loop: read interlock loop (command 0x46 / 70)
+uint8_t spi2_read_itr_loop(uint8_t idx) {
+
+  uint8_t st;
+
+  // Save off index for text mode print
+  spi2_itr_idx = idx;
+
+  // Read interlock loop value and store in global variable
+  wbuf[0] = idx;
+  st = spi2_cmd(false, SPI2_CMD_RD_ITR_LOOP,  wbuf, 1, rbuf, 1);
+
+  spi2_itr_val = rbuf[0];
+
+  return st;
+}
+
+// spi2_set_spindle_led: set spindle led strip (command 0x47 / 71)
+uint8_t spi2_set_spindle_led() {
+  return SPI2_STS_OK;
+}
+
+// spi2_set_epsilon: set epsilon (command 0x48 / 72)
+uint8_t spi2_set_epsilon(float f) {
+
+  uint32_t u;
+
+  u = FLOAT_TO_U32(f);
+
+  // Break 32-bits into separate bytes
+  wbuf[0] = (uint8_t)((u >> 24) & 0xFF);
+  wbuf[1] = (uint8_t)((u >> 16) & 0xFF);
+  wbuf[2] = (uint8_t)((u >> 8) & 0xFF);
+  wbuf[3] = (uint8_t)(u & 0xFF);
+
+  return(spi2_cmd(false, SPI2_CMD_SET_EPS, wbuf, 4, rbuf, 0));
+}
+
+// spi2_read_esc_current: read esc current (command 0x49 / 73) - TODO implement
+
+// spi2_get_fw_version: firmware version (command 0x4a / 74)
+uint8_t spi2_get_fw_version() {
+
+  uint8_t st;
+
+  // Read the firmware version and store in global variables
+  st = spi2_cmd(false, SPI2_CMD_FW_VER,  wbuf, 0, rbuf, 3);
+
+  spi2_fw_ver.major = rbuf[0];
+  spi2_fw_ver.minor = rbuf[1];
+  spi2_fw_ver.rev   = rbuf[2];
+
+  return st;
+}
+
 // spi2_test: unit testing for SPI2 interface
 void spi2_test() {
 
@@ -501,13 +633,13 @@ void spi2_test() {
   fprintf_P(stderr, PSTR("\nSending commands 0x40-0x4A in sequence...\n"));
 
   // Read all the encoder axes (0x40)
-  wbuf[0] = SPI2_X_ENC;
+  wbuf[0] = AXIS_X;
   spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
-  wbuf[0] = SPI2_Y_ENC;
+  wbuf[0] = AXIS_Y;
   spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
-  wbuf[0] = SPI2_Z_ENC;
+  wbuf[0] = AXIS_Z;
   spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
-  wbuf[0] = SPI2_A_ENC;
+  wbuf[0] = AXIS_A;
   spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
 
   // Set and clear USER_IO6, reading after both steps (0x41-0x43)
@@ -576,7 +708,7 @@ void spi2_test() {
   wbuf[3] = 0x0E;
   spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 4, rbuf, 0);
   spi2_cmd(false, SPI2_CMD_RST_ENC_POS, wbuf, 0, rbuf, 0);
-  wbuf[0] = SPI2_Z_ENC;
+  wbuf[0] = AXIS_Z;
   spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
 
   // Additional Manual Tests:
@@ -618,19 +750,6 @@ void Pin<kSocket3_SPISlaveSelectPinNumber>::interrupt() {
 //  cmd4a - Firmware Version
 //
 
-// Encoder data global variable (for JSON commands)
-float spi2_encoder_pos[SPI2_NUM_AXES] = {0.0,0.0,0.0,0.0};
-
-// Encoder, User IO and Interlock value global variables (for JSON commands)
-uint8_t spi2_enc_idx = 0;
-uint8_t spi2_io_idx = 0;
-uint8_t spi2_io_val = 0;
-uint8_t spi2_itr_idx = 0;
-uint8_t spi2_itr_val = 0;
-
-// Firmware version global variable (for JSON commands)
-struct spi2_fw_type spi2_fw_ver = {0, 0, 0};
-
 // spi2_cmd_helper: helper function to return proper status
 stat_t spi2_cmd_helper(uint8_t sts_byte) {
 
@@ -648,6 +767,23 @@ stat_t spi2_cmd_helper(uint8_t sts_byte) {
   return status;
 }
 
+stat_t spi2_cmd64_get(nvObj_t *nv) {
+
+  // Get the variable based on the current encoder index
+  switch (spi2_enc_idx) {
+    case AXIS_X: nv->value = *((float *)&spi2_encoder_pos[AXIS_X]); break;
+    case AXIS_Y: nv->value = *((float *)&spi2_encoder_pos[AXIS_Y]); break;
+    case AXIS_Z: nv->value = *((float *)&spi2_encoder_pos[AXIS_Z]); break;
+    case AXIS_A: nv->value = *((float *)&spi2_encoder_pos[AXIS_A]); break;
+    default: nv->value = 0.0; break;
+  }
+
+	nv->precision = (int8_t)GET_TABLE_WORD(precision);
+	nv->valuetype = TYPE_FLOAT;
+
+  return STAT_OK;
+}
+
 stat_t spi2_cmd1_set(nvObj_t *nv) {
   return (spi2_cmd_helper(spi2_reset_encoder_positions()));
 }
@@ -660,68 +796,32 @@ stat_t spi2_cmd4_set(nvObj_t *nv) {
   return (spi2_cmd_helper(spi2_request_encoder_positions()));
 }
 
-stat_t spi2_cmd64_get(nvObj_t *nv) {
-
-  // Get the variable based on the current encoder index
-  switch (spi2_enc_idx) {
-    case SPI2_X_ENC: nv->value = *((float *)&spi2_encoder_pos[AXIS_X]); break;
-    case SPI2_Y_ENC: nv->value = *((float *)&spi2_encoder_pos[AXIS_Y]); break;
-    case SPI2_Z_ENC: nv->value = *((float *)&spi2_encoder_pos[AXIS_Z]); break;
-    case SPI2_A_ENC: nv->value = *((float *)&spi2_encoder_pos[AXIS_A]); break;
-    default: nv->value = 0.0; break;
-  }
-
-	nv->precision = (int8_t)GET_TABLE_WORD(precision);
-	nv->valuetype = TYPE_FLOAT;
-
-  return STAT_OK;
-}
-
 stat_t spi2_cmd64_set(nvObj_t *nv) {
-  //TODO
-
-  // Save off index for text mode print
-  spi2_enc_idx = (uint8_t)nv->value;
-
-  return STAT_OK;
+  return (spi2_cmd_helper(spi2_read_encoder_position((uint8_t)nv->value)));
 }
 
 stat_t spi2_cmd65_set(nvObj_t *nv) {
-  //TODO
-  return STAT_OK;
+  return (spi2_cmd_helper(spi2_set_user_io((uint8_t)nv->value)));
 }
 
 stat_t spi2_cmd66_set(nvObj_t *nv) {
-  //TODO
-  return STAT_OK;
+  return (spi2_cmd_helper(spi2_clear_user_io((uint8_t)nv->value)));
 }
 
 stat_t spi2_cmd67_set(nvObj_t *nv) {
-  //TODO
-
-  // Save off index for text mode print
-  spi2_io_idx = (uint8_t)nv->value;
-
-  return STAT_OK;
+  return (spi2_cmd_helper(spi2_read_user_io((uint8_t)nv->value)));
 }
 
 stat_t spi2_cmd68_set(nvObj_t *nv) {
-  //TODO
-  return STAT_OK;
+  return (spi2_cmd_helper(spi2_set_user_led((uint8_t)nv->value)));
 }
 
 stat_t spi2_cmd69_set(nvObj_t *nv) {
-  //TODO
-  return STAT_OK;
+  return (spi2_cmd_helper(spi2_clear_user_led((uint8_t)nv->value)));
 }
 
 stat_t spi2_cmd70_set(nvObj_t *nv) {
-  //TODO
-
-  // Save off index for text mode print
-  spi2_itr_idx = (uint8_t)nv->value;
-
-  return STAT_OK;
+  return (spi2_cmd_helper(spi2_read_itr_loop((uint8_t)nv->value)));
 }
 
 stat_t spi2_cmd71_set(nvObj_t *nv) {
@@ -730,13 +830,11 @@ stat_t spi2_cmd71_set(nvObj_t *nv) {
 }
 
 stat_t spi2_cmd72_set(nvObj_t *nv) {
-  //TODO
-  return STAT_OK;
+  return (spi2_cmd_helper(spi2_set_epsilon((float)nv->value)));
 }
 
 stat_t spi2_cmd74_set(nvObj_t *nv) {
-  //TODO
-  return STAT_OK;
+  return (spi2_cmd_helper(spi2_get_fw_version()));
 }
 
 // Print functions (text-mode only)
@@ -808,10 +906,10 @@ static void _print_single_enc_pos(nvObj_t *nv, const char *format, uint8_t units
 
   // Set axis and value based on current index
   switch (spi2_enc_idx) {
-    case SPI2_X_ENC: enc_axis = 'X'; enc_value = spi2_encoder_pos[AXIS_X]; break;
-    case SPI2_Y_ENC: enc_axis = 'Y'; enc_value = spi2_encoder_pos[AXIS_Y]; break;
-    case SPI2_Z_ENC: enc_axis = 'Z'; enc_value = spi2_encoder_pos[AXIS_Z]; break;
-    case SPI2_A_ENC: enc_axis = 'A'; enc_value = spi2_encoder_pos[AXIS_A]; break;
+    case AXIS_X: enc_axis = 'X'; enc_value = spi2_encoder_pos[AXIS_X]; break;
+    case AXIS_Y: enc_axis = 'Y'; enc_value = spi2_encoder_pos[AXIS_Y]; break;
+    case AXIS_Z: enc_axis = 'Z'; enc_value = spi2_encoder_pos[AXIS_Z]; break;
+    case AXIS_A: enc_axis = 'A'; enc_value = spi2_encoder_pos[AXIS_A]; break;
     default: enc_axis = '?'; enc_value = 0.0; break;
   }
 

@@ -5,8 +5,6 @@
 extern "C" {
 #endif
 
-//#include "integer.h"
-
 // Structures
 struct spi2_fw_type
 {
@@ -21,12 +19,6 @@ struct spi2_fw_type
 #define SPI2_BUF_SIZE     (SPI2_NUM_AXES*4)        // Buffer size for passing data
 #define SPI2_NUM_RETRIES  3                        // Number of retries on error condition
 #define SPI2_TIMEOUT      100                      // SPI2 bus timeout (in ms)
-
-// Encoder Axes
-#define SPI2_X_ENC 0
-#define SPI2_Y_ENC 1
-#define SPI2_Z_ENC 2
-#define SPI2_A_ENC 3
 
 #define FLOAT_TO_U32(n) (uint32_t)(*(uint32_t*)&n)  // Convert from float to uint32_t
 #define U32_TO_FLOAT(n) ((float)(*(float*)&n))      // Convert from uint32_t to float
@@ -49,8 +41,6 @@ struct spi2_fw_type
 #define SPI2_CMD_RD_ESC_CURR    0x49  // Read ESC Current
 #define SPI2_CMD_FW_VER         0x4A  // Firmware Version
 
-#define SPI2_CMD_NULL           0xFF  // NULL command (placeholder for slave requests)
-
 #define SPI2_STS_OK             0x01  // OK Status
 #define SPI2_STS_ERR            0x02  // Error Status
 #define SPI2_STS_TIMEOUT        0x03  // Timeout Status
@@ -64,13 +54,24 @@ uint8_t spi2_reset_encoder_positions(void);
 uint8_t spi2_start_tool_tip(void);
 uint8_t spi2_send_motor_positions(void);
 uint8_t spi2_request_encoder_positions(void);
+uint8_t spi2_read_encoder_position(uint8_t);
+uint8_t spi2_set_user_io(uint8_t);
+uint8_t spi2_clear_user_io(uint8_t);
+uint8_t spi2_read_user_io(uint8_t);
+uint8_t spi2_set_user_led(uint8_t);
+uint8_t spi2_clear_user_led(uint8_t);
+uint8_t spi2_read_itr_loop(uint8_t);
+uint8_t spi2_set_epsilon(float);
+uint8_t spi2_get_fw_version(void);
 void spi2_test(void);
 
 stat_t spi2_cmd_helper(uint8_t);
+
+stat_t spi2_cmd64_get(nvObj_t *);
+
 stat_t spi2_cmd1_set(nvObj_t *);
 stat_t spi2_cmd2_set(nvObj_t *);
 stat_t spi2_cmd4_set(nvObj_t *);
-stat_t spi2_cmd64_get(nvObj_t *);
 stat_t spi2_cmd64_set(nvObj_t *);
 stat_t spi2_cmd65_set(nvObj_t *);
 stat_t spi2_cmd66_set(nvObj_t *);

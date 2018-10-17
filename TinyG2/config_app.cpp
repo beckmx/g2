@@ -569,11 +569,11 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","s270", _f0, 0, spi2_cmd70_print, get_ui8, spi2_cmd70_set,(float *)&spi2_itr_val },  			// read interlock loop
 
 																																																	// set spindle led
-	{ "s271","s271l", _f0, 0, tx_print_nul, get_nul, set_nul,(float *)&cs.null,0 },									// strip index
-	{ "s271","s271r", _f0, 0, tx_print_nul, get_nul, set_nul,(float *)&cs.null,0 },									// red
-	{ "s271","s271g", _f0, 0, tx_print_nul, get_nul, set_nul,(float *)&cs.null,0 },									// green
-	{ "s271","s271b", _f0, 0, tx_print_nul, get_nul, set_nul,(float *)&cs.null,0 },									// blue
-	{ "s271","s271w", _f0, 0, tx_print_nul, get_nul, set_nul,(float *)&cs.null,0 },									// white
+	{ "s271","s271l", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_spd_led[0] },									// strip index
+	{ "s271","s271r", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_spd_led[1] },									// red
+	{ "s271","s271g", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_spd_led[2] },									// green
+	{ "s271","s271b", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_spd_led[3] },									// blue
+	{ "s271","s271w", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_spd_led[4] },									// white
 
 	{ "","s272", _f0, 3, spi2_cmd72_print, get_nul, spi2_cmd72_set,(float *)&cs.null,0 },						// set epsilon
 
