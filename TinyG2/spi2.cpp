@@ -480,7 +480,13 @@ uint8_t spi2_read_itr_loop(uint8_t idx) {
 
 // spi2_set_spindle_led: set spindle led strip (command 0x47 / 71)
 uint8_t spi2_set_spindle_led() {
-  return SPI2_STS_OK;
+
+  wbuf[0] = spi2_spd_led[SPI2_SPD_IDX];
+  wbuf[1] = spi2_spd_led[SPI2_SPD_R];
+  wbuf[2] = spi2_spd_led[SPI2_SPD_G];
+  wbuf[3] = spi2_spd_led[SPI2_SPD_B];
+  wbuf[4] = spi2_spd_led[SPI2_SPD_W];
+  return(spi2_cmd(false, SPI2_CMD_SET_SPIN_LED,  wbuf, 5, rbuf, 0));
 }
 
 // spi2_set_epsilon: set epsilon (command 0x48 / 72)
@@ -825,8 +831,12 @@ stat_t spi2_cmd70_set(nvObj_t *nv) {
 }
 
 stat_t spi2_cmd71_set(nvObj_t *nv) {
-  //TODO
-  return STAT_OK;
+
+  // Call set_grp() to set all the variables using the JSON
+  set_grp(nv);
+
+  // Run the SPI command
+  return (spi2_cmd_helper(spi2_set_spindle_led()));
 }
 
 stat_t spi2_cmd72_set(nvObj_t *nv) {

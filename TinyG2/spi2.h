@@ -5,11 +5,19 @@
 extern "C" {
 #endif
 
-// Structures
+// Structures and Type Definitions
 struct spi2_fw_type
 {
    uint8_t major, minor, rev;
 };
+
+typedef enum {
+    SPI2_SPD_IDX = 0,
+    SPI2_SPD_R,
+    SPI2_SPD_G,
+    SPI2_SPD_B,
+    SPI2_SPD_W,
+} spi2SpdEnum;
 
 // General Definitions
 #define SPI2_MCK_DIV      (SystemCoreClock / 84)   // SPI clock divider to generate baud (based on 84MHz MCK)
@@ -61,6 +69,7 @@ uint8_t spi2_read_user_io(uint8_t);
 uint8_t spi2_set_user_led(uint8_t);
 uint8_t spi2_clear_user_led(uint8_t);
 uint8_t spi2_read_itr_loop(uint8_t);
+uint8_t spi2_set_spindle_led(void);
 uint8_t spi2_set_epsilon(float);
 uint8_t spi2_get_fw_version(void);
 void spi2_test(void);
