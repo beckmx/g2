@@ -560,7 +560,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "s24","s24z", _f0, 3, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_Z] },	//  Z-axis
 	{ "s24","s24a", _f0, 3, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_A] },	//  a-axis
 
-	{ "","s264", _f0, 0, spi2_cmd64_print, get_nul, spi2_cmd64_set,(float *)&cs.null,0 },						// read encoder position
+	{ "","s264", _f0, 3, spi2_cmd64_print, spi2_cmd64_get, spi2_cmd64_set,(float *)&cs.null,0 },		// read encoder position
 	{ "","s265", _f0, 0, spi2_cmd65_print, get_nul, spi2_cmd65_set,(float *)&cs.null,0 },						// set user io
 	{ "","s266", _f0, 0, spi2_cmd66_print, get_nul, spi2_cmd66_set,(float *)&cs.null,0 },						// clear user io
 	{ "","s267", _f0, 0, spi2_cmd67_print, get_ui8, spi2_cmd67_set,(float *)&spi2_io_val },					// read user io
@@ -575,7 +575,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "s271","s271b", _f0, 0, tx_print_nul, get_nul, set_nul,(float *)&cs.null,0 },									// blue
 	{ "s271","s271w", _f0, 0, tx_print_nul, get_nul, set_nul,(float *)&cs.null,0 },									// white
 
-	{ "","s272", _f0, 0, spi2_cmd72_print, get_nul, spi2_cmd72_set,(float *)&cs.null,0 },						// set epsilon
+	{ "","s272", _f0, 3, spi2_cmd72_print, get_nul, spi2_cmd72_set,(float *)&cs.null,0 },						// set epsilon
 
 																																																	// read firmware version
 	{ "s274","s274a", _f0, 0, spi2_cmd74_print, get_ui8, set_nul,(float *)&spi2_fw_ver.major },	 	  // major

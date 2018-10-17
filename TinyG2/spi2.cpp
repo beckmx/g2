@@ -621,8 +621,11 @@ void Pin<kSocket3_SPISlaveSelectPinNumber>::interrupt() {
 // Encoder data global variable (for JSON commands)
 float spi2_encoder_pos[SPI2_NUM_AXES] = {0.0,0.0,0.0,0.0};
 
-// User IO and Interlock value global variables (for JSON commands)
+// Encoder, User IO and Interlock value global variables (for JSON commands)
+uint8_t spi2_enc_idx = 0;
+uint8_t spi2_io_idx = 0;
 uint8_t spi2_io_val = 0;
+uint8_t spi2_itr_idx = 0;
 uint8_t spi2_itr_val = 0;
 
 // Firmware version global variable (for JSON commands)
@@ -657,8 +660,29 @@ stat_t spi2_cmd4_set(nvObj_t *nv) {
   return (spi2_cmd_helper(spi2_request_encoder_positions()));
 }
 
+stat_t spi2_cmd64_get(nvObj_t *nv) {
+
+  // Get the variable based on the current encoder index
+  switch (spi2_enc_idx) {
+    case SPI2_X_ENC: nv->value = *((float *)&spi2_encoder_pos[AXIS_X]); break;
+    case SPI2_Y_ENC: nv->value = *((float *)&spi2_encoder_pos[AXIS_Y]); break;
+    case SPI2_Z_ENC: nv->value = *((float *)&spi2_encoder_pos[AXIS_Z]); break;
+    case SPI2_A_ENC: nv->value = *((float *)&spi2_encoder_pos[AXIS_A]); break;
+    default: nv->value = 0.0; break;
+  }
+
+	nv->precision = (int8_t)GET_TABLE_WORD(precision);
+	nv->valuetype = TYPE_FLOAT;
+
+  return STAT_OK;
+}
+
 stat_t spi2_cmd64_set(nvObj_t *nv) {
   //TODO
+
+  // Save off index for text mode print
+  spi2_enc_idx = (uint8_t)nv->value;
+
   return STAT_OK;
 }
 
@@ -674,6 +698,10 @@ stat_t spi2_cmd66_set(nvObj_t *nv) {
 
 stat_t spi2_cmd67_set(nvObj_t *nv) {
   //TODO
+
+  // Save off index for text mode print
+  spi2_io_idx = (uint8_t)nv->value;
+
   return STAT_OK;
 }
 
@@ -689,6 +717,10 @@ stat_t spi2_cmd69_set(nvObj_t *nv) {
 
 stat_t spi2_cmd70_set(nvObj_t *nv) {
   //TODO
+
+  // Save off index for text mode print
+  spi2_itr_idx = (uint8_t)nv->value;
+
   return STAT_OK;
 }
 
@@ -720,23 +752,16 @@ static const char fw_ver1[] PROGMEM = "MINOR Version";
 static const char fw_ver2[] PROGMEM = "REVISION";
 static const char *const fw_vers[] PROGMEM = { fw_ver0, fw_ver1, fw_ver2 };
 
-/*static const char spd_led_desc0[] PROGMEM = "Index";
-static const char spd_led_desc1[] PROGMEM = "Red Value";
-static const char spd_led_desc2[] PROGMEM = "Green Value";
-static const char spd_led_desc3[] PROGMEM = "Blue Value";
-static const char spd_led_desc4[] PROGMEM = "White Value";
-static const char *const spd_led_descs[] PROGMEM = { spd_led_desc0, spd_led_desc1, spd_led_desc2, spd_led_desc3, spd_led_desc4 };
-*/
 static const char fmt_spi2_cmd1[] PROGMEM  = "Reset Encoder Positions to Zero\n";
 static const char fmt_spi2_cmd2[] PROGMEM  = "Start Tool Tip Command\n";
 static const char fmt_spi2_cmd4[] PROGMEM  = "%c Encoder Position:%15.3f%s\n";
 static const char fmt_spi2_cmd64[] PROGMEM = "%c Encoder Position:%15.3f%s\n";
 static const char fmt_spi2_cmd65[] PROGMEM = "Set User IO %u\n";
 static const char fmt_spi2_cmd66[] PROGMEM = "Clear User IO %u\n";
-static const char fmt_spi2_cmd67[] PROGMEM = "User IO value: %u\n";
+static const char fmt_spi2_cmd67[] PROGMEM = "User IO %u value: %u\n";
 static const char fmt_spi2_cmd68[] PROGMEM = "Set User LED %u\n";
 static const char fmt_spi2_cmd69[] PROGMEM = "Clear User LED %u\n";
-static const char fmt_spi2_cmd70[] PROGMEM = "Interlock Loop value: %u\n";
+static const char fmt_spi2_cmd70[] PROGMEM = "Interlock Loop %u value: %u\n";
 static const char fmt_spi2_cmd71[] PROGMEM = "Spindle LED %s: %X\n";
 static const char fmt_spi2_cmd72[] PROGMEM = "Set Epsilon to %5.3f\n";
 static const char fmt_spi2_cmd74[] PROGMEM = "Firmware %s Number: %u\n";
@@ -769,41 +794,39 @@ static int8_t _get_fw_ver(const index_t index)
 	return (ptr - fw_ver_tokens);
 }
 
-/*static int8_t _get_spd_led_desc(const index_t index)
-{
-	char_t *ptr;
-	char_t tmp[TOKEN_LEN+1];
-	char_t spd_led_tokens[] = {"lrgbw"};
-
-	strncpy_P(tmp, cfgArray[index].token, TOKEN_LEN);	// kind of a hack. Looks for a description type
-	if ((ptr = strchr(spd_led_tokens, tmp[4])) == NULL) {
-	   return -1;
-	}
-	return (ptr - spd_led_tokens);
-}*/
-
-static void _print_enc_pos(nvObj_t *nv, const char *format, uint8_t units)
+static void _print_all_enc_pos(nvObj_t *nv, const char *format, uint8_t units)
 {
 	char axes[] = {"XYZA"};
 	uint8_t axis = _get_axis(nv->index);
 	fprintf_P(stderr, format, axes[axis], nv->value, GET_TEXT_ITEM(msg_units, units));
 }
 
+static void _print_single_enc_pos(nvObj_t *nv, const char *format, uint8_t units)
+{
+	char enc_axis = 0;
+  float enc_value = 0.0;
+
+  // Set axis and value based on current index
+  switch (spi2_enc_idx) {
+    case SPI2_X_ENC: enc_axis = 'X'; enc_value = spi2_encoder_pos[AXIS_X]; break;
+    case SPI2_Y_ENC: enc_axis = 'Y'; enc_value = spi2_encoder_pos[AXIS_Y]; break;
+    case SPI2_Z_ENC: enc_axis = 'Z'; enc_value = spi2_encoder_pos[AXIS_Z]; break;
+    case SPI2_A_ENC: enc_axis = 'A'; enc_value = spi2_encoder_pos[AXIS_A]; break;
+    default: enc_axis = '?'; enc_value = 0.0; break;
+  }
+
+	fprintf_P(stderr, format, enc_axis, enc_value, GET_TEXT_ITEM(msg_units, units));
+}
+
 static void _print_user_io(nvObj_t *nv, const char *format)
 {
-  fprintf_P(stderr, format, spi2_io_val);
+  fprintf_P(stderr, format, spi2_io_idx, spi2_io_val);
 }
 
 static void _print_interlock(nvObj_t *nv, const char *format)
 {
-  fprintf_P(stderr, format, spi2_itr_val);
+  fprintf_P(stderr, format, spi2_itr_idx, spi2_itr_val);
 }
-
-/*static void _print_spindle_led(nvObj_t *nv, const char *format)
-{
-  uint8_t spd_led_idx = _get_spd_led_desc(nv->index);
-  fprintf_P(stderr, format, GET_TEXT_ITEM(spd_led_descs, spd_led_idx), (uint8_t)nv->value);
-}*/
 
 static void _print_fw_version(nvObj_t *nv, const char *format)
 {
@@ -813,15 +836,14 @@ static void _print_fw_version(nvObj_t *nv, const char *format)
 
 void spi2_cmd1_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd1);}
 void spi2_cmd2_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd2);}
-void spi2_cmd4_print(nvObj_t *nv) { _print_enc_pos(nv, fmt_spi2_cmd4, cm_get_units_mode(MODEL));}
-void spi2_cmd64_print(nvObj_t *nv) { _print_enc_pos(nv, fmt_spi2_cmd64, cm_get_units_mode(MODEL));}
+void spi2_cmd4_print(nvObj_t *nv) { _print_all_enc_pos(nv, fmt_spi2_cmd4, cm_get_units_mode(MODEL));}
+void spi2_cmd64_print(nvObj_t *nv) { _print_single_enc_pos(nv, fmt_spi2_cmd64, cm_get_units_mode(MODEL));}
 void spi2_cmd65_print(nvObj_t *nv) { text_print_ui8(nv, fmt_spi2_cmd65);}
 void spi2_cmd66_print(nvObj_t *nv) { text_print_ui8(nv, fmt_spi2_cmd66);}
 void spi2_cmd67_print(nvObj_t *nv) { _print_user_io(nv, fmt_spi2_cmd67);}
 void spi2_cmd68_print(nvObj_t *nv) { text_print_ui8(nv, fmt_spi2_cmd68);}
 void spi2_cmd69_print(nvObj_t *nv) { text_print_ui8(nv, fmt_spi2_cmd69);}
 void spi2_cmd70_print(nvObj_t *nv) { _print_interlock(nv, fmt_spi2_cmd70);}
-//void spi2_cmd71_print(nvObj_t *nv) { _print_spindle_led(nv, fmt_spi2_cmd71);}
 void spi2_cmd72_print(nvObj_t *nv) { text_print_flt(nv, fmt_spi2_cmd72);}
 void spi2_cmd74_print(nvObj_t *nv) { _print_fw_version(nv, fmt_spi2_cmd74);}
 #endif

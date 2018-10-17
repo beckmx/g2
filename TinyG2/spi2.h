@@ -70,6 +70,7 @@ stat_t spi2_cmd_helper(uint8_t);
 stat_t spi2_cmd1_set(nvObj_t *);
 stat_t spi2_cmd2_set(nvObj_t *);
 stat_t spi2_cmd4_set(nvObj_t *);
+stat_t spi2_cmd64_get(nvObj_t *);
 stat_t spi2_cmd64_set(nvObj_t *);
 stat_t spi2_cmd65_set(nvObj_t *);
 stat_t spi2_cmd66_set(nvObj_t *);
@@ -92,7 +93,6 @@ void spi2_cmd67_print(nvObj_t *);
 void spi2_cmd68_print(nvObj_t *);
 void spi2_cmd69_print(nvObj_t *);
 void spi2_cmd70_print(nvObj_t *);
-//void spi2_cmd71_print(nvObj_t *);
 void spi2_cmd72_print(nvObj_t *);
 void spi2_cmd74_print(nvObj_t *);
 #else
@@ -106,7 +106,6 @@ void spi2_cmd74_print(nvObj_t *);
 #define spi2_cmd68_print tx_print_stub
 #define spi2_cmd69_print tx_print_stub
 #define spi2_cmd70_print tx_print_stub
-//#define spi2_cmd71_print tx_print_stub
 #define spi2_cmd72_print tx_print_stub
 #define spi2_cmd74_print tx_print_stub
 #endif
