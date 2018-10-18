@@ -70,7 +70,7 @@ uint8_t spi2_set_user_led(uint8_t);
 uint8_t spi2_clear_user_led(uint8_t);
 uint8_t spi2_read_itr_loop(uint8_t);
 uint8_t spi2_set_spindle_led(void);
-uint8_t spi2_set_epsilon(float);
+uint8_t spi2_set_epsilon(void);
 uint8_t spi2_get_fw_version(void);
 void spi2_test(void);
 
@@ -103,7 +103,6 @@ void spi2_cmd67_print(nvObj_t *);
 void spi2_cmd68_print(nvObj_t *);
 void spi2_cmd69_print(nvObj_t *);
 void spi2_cmd70_print(nvObj_t *);
-void spi2_cmd72_print(nvObj_t *);
 void spi2_cmd74_print(nvObj_t *);
 #else
 #define spi2_cmd1_print tx_print_stub
@@ -116,7 +115,6 @@ void spi2_cmd74_print(nvObj_t *);
 #define spi2_cmd68_print tx_print_stub
 #define spi2_cmd69_print tx_print_stub
 #define spi2_cmd70_print tx_print_stub
-#define spi2_cmd72_print tx_print_stub
 #define spi2_cmd74_print tx_print_stub
 #endif
 

@@ -65,6 +65,8 @@ extern float spi2_encoder_pos[4];
 extern uint8_t spi2_io_val;
 extern uint8_t spi2_itr_val;
 extern uint8_t spi2_spd_led[5];
+extern uint8_t spi2_eps_axis;
+extern float spi2_eps_val;
 extern struct spi2_fw_type spi2_fw_ver;
 
 /***********************************************************************************

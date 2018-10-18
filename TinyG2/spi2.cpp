@@ -37,6 +37,10 @@ uint8_t spi2_itr_val = 0;
 // Spindle LED global variable (for JSON commands)
 uint8_t spi2_spd_led[5] = {0,0,0,0,0};
 
+// Epsilon global variables (for JSON commands)
+uint8_t spi2_eps_axis = 0;
+float spi2_eps_val = 0.0;
+
 // Firmware version global variable (for JSON commands)
 struct spi2_fw_type spi2_fw_ver = {0, 0, 0};
 
@@ -177,7 +181,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
     // Set Epsilon Command (0x48)
     case SPI2_CMD_SET_EPS:
 
-      if ((slave_req) || (wr_cnt != 4) || (rd_cnt > 0)) {
+      if ((slave_req) || (wr_buf[0] > AXIS_A) || (wr_cnt != 5) || (rd_cnt > 0)) {
 
         fprintf_P(stderr, PSTR("\nERROR: Malformed Set Epsilon command (Command 0x%02X)\n"),cmd_byte);
         return SPI2_STS_ERR;
@@ -490,19 +494,22 @@ uint8_t spi2_set_spindle_led() {
 }
 
 // spi2_set_epsilon: set epsilon (command 0x48 / 72)
-uint8_t spi2_set_epsilon(float f) {
+uint8_t spi2_set_epsilon() {
 
   uint32_t u;
 
-  u = FLOAT_TO_U32(f);
+  // Set index and value for global variables
+  wbuf[0] = spi2_eps_axis;
+
+  u = FLOAT_TO_U32(spi2_eps_val);
 
   // Break 32-bits into separate bytes
-  wbuf[0] = (uint8_t)((u >> 24) & 0xFF);
-  wbuf[1] = (uint8_t)((u >> 16) & 0xFF);
-  wbuf[2] = (uint8_t)((u >> 8) & 0xFF);
-  wbuf[3] = (uint8_t)(u & 0xFF);
+  wbuf[1] = (uint8_t)((u >> 24) & 0xFF);
+  wbuf[2] = (uint8_t)((u >> 16) & 0xFF);
+  wbuf[3] = (uint8_t)((u >> 8) & 0xFF);
+  wbuf[4] = (uint8_t)(u & 0xFF);
 
-  return(spi2_cmd(false, SPI2_CMD_SET_EPS, wbuf, 4, rbuf, 0));
+  return(spi2_cmd(false, SPI2_CMD_SET_EPS, wbuf, 5, rbuf, 0));
 }
 
 // spi2_read_esc_current: read esc current (command 0x49 / 73) - TODO implement
@@ -610,9 +617,9 @@ void spi2_test() {
   wbuf[0] = 0x80;
   spi2_cmd(false, SPI2_CMD_SET_SPIN_LED,  wbuf, 5, rbuf, 0);
 
-  spi2_cmd(true,  SPI2_CMD_SET_EPS,  wbuf, 4, rbuf, 0);
+  spi2_cmd(true,  SPI2_CMD_SET_EPS,  wbuf, 5, rbuf, 0);
   spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 10, rbuf, 0);
-  spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 4, rbuf, 10);
+  spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 5, rbuf, 10);
 
   spi2_cmd(true,  SPI2_CMD_FW_VER,  wbuf, 0, rbuf, 3);
   spi2_cmd(false, SPI2_CMD_FW_VER,  wbuf, 10, rbuf, 3);
@@ -683,12 +690,19 @@ void spi2_test() {
   spi2_cmd(false, SPI2_CMD_SET_SPIN_LED,  wbuf, 5, rbuf, 0);
   delay(500);
 
-  // Set Epsilon to a random value (0x48)
-  wbuf[0] = 0x03;
-  wbuf[1] = 0x0A;
-  wbuf[2] = 0x07;
-  wbuf[3] = 0x0E;
-  spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 4, rbuf, 0);
+  // Set each axis Epsilon to a random value (0x48)
+  wbuf[0] = AXIS_X;
+  wbuf[1] = 0x03;
+  wbuf[2] = 0x0A;
+  wbuf[3] = 0x07;
+  wbuf[4] = 0x0E;
+  spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 5, rbuf, 0);
+  wbuf[0] = AXIS_Y;
+  spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 5, rbuf, 0);
+  wbuf[0] = AXIS_Z;
+  spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 5, rbuf, 0);
+  wbuf[0] = AXIS_A;
+  spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 5, rbuf, 0);
 
   // Read Current (0x49) - TODO implement
 
@@ -708,11 +722,12 @@ void spi2_test() {
   wbuf[0] = 2;
   spi2_cmd(false, SPI2_CMD_SET_USER_LED, wbuf, 1, rbuf, 0);
   spi2_cmd(false, SPI2_CMD_REQ_ENC_POS, wbuf, 0, rbuf, (SPI2_NUM_AXES*4));
-  wbuf[0] = 0x03;
-  wbuf[1] = 0x0A;
-  wbuf[2] = 0x07;
-  wbuf[3] = 0x0E;
-  spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 4, rbuf, 0);
+  wbuf[0] = AXIS_Z;
+  wbuf[1] = 0x03;
+  wbuf[2] = 0x0A;
+  wbuf[3] = 0x07;
+  wbuf[4] = 0x0E;
+  spi2_cmd(false, SPI2_CMD_SET_EPS,  wbuf, 5, rbuf, 0);
   spi2_cmd(false, SPI2_CMD_RST_ENC_POS, wbuf, 0, rbuf, 0);
   wbuf[0] = AXIS_Z;
   spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
@@ -840,7 +855,12 @@ stat_t spi2_cmd71_set(nvObj_t *nv) {
 }
 
 stat_t spi2_cmd72_set(nvObj_t *nv) {
-  return (spi2_cmd_helper(spi2_set_epsilon((float)nv->value)));
+
+  // Call set_grp() to set all the variables using the JSON
+  set_grp(nv);
+
+  // Run the SPI command
+  return (spi2_cmd_helper(spi2_set_epsilon()));
 }
 
 stat_t spi2_cmd74_set(nvObj_t *nv) {
@@ -871,7 +891,6 @@ static const char fmt_spi2_cmd68[] PROGMEM = "Set User LED %u\n";
 static const char fmt_spi2_cmd69[] PROGMEM = "Clear User LED %u\n";
 static const char fmt_spi2_cmd70[] PROGMEM = "Interlock Loop %u value: %u\n";
 static const char fmt_spi2_cmd71[] PROGMEM = "Spindle LED %s: %X\n";
-static const char fmt_spi2_cmd72[] PROGMEM = "Set Epsilon to %5.3f\n";
 static const char fmt_spi2_cmd74[] PROGMEM = "Firmware %s Number: %u\n";
 
 static int8_t _get_axis(const index_t index)
@@ -952,7 +971,6 @@ void spi2_cmd67_print(nvObj_t *nv) { _print_user_io(nv, fmt_spi2_cmd67);}
 void spi2_cmd68_print(nvObj_t *nv) { text_print_ui8(nv, fmt_spi2_cmd68);}
 void spi2_cmd69_print(nvObj_t *nv) { text_print_ui8(nv, fmt_spi2_cmd69);}
 void spi2_cmd70_print(nvObj_t *nv) { _print_interlock(nv, fmt_spi2_cmd70);}
-void spi2_cmd72_print(nvObj_t *nv) { text_print_flt(nv, fmt_spi2_cmd72);}
 void spi2_cmd74_print(nvObj_t *nv) { _print_fw_version(nv, fmt_spi2_cmd74);}
 #endif
 
