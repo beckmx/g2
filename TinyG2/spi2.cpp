@@ -242,6 +242,10 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       start_time = SysTickTimer_getValue();
       while(!spi2->is_tx_empty() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT));
       while(spi2->is_rx_ready() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {
+        // Read Encoder Positions command requires time for SPI2 to prep data - TODO fix performance
+        if (cmd_byte == SPI2_CMD_RD_ENC_POS) {
+          delay(1);
+        }
         spi2->read();
       }
       // Timed out, report and exit with timeout status
