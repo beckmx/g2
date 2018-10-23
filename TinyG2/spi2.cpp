@@ -242,8 +242,8 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       start_time = SysTickTimer_getValue();
       while(!spi2->is_tx_empty() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT));
       while(spi2->is_rx_ready() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {
-        // Read Encoder Positions command requires time for SPI2 to prep data - TODO fix performance
-        if (cmd_byte == SPI2_CMD_RD_ENC_POS) {
+        // Commands with multiple writes and reads need time to prep data - TODO fix performance
+        if (rd_cnt > 0) {
           delay(1);
         }
         spi2->read();
@@ -253,8 +253,8 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
         fprintf_P(stderr, PSTR("\nERROR: Timed out waiting on data bytes\n"));
         return SPI2_STS_TIMEOUT;
       }
-      // Read Encoder Positions command requires time for SPI2 to prep data - TODO fix performance
-      if (cmd_byte == SPI2_CMD_RD_ENC_POS) {
+      // Commands with multiple writes and reads need time to prep data - TODO fix performance
+      if (rd_cnt > 0) {
         delay(1);
       } else {
         delay_us(25);
