@@ -102,6 +102,7 @@ CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
 #CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
 CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
 CPPFLAGS += -Wredundant-decls -Wlong-long
+CPPFLAGS += -Wno-strict-aliasing
 #CPPFLAGS += -Wmissing-noreturn -Wpacked
 #CPPFLAGS += -Wconversion
 
