@@ -233,7 +233,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       if (cmd_byte == SPI2_CMD_REQ_ENC_POS) {
         delay(4);
       } else {
-        delay_us(100);
+        delay_us(75);
       }
     }
 
@@ -259,19 +259,19 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       if (rd_cnt > 0) {
         delay(1);
       } else {
-        delay_us(100);
+        delay_us(25);
       }
     }
     if (rd_cnt > 0) {
       spi2->read(rd_buf, rd_cnt, true);   // Read RX data (performs dummy writes, doesn't count if RDRF = 0)
-      delay_us(100);
+      delay_us(25);
     }
-    delay_us(100);
+    delay_us(25);
 
     // Read the status
     start_time = SysTickTimer_getValue();
     while (((ret = spi2->read(true)) < 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
-      delay_us(100);
+      delay_us(25);
     }
     // Timed out, report and exit with timeout status
     if ((SysTickTimer_getValue() - start_time) >= SPI2_TIMEOUT) {
@@ -306,7 +306,7 @@ uint8_t spi2_slave_handler() {
   // SPI2 Slave Interrupt received
   if (spi2_slave_int) {
 
-    delay_us(100);
+    delay_us(25);
 
     // Clear flag
     spi2_slave_int = false;
@@ -320,7 +320,7 @@ uint8_t spi2_slave_handler() {
     // Read command
     start_time = SysTickTimer_getValue();
     while (((ret = spi2->read(true)) < 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
-      delay_us(100);
+      delay_us(25);
     }
     // Timed out, report and exit with timeout status
     if ((SysTickTimer_getValue() - start_time) >= SPI2_TIMEOUT) {
