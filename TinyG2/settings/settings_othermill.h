@@ -65,9 +65,9 @@
 // Note: there are some commented test values below
 
 #define MOTOR_POWER_LEVEL_XY		MOTOR_POWER_LEVEL					// default motor power level 0.00 - 1.00 (ARM only)
-#define MOTOR_POWER_LEVEL_XY_IDLE	0.15
+#define MOTOR_POWER_LEVEL_XY_IDLE	0.25
 #define MOTOR_POWER_LEVEL_Z			MOTOR_POWER_LEVEL
-#define MOTOR_POWER_LEVEL_Z_IDLE	0.15
+#define MOTOR_POWER_LEVEL_Z_IDLE	0.25
 #define MOTOR_POWER_LEVEL_DISABLED	0.05
 
 #undef MOTOR_POWER_MODE
@@ -116,7 +116,7 @@
 
 #define M1_MOTOR_MAP 			AXIS_X				// 1ma
 #define M1_STEP_ANGLE 			1.8					// 1sa
-#define M1_TRAVEL_PER_REV 		4.8768				// 1tr
+#define M1_TRAVEL_PER_REV 		9.525				// 1tr
 #define M1_MICROSTEPS 			8					// 1mi		1,2,4,8
 #define M1_POLARITY 			1					// 1po		0=normal, 1=reversed
 #define M1_POWER_MODE 			MOTOR_POWER_MODE	// 1pm		See enum cmMotorPowerMode in stepper.h
@@ -125,7 +125,7 @@
 
 #define M2_MOTOR_MAP 			AXIS_Y
 #define M2_STEP_ANGLE 			1.8
-#define M2_TRAVEL_PER_REV 		4.8768
+#define M2_TRAVEL_PER_REV 		9.525
 #define M2_MICROSTEPS 			8
 #define M2_POLARITY 			1
 #define M2_POWER_MODE 			MOTOR_POWER_MODE
@@ -138,10 +138,10 @@
 #define M3_TRAVEL_PER_REV 		1.27254
 #else
 #define M3_STEP_ANGLE 			1.8
-#define M3_TRAVEL_PER_REV 		4.8768
+#define M3_TRAVEL_PER_REV 		9.525
 #endif
 #define M3_MICROSTEPS 			8
-#define M3_POLARITY 			0
+#define M3_POLARITY 			1
 #define M3_POWER_MODE 			MOTOR_POWER_MODE
 #define M3_POWER_LEVEL			MOTOR_POWER_LEVEL_Z
 #define M3_POWER_LEVEL_IDLE		MOTOR_POWER_LEVEL_Z_IDLE
@@ -292,7 +292,7 @@
 #define P1_PWM_FREQUENCY		100					// in Hz
 #define P1_CW_SPEED_LO			10500				// in RPM (arbitrary units)
 #define P1_CW_SPEED_HI			16400
-#define P1_CW_PHASE_LO			0.13				// phase [0..1]
+#define P1_CW_PHASE_LO			0.11				// phase [0..1]
 #define P1_CW_PHASE_HI			0.17
 #define P1_CCW_SPEED_LO			0
 #define P1_CCW_SPEED_HI			0
