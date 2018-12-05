@@ -250,6 +250,10 @@ static uint8_t _probing_init()
 static stat_t _probing_start()
 {
     if( _read_switch() == SW_OPEN ) {
+			 // Start tool tip location
+			 if (spi2_cmd_helper(spi2_start_tool_tip()) != STAT_OK) {
+			   cm.probe_state = PROBE_FAILED;	// Set error if transaction fails
+			 }
        cm_straight_feed(pb.target, pb.flags);
        return (_set_pb_func(_probing_backoff));
     } else {
@@ -299,11 +303,6 @@ static stat_t _probing_finish()
 
 		// store the probe results
 		cm.probe_results[axis] = position;
-	}
-
-	// Start tool tip location
-	if (spi2_cmd_helper(spi2_start_tool_tip()) != STAT_OK) {
-		cm.probe_state = PROBE_FAILED;	// Set error if transaction fails
 	}
 
 	// If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error

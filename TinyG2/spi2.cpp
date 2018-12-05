@@ -266,7 +266,8 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       spi2->read(rd_buf, rd_cnt, true);   // Read RX data (performs dummy writes, doesn't count if RDRF = 0)
       delay_us(25);
     }
-    delay_us(25);
+
+    delay_us(50);
 
     // Read the status
     start_time = SysTickTimer_getValue();
@@ -377,7 +378,7 @@ uint8_t spi2_send_motor_positions() {
   for (uint8_t axis = AXIS_X; axis < SPI2_NUM_AXES; axis++) {
 
     // Convert from float to unsigned 32-bit integer
-    f = cm_get_g28_position(axis);
+    f = cm_get_absolute_position(ACTIVE_MODEL, axis);
     u = FLOAT_TO_U32(f);
 
     // Break 32-bits into separate bytes

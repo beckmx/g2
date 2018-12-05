@@ -930,7 +930,6 @@ stat_t cm_straight_traverse(float target[], float flags[])
 
 /*
  * cm_set_g28_position()  - G28.1
- * cm_get_g28_position()
  * cm_goto_g28_position() - G28
  * cm_set_g30_position()  - G30.1
  * cm_goto_g30_position() - G30
@@ -940,16 +939,6 @@ stat_t cm_set_g28_position(void)
 {
 	copy_vector(cm.gmx.g28_position, cm.gmx.position);
 	return (STAT_OK);
-}
-
-float cm_get_g28_position(uint8_t axis)
-{
-  // Out of range error
-  if (axis < AXIS_X || axis >= AXES) {
-    return 0.0;
-  }
-
-	return cm.gmx.g28_position[axis];
 }
 
 stat_t cm_goto_g28_position(float target[], float flags[])

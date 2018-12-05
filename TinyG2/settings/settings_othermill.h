@@ -118,7 +118,7 @@
 #define M1_STEP_ANGLE 			1.8					// 1sa
 #define M1_TRAVEL_PER_REV 		9.525				// 1tr
 #define M1_MICROSTEPS 			8					// 1mi		1,2,4,8
-#define M1_POLARITY 			1					// 1po		0=normal, 1=reversed
+#define M1_POLARITY 			0					// 1po		0=normal, 1=reversed
 #define M1_POWER_MODE 			MOTOR_POWER_MODE	// 1pm		See enum cmMotorPowerMode in stepper.h
 #define M1_POWER_LEVEL			MOTOR_POWER_LEVEL_XY	// 0.00=off, 1.00=max
 #define M1_POWER_LEVEL_IDLE		MOTOR_POWER_LEVEL_XY_IDLE
@@ -127,7 +127,7 @@
 #define M2_STEP_ANGLE 			1.8
 #define M2_TRAVEL_PER_REV 		9.525
 #define M2_MICROSTEPS 			8
-#define M2_POLARITY 			1
+#define M2_POLARITY 			0
 #define M2_POWER_MODE 			MOTOR_POWER_MODE
 #define M2_POWER_LEVEL			MOTOR_POWER_LEVEL_XY
 #define M2_POWER_LEVEL_IDLE		MOTOR_POWER_LEVEL_XY_IDLE
@@ -180,7 +180,7 @@
 #define X_VELOCITY_MAX 			1500 				// xvm		G0 max velocity in mm/min
 #define X_FEEDRATE_MAX 			X_VELOCITY_MAX		// xfr 		G1 max feed rate in mm/min
 #define X_TRAVEL_MIN			0					// xtn		minimum travel for soft limits
-#define X_TRAVEL_MAX 			145.6				// xtr		travel between switches or crashes
+#define X_TRAVEL_MAX 			160.0				// xtr		travel between switches or crashes
 #define X_JERK_MAX 				JERK_MAX			// xjm
 #define X_JUNCTION_DEVIATION	JUNCTION_DEVIATION	// xjd
 #define X_SWITCH_MODE_MIN 		SW_MODE_HOMING		// xsn		SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
@@ -197,7 +197,7 @@
 #define Y_VELOCITY_MAX 			X_VELOCITY_MAX
 #define Y_FEEDRATE_MAX 			Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN			0
-#define Y_TRAVEL_MAX 			119.1
+#define Y_TRAVEL_MAX 			300.0
 #define Y_JERK_MAX 				JERK_MAX
 #define Y_JUNCTION_DEVIATION 	JUNCTION_DEVIATION
 #define Y_SWITCH_MODE_MIN		SW_MODE_HOMING
@@ -217,7 +217,7 @@
 #define Z_VELOCITY_MAX 			X_VELOCITY_MAX
 #endif
 #define Z_FEEDRATE_MAX 			Z_VELOCITY_MAX
-#define Z_TRAVEL_MIN			-60.1
+#define Z_TRAVEL_MIN			-100.0
 #define Z_TRAVEL_MAX 			0
 #define Z_JERK_MAX 				JERK_MAX			// 200 million
 #define Z_JUNCTION_DEVIATION 	JUNCTION_DEVIATION

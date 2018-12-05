@@ -619,7 +619,6 @@ stat_t cm_resume_origin_offsets(void);				 			// G92.3
 // Free Space Motion (4.3.4)
 stat_t cm_straight_traverse(float target[], float flags[]);		// G0
 stat_t cm_set_g28_position(void);								// G28.1
-float cm_get_g28_position(uint8_t);
 stat_t cm_goto_g28_position(float target[], float flags[]); 	// G28
 stat_t cm_set_g30_position(void);								// G30.1
 stat_t cm_goto_g30_position(float target[], float flags[]);		// G30
