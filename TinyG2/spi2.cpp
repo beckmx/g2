@@ -307,7 +307,7 @@ uint8_t spi2_slave_handler() {
   // SPI2 Slave Interrupt received
   if (spi2_slave_int) {
 
-    delay_us(25);
+    delay_us(300);
 
     // Clear flag
     spi2_slave_int = false;
