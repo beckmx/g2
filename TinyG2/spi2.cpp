@@ -243,7 +243,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
 
     // Process data bytes if available; process write data, then read data
     if (wr_cnt > 0) {
-      spi2->write(wr_buf, wr_cnt, false);
+      spi2->write(wr_buf, wr_cnt, true);
       // Wait for TXEMPTY to flush, then clear unused RX data without invoking read
       start_time = SysTickTimer_getValue();
       while(!spi2->is_tx_empty() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT));
