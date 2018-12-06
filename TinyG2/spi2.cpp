@@ -217,12 +217,16 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
 
     // Write out command byte (slave request, skip this)
     if (!slave_req) {
-      spi2->write(cmd_byte, true);
+      if (wr_cnt > 0) {
+        spi2->write(cmd_byte, false);
+      } else {
+        spi2->write(cmd_byte, true);
+      }
       // Wait for TXEMPTY to flush, then clear unused RX data without invoking read
       start_time = SysTickTimer_getValue();
       while(!spi2->is_tx_empty() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT));
       while(spi2->is_rx_ready() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {
-        spi2->read();
+        spi2->read(false);
       }
       // Timed out, report and exit with timeout status
       if ((SysTickTimer_getValue() - start_time) >= SPI2_TIMEOUT) {
@@ -239,7 +243,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
 
     // Process data bytes if available; process write data, then read data
     if (wr_cnt > 0) {
-      spi2->write(wr_buf, wr_cnt, true);
+      spi2->write(wr_buf, wr_cnt, false);
       // Wait for TXEMPTY to flush, then clear unused RX data without invoking read
       start_time = SysTickTimer_getValue();
       while(!spi2->is_tx_empty() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT));
@@ -248,7 +252,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
         if (rd_cnt > 0) {
           delay(1);
         }
-        spi2->read();
+        spi2->read(false);
       }
       // Timed out, report and exit with timeout status
       if ((SysTickTimer_getValue() - start_time) >= SPI2_TIMEOUT) {
@@ -263,7 +267,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       }
     }
     if (rd_cnt > 0) {
-      spi2->read(rd_buf, rd_cnt, true);   // Read RX data (performs dummy writes, doesn't count if RDRF = 0)
+      spi2->read(rd_buf, rd_cnt, false);   // Read RX data (performs dummy writes, doesn't count if RDRF = 0)
       delay_us(25);
     }
     delay_us(50);
