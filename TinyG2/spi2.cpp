@@ -41,6 +41,9 @@ uint8_t spi2_spd_led[5] = {0,0,0,0,0};
 uint8_t spi2_eps_axis = 0;
 float spi2_eps_val = 0.0;
 
+// WORKAROUND: Stop Tool Tip command global variable
+bool spi2_stop_tool_tip = false;
+
 // Firmware version global variable (for JSON commands)
 struct spi2_fw_type spi2_fw_ver = {0, 0, 0};
 
@@ -380,8 +383,21 @@ uint8_t spi2_send_motor_positions() {
   // Get each motor position, convert to uint32_t and store bytes into buffer
   for (uint8_t axis = AXIS_X; axis < SPI2_NUM_AXES; axis++) {
 
+    // WORKAROUND: Send Stop Tool Tip command for on Z-Axis when flag set
+    if (axis == AXIS_Z && spi2_stop_tool_tip) {
+
+      // Reset flag
+      spi2_stop_tool_tip = false;
+
+      // Set motor position to Stop Tool Tip command code
+      f = SPI2_STOP_TOOL_TIP;
+
+    // All others, get the current motor position for the given axis
+    } else {
+      f = cm_get_absolute_position(ACTIVE_MODEL, axis);
+    }
+
     // Convert from float to unsigned 32-bit integer
-    f = cm_get_absolute_position(ACTIVE_MODEL, axis);
     u = FLOAT_TO_U32(f);
 
     // Break 32-bits into separate bytes

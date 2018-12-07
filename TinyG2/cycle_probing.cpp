@@ -37,6 +37,9 @@
 #include "util.h"
 #include "spi2.h"
 
+// WORKAROUND: Stop Tool Tip command global variable
+extern bool spi2_stop_tool_tip;
+
 /**** Probe singleton structure ****/
 
 #define MINIMUM_PROBE_TRAVEL 0.254
@@ -250,10 +253,15 @@ static uint8_t _probing_init()
 static stat_t _probing_start()
 {
     if( _read_switch() == SW_OPEN ) {
+
+			 // WORKAROUND: Reset Stop Tool Tip flag if active
+			 spi2_stop_tool_tip = false;
+
 			 // Start tool tip location
 			 if (spi2_cmd_helper(spi2_start_tool_tip()) != STAT_OK) {
 			   cm.probe_state = PROBE_FAILED;	// Set error if transaction fails
 			 }
+
        cm_straight_feed(pb.target, pb.flags);
        return (_set_pb_func(_probing_backoff));
     } else {
@@ -303,6 +311,11 @@ static stat_t _probing_finish()
 
 		// store the probe results
 		cm.probe_results[axis] = position;
+	}
+
+	// WORKAROUND: Execute Stop Tool Tip command if probing fails (didn't touch down)
+	if (cm.probe_state == PROBE_FAILED) {
+		spi2_stop_tool_tip = true;
 	}
 
 	// If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error

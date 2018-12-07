@@ -54,6 +54,8 @@ typedef enum {
 #define SPI2_STS_TIMEOUT        0x03  // Timeout Status
 #define SPI2_STS_RETRIES        0x04  // Exceeded Retries Status
 
+#define SPI2_STOP_TOOL_TIP      100.0 // WORKAROUND: Unique command to stop tool tip (Z Axis runs 0 to -100 typically)
+
 // Function Prototypes
 void spi2_init(void);
 uint8_t spi2_cmd(bool, uint8_t, uint8_t*, uint16_t, uint8_t *, uint16_t);
