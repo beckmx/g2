@@ -377,8 +377,7 @@ uint8_t spi2_start_tool_tip() {
 // spi2_send_motor_positions: send motor positions (command 0x03)
 uint8_t spi2_send_motor_positions() {
 
-  float f;
-  uint32_t u;
+  conv_type x;
 
   // Get each motor position, convert to uint32_t and store bytes into buffer
   for (uint8_t axis = AXIS_X; axis < SPI2_NUM_AXES; axis++) {
@@ -390,21 +389,18 @@ uint8_t spi2_send_motor_positions() {
       spi2_stop_tool_tip = false;
 
       // Set motor position to Stop Tool Tip command code
-      f = SPI2_STOP_TOOL_TIP;
+      x.f = SPI2_STOP_TOOL_TIP;
 
     // All others, get the current motor position for the given axis
     } else {
-      f = cm_get_absolute_position(ACTIVE_MODEL, axis);
+      x.f = cm_get_absolute_position(ACTIVE_MODEL, axis);
     }
 
-    // Convert from float to unsigned 32-bit integer
-    u = FLOAT_TO_U32(f);
-
     // Break 32-bits into separate bytes
-    wbuf[axis*4] = (uint8_t)((u >> 24) & 0xFF);
-    wbuf[axis*4+1] = (uint8_t)((u >> 16) & 0xFF);
-    wbuf[axis*4+2] = (uint8_t)((u >> 8) & 0xFF);
-    wbuf[axis*4+3] = (uint8_t)(u & 0xFF);
+    wbuf[axis*4] = x.u[3];
+    wbuf[axis*4+1] = x.u[2];
+    wbuf[axis*4+2] = x.u[1];
+    wbuf[axis*4+3] = x.u[0];
 
   }
 
@@ -416,15 +412,20 @@ uint8_t spi2_send_motor_positions() {
 uint8_t spi2_request_encoder_positions() {
 
   uint8_t st;
-  uint32_t u;
+  conv_type x;
 
   // Get the encoder position data as one 16-byte transfer
   st = spi2_cmd(false, SPI2_CMD_REQ_ENC_POS, NULL, 0, rbuf, (SPI2_NUM_AXES*4));
 
   // Convert the data in the buffer to their approriate array values
   for (uint8_t axis = AXIS_X; axis < SPI2_NUM_AXES; axis++) {
-    u = ((rbuf[axis*4] << 24) + (rbuf[axis*4+1] << 16) + (rbuf[axis*4+2] << 8) + (rbuf[axis*4+3]));
-    spi2_encoder_pos[axis] = U32_TO_FLOAT(u);
+
+    x.u[3] = rbuf[axis*4];
+    x.u[2] = rbuf[axis*4+1];
+    x.u[1] = rbuf[axis*4+2];
+    x.u[0] = rbuf[axis*4+3];
+
+    spi2_encoder_pos[axis] = x.f;
   }
 
   return st;
@@ -434,7 +435,7 @@ uint8_t spi2_request_encoder_positions() {
 uint8_t spi2_read_encoder_position(uint8_t axis) {
 
   uint8_t st;
-  uint32_t u;
+  conv_type x;
 
   // Save off index for text mode print
   spi2_enc_idx = axis;
@@ -444,8 +445,12 @@ uint8_t spi2_read_encoder_position(uint8_t axis) {
   st = spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
 
   // Convert the data in the buffer to their approriate array value
-  u = ((rbuf[axis*4] << 24) + (rbuf[axis*4+1] << 16) + (rbuf[axis*4+2] << 8) + (rbuf[axis*4+3]));
-  spi2_encoder_pos[axis] = U32_TO_FLOAT(u);
+  x.u[3] = rbuf[axis*4];
+  x.u[2] = rbuf[axis*4+1];
+  x.u[1] = rbuf[axis*4+2];
+  x.u[0] = rbuf[axis*4+3];
+
+  spi2_encoder_pos[axis] = x.f;
 
   return st;
 }
@@ -522,18 +527,18 @@ uint8_t spi2_set_spindle_led() {
 // spi2_set_epsilon: set epsilon (command 0x48 / 72)
 uint8_t spi2_set_epsilon() {
 
-  uint32_t u;
+  conv_type x;
 
   // Set index and value for global variables
   wbuf[0] = spi2_eps_axis;
 
-  u = FLOAT_TO_U32(spi2_eps_val);
+  x.f = spi2_eps_val;
 
   // Break 32-bits into separate bytes
-  wbuf[1] = (uint8_t)((u >> 24) & 0xFF);
-  wbuf[2] = (uint8_t)((u >> 16) & 0xFF);
-  wbuf[3] = (uint8_t)((u >> 8) & 0xFF);
-  wbuf[4] = (uint8_t)(u & 0xFF);
+  wbuf[1] = x.u[3];
+  wbuf[2] = x.u[2];
+  wbuf[3] = x.u[1];
+  wbuf[4] = x.u[0];
 
   return(spi2_cmd(false, SPI2_CMD_SET_EPS, wbuf, 5, rbuf, 0));
 }

@@ -28,9 +28,6 @@ typedef enum {
 #define SPI2_NUM_RETRIES  3                        // Number of retries on error condition
 #define SPI2_TIMEOUT      100                      // SPI2 bus timeout (in ms)
 
-#define FLOAT_TO_U32(n) (uint32_t)(*(uint32_t*)&n)  // Convert from float to uint32_t
-#define U32_TO_FLOAT(n) ((float)(*(float*)&n))      // Convert from uint32_t to float
-
 // SPI2 Command Set
 #define SPI2_CMD_RST_ENC_POS    0x01  // Reset Encoder Positions to Zero
 #define SPI2_CMD_START_TOOL_TIP 0x02  // Start Tool Tip Command
@@ -119,6 +116,13 @@ void spi2_cmd74_print(nvObj_t *);
 #define spi2_cmd70_print tx_print_stub
 #define spi2_cmd74_print tx_print_stub
 #endif
+
+// Conversion type (uint32_t <> float)
+typedef union conv_type{
+  float f;
+  uint8_t u[sizeof (float)];
+} conv_type;
+
 
 #ifdef __cplusplus
 }
