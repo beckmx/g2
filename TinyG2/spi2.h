@@ -117,13 +117,6 @@ void spi2_cmd74_print(nvObj_t *);
 #define spi2_cmd74_print tx_print_stub
 #endif
 
-// Conversion type (uint32_t <> float)
-typedef union conv_type{
-  float f;
-  uint8_t u[sizeof (float)];
-} conv_type;
-
-
 #ifdef __cplusplus
 }
 #endif
