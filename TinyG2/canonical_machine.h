@@ -87,9 +87,6 @@ typedef struct GCodeState {				// Gcode model state - used by model, planning an
 	float feed_rate; 					// F - normalized to millimeters/minute or in inverse time mode
 
 	float spindle_speed;				// in RPM
-	float prev_spindle_speed;		// in RPM
-	float rpm_increment;			// in RPM
-	uint32_t dly_per_rpm_incr;		// in milliseconds
 	float parameter;					// P - parameter used for dwell time in seconds, G10 coord select...
 
 	uint8_t feed_rate_mode;				// See cmFeedRateMode for settings
@@ -173,9 +170,6 @@ typedef struct GCodeInput {				// Gcode model inputs - meaning depends on contex
 
 	uint8_t spindle_mode;				// 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
 	float spindle_speed;				// in RPM
-	float prev_spindle_speed;		// in RPM
-	float rpm_increment;			// in RPM
-	uint32_t dly_per_rpm_incr;		// in milliseconds
 	float spindle_override_factor;		// 1.0000 x S spindle speed. Go up or down from there
 	uint8_t	spindle_override_enable;	// TRUE = override enabled
 
@@ -575,7 +569,6 @@ float cm_get_feed_rate(GCodeState_t *gcode_state);
 
 void cm_set_motion_mode(GCodeState_t *gcode_state, uint8_t motion_mode);
 void cm_set_spindle_mode(GCodeState_t *gcode_state, uint8_t spindle_mode);
-void cm_set_prev_spindle_speed_parameter(GCodeState_t *gcode_state, float prev_speed);
 void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed);
 void cm_set_tool_number(GCodeState_t *gcode_state, uint8_t tool);
 void cm_set_absolute_override(GCodeState_t *gcode_state, uint8_t absolute_override);
@@ -777,9 +770,6 @@ stat_t cm_set_g55c(nvObj_t *nv);		// set c-axis offset (spi2 special handling)
 	void cm_print_estp(nvObj_t *nv);
 	void cm_print_spc(nvObj_t *nv);
 	void cm_print_sps(nvObj_t *nv);
-	void cm_print_spps(nvObj_t *nv);
-	void cm_print_sprpm(nvObj_t *nv);
-	void cm_print_spdly(nvObj_t *nv);
 
 	void cm_print_gpl(nvObj_t *nv);		// Gcode defaults
 	void cm_print_gun(nvObj_t *nv);
@@ -844,9 +834,6 @@ stat_t cm_set_g55c(nvObj_t *nv);		// set c-axis offset (spi2 special handling)
 	#define cm_print_estp tx_print_stub
 	#define cm_print_spc tx_print_stub
 	#define cm_print_sps tx_print_stub
-	#define cm_print_spps tx_print_stub
-	#define cm_print_sprpm tx_print_stub
-	#define cm_print_spdly tx_print_stub
 
 	#define cm_print_gpl tx_print_stub		// Gcode defaults
 	#define cm_print_gun tx_print_stub

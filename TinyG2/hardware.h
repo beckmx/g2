@@ -117,7 +117,7 @@ extern "C"{
  */
 
 /**** Stepper DDA and dwell timer settings ****/
-#define FREQUENCY_SS		  1000UL		// PWM soft-start timer frequency, 1ms period (1kHz)
+
 #define FREQUENCY_DDA		200000.0		// Hz step frequency. Interrupts actually fire at 2x (400 KHz)
 #define FREQUENCY_DWELL		1000UL
 #define FREQUENCY_SGI		200000UL		// 200,000 Hz means software interrupts will fire 5 uSec after being called
@@ -125,11 +125,11 @@ extern "C"{
 /**** Motate Definitions ****/
 
 // Timer definitions. See stepper.h and other headers for setup
-timer_number soft_start_timer_num	= 0;	// pwm soft-start in spindle.cpp
-timer_number dda_timer_num   			= 2;	// stepper pulse generation in stepper.cpp
-timer_number dwell_timer_num 			= 3;	// dwell timing in stepper.cpp
-timer_number load_timer_num  			= 4;	// request load timer in stepper.cpp
-timer_number exec_timer_num  			= 5;	// request exec timer in stepper.cpp
+
+timer_number dda_timer_num   = 2;	// stepper pulse generation in stepper.cpp
+timer_number dwell_timer_num = 3;	// dwell timing in stepper.cpp
+timer_number load_timer_num  = 4;	// request load timer in stepper.cpp
+timer_number exec_timer_num  = 5;	// request exec timer in stepper.cpp
 
 // Pin assignments
 

@@ -31,9 +31,6 @@
  *		 to be changed are in tinyg.h
  */
 
- #ifndef SETTINGS_OTHERMILL_PRO_H_ONCE
- #define SETTINGS_OTHERMILL_PRO_H_ONCE
-
 /***********************************************************************/
 /**** OtherMill Pro profile ***************************************/
 /***********************************************************************/
@@ -44,21 +41,17 @@
 // interim max values for testing
 #undef X_VELOCITY_MAX
 #undef Y_VELOCITY_MAX
-#undef P1_CW_PHASE_HI
-#undef P1_CW_PHASE_LO
-#define X_VELOCITY_MAX 2600
-#define Y_VELOCITY_MAX 2600
-#define P1_CW_SPEED_HI 26000
-#define P1_CW_SPEED_LO 8000
-#define P1_CW_PHASE_HI 0.19
-#define P1_CW_PHASE_LO 0.135
+#undef P1_CW_SPEED_HI
+#undef P1_CW_SPEED_LO
+#define X_VELOCITY_MAX 5000
+#define Y_VELOCITY_MAX 5000
+#define P1_CW_SPEED_HI 32000
+#define P1_CW_SPEED_LO 10000
 
 #undef PAUSE_DWELL_TIME
 #define PAUSE_DWELL_TIME 4.0
 
 #undef MOTOR_POWER_LEVEL
 #undef MOTOR_POWER_LEVEL_Z
-#define MOTOR_POWER_LEVEL 0.275
-#define MOTOR_POWER_LEVEL_Z 0.375
-
-#endif  // SETTINGS_OTHERMILL_PRO_H_ONCE
+#define MOTOR_POWER_LEVEL 1
+#define MOTOR_POWER_LEVEL_Z 0.9

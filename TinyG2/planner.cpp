@@ -262,7 +262,7 @@ stat_t _advance_dwell(float& dwell_time)
 		mp_start_hold();
 		return STAT_NOOP;
 	}
-
+    
 	// execute dwells in segments rather than all at once so that feedhold
 	// processing can proceed while dwells are in progress. This works around a
 	// bug where holds initiated during dwells get stuck in FEEDHOLD_DECEL, apparently
@@ -270,20 +270,20 @@ stat_t _advance_dwell(float& dwell_time)
 	float dwell_segment_time = min(dwell_time, NOM_DWELL_SEGMENT_SEC); // segment time in seconds
 	st_prep_dwell(dwell_segment_time * MICROSECONDS_PER_SECOND);       // convert to usecs and prep
 	dwell_time = max(dwell_time - dwell_segment_time, 0.);
-
+    
 	sr_request_status_report(SR_REQUEST_TIMED);                // continue reporting mr buffer
-
+    
 	return fp_ZERO(dwell_time) ? (STAT_OK) : (STAT_EAGAIN);
 }
 
 static stat_t _exec_dwell(mpBuf_t *bf)
 {
 	stat_t status = _advance_dwell(bf->gm.move_time);
-
+    
 	if (status == STAT_OK && mp_free_run_buffer()) {
 		cm_cycle_end();			// free buffer & perform cycle_end if planner is empty
 	}
-
+	
 	return status;
 }
 

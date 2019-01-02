@@ -47,7 +47,6 @@
 #include "settings.h"
 #include "spindle.h"
 #include "persistence.h"
-#include "pwm.h"
 #include "spi2.h"
 
 #ifdef __ARM
@@ -69,7 +68,6 @@ static stat_t _shutdown_idler(void);
 static stat_t _normal_idler(void);
 static stat_t _limit_switch_handler(void);
 static stat_t _interlock_estop_handler(void);
-static stat_t _pwm_soft_start_handler(void);
 static stat_t _system_assertions(void);
 static stat_t _sync_to_planner(void);
 static stat_t _sync_to_tx_buffer(void);
@@ -177,8 +175,7 @@ static void _controller_HSM()
 	DISPATCH(mp_plan_hold_callback());			// 6b. plan a feedhold from line runtime
 	DISPATCH(xio_callback());					// 7. manages state changes in the XIO system
 	DISPATCH(_system_assertions());				// 8. system integrity assertions
-	DISPATCH(_pwm_soft_start_handler());	// 9. perform PWM soft-start on spindle
-	DISPATCH(_spi2_slave_handler());			// 10. SPI2 slave requests
+	DISPATCH(_spi2_slave_handler());			// 9. SPI2 slave requests
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
@@ -490,13 +487,6 @@ static stat_t _interlock_estop_handler(void)
 #else
 	return (STAT_OK);
 #endif
-}
-
-/*
- * _pwm_soft_start_handler() - perform PWM soft-start on spindle motor
- */
-static stat_t _pwm_soft_start_handler(void) {
-	return cm_spindle_soft_start(cm.gm.spindle_mode);
 }
 
 /*
