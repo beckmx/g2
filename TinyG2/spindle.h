@@ -29,6 +29,14 @@
 #define SPINDLE_H_ONCE
 
 /*
+ * Definitions
+ */
+
+ // PWM soft-start: original estimate 13ms/100RPM, but tweaked for slipping
+ #define SP_RPM_INCREMENT     500.0  // RPM
+ #define SP_DLY_PER_RPM_INCR  75     // ms per RPM increment (above)
+
+/*
  * Global Scope Functions
  */
 
@@ -36,7 +44,9 @@ void cm_spindle_init();
 
 stat_t cm_set_spindle_speed(float speed);			// S parameter
 
+stat_t get_speed_limits(uint8_t, float *, float *);
 stat_t cm_spindle_control(uint8_t spindle_mode);	// M3, M4, M5 integrated spindle control
 stat_t cm_spindle_control_immediate(uint8_t spindle_mode); //like cm_spindle_control but not synchronized to planner
+stat_t cm_spindle_soft_start(uint8_t spindle_mode);
 
 #endif	// End of include guard: SPINDLE_H_ONCE

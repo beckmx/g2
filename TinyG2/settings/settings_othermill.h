@@ -31,6 +31,9 @@
  *		 to be changed are in tinyg.h
  */
 
+ #ifndef SETTINGS_OTHERMILL_H_ONCE
+ #define SETTINGS_OTHERMILL_H_ONCE
+
 /***********************************************************************/
 /**** Otherlab OtherMill profile ***************************************/
 /***********************************************************************/
@@ -300,7 +303,7 @@
 #define P1_CCW_PHASE_HI			0.1
 #define P1_PWM_PHASE_OFF		0.1
 
-#define P1_USE_MAPPING_CUBIC
+//#define P1_USE_MAPPING_CUBIC
 #define P1_MAPPING_CUBIC_X3     2.1225328766717546e-013
 #define P1_MAPPING_CUBIC_X2    -7.2900167282605129e-009
 #define P1_MAPPING_CUBIC_X1     8.5854646785876479e-005
@@ -349,3 +352,5 @@
 #define G59_A_OFFSET 0
 #define G59_B_OFFSET 0
 #define G59_C_OFFSET 0
+
+#endif  //  SETTINGS_OTHERMILL_H_ONCE

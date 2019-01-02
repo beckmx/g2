@@ -40,6 +40,12 @@
 
 pwmSingleton_t pwm;
 
+#ifdef __ARM
+static volatile bool soft_start_enabled = false;
+static volatile uint32_t soft_start_count = 0;																				// soft-start delay counter
+Timer<soft_start_timer_num> soft_start_timer(kTimerUpToMatch, FREQUENCY_SS);	// soft-start timer, 1kHz (1ms)
+#endif // __ARM
+
 // defines common to all PWM channels
 //#define PWM_TIMER_TYPE	TC1_struct	// PWM uses TC1's
 #define PWM_TIMER_t	TC1_t				// PWM uses TC1's
@@ -98,6 +104,12 @@ void pwm_init()
 	pwm.p[PWM_2].timer->CTRLB = PWM2_CTRLB;
 	pwm.p[PWM_2].timer->INTCTRLB = PWM2_INTCTRLB;
 #endif // __AVR
+
+#ifdef __ARM
+	// initialize the soft-start timer
+	soft_start_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
+	pwm_soft_start_end();	// Make sure the counter is stopped and reset
+#endif // __ARM
 }
 
 /*
@@ -212,6 +224,76 @@ stat_t pwm_set_duty(uint8_t chan, float duty)
 
 	return (STAT_OK);
 }
+
+#ifdef __ARM
+
+
+// pwm_soft_start_delay: set a delay for pwm soft start (**BLOCKING**)
+stat_t pwm_soft_start_delay(uint32_t msec) {
+
+	// reset counter
+	soft_start_count = 0;
+
+	// start timer
+	soft_start_timer.start();
+
+	// wait for requested number of milliseconds (**BLOCKING**)
+	while (soft_start_count < msec);
+
+	// stop timer
+	soft_start_timer.stop();
+
+	return (STAT_OK);
+}
+
+// pwm_soft_start_begin: starts soft start delay
+stat_t pwm_soft_start_begin() {
+
+	// start timer
+	soft_start_timer.start();
+
+	// set flag
+	soft_start_enabled = true;
+
+	return STAT_OK;
+}
+
+// pwm_soft_start_end stops the soft start delay and resets the counter
+stat_t pwm_soft_start_end() {
+
+	// stop timer
+	soft_start_timer.stop();
+
+	// reset counter and flag
+	soft_start_count = 0;
+	soft_start_enabled = false;
+
+	return STAT_OK;
+}
+
+// pwm_is_soft_start_done: checks if the soft start delay has met or exceeded the provided delay
+bool pwm_is_soft_start_done(uint32_t msec) {
+
+	if (soft_start_count >= msec) {
+		return true;
+	}
+
+	return false;
+}
+
+// pwm_is_soft_start_enabled: checks if the soft start delay is running
+bool pwm_is_soft_start_enabled() {
+	return soft_start_enabled;
+}
+
+// soft-start timer isr
+namespace Motate {	// Must define timer interrupts inside the Motate namespace
+	MOTATE_TIMER_INTERRUPT(soft_start_timer_num) {
+		soft_start_timer.getInterruptCause();	// read SR to clear interrupt condition
+		soft_start_count++;
+	}
+} // namespace Motate
+#endif // __ARM
 
 
 /***********************************************************************************

@@ -33,6 +33,9 @@
 #include "hardware.h"
 #include "pwm.h"
 #include "report.h"
+#include "util.h"
+#include "math.h"
+#include "settings.h"
 
 static void _exec_spindle_control(float *value, float *flag);
 static void _exec_spindle_speed(float *value, float *flag);
@@ -47,49 +50,67 @@ void cm_spindle_init()
 
     pwm_set_freq(PWM_1, pwm.c[PWM_1].frequency);
     pwm_set_duty(PWM_1, pwm.c[PWM_1].phase_off);
+
+		// Set initial RPM increment and delay - TODO config.cpp should handle this, not initializing
+		cm.gm.rpm_increment 		= SP_RPM_INCREMENT;
+		cm.gm.dly_per_rpm_incr 	= SP_DLY_PER_RPM_INCR;
 }
 
 /*
  * cm_get_spindle_pwm() - return PWM phase (duty cycle) for dir and speed
  */
-float cm_get_spindle_pwm( uint8_t spindle_mode )
+float cm_get_spindle_pwm( uint8_t spindle_mode, float speed )
 {
 	float speed_lo=0, speed_hi=0, phase_lo=0, phase_hi=0;
+
+	get_speed_limits(spindle_mode, &speed_lo, &speed_hi);
 	if (spindle_mode == SPINDLE_CW ) {
-		speed_lo = pwm.c[PWM_1].cw_speed_lo;
-		speed_hi = pwm.c[PWM_1].cw_speed_hi;
 		phase_lo = pwm.c[PWM_1].cw_phase_lo;
 		phase_hi = pwm.c[PWM_1].cw_phase_hi;
 	} else if (spindle_mode == SPINDLE_CCW ) {
-		speed_lo = pwm.c[PWM_1].ccw_speed_lo;
-		speed_hi = pwm.c[PWM_1].ccw_speed_hi;
 		phase_lo = pwm.c[PWM_1].ccw_phase_lo;
 		phase_hi = pwm.c[PWM_1].ccw_phase_hi;
 	}
 
 	if (spindle_mode==SPINDLE_CW || spindle_mode==SPINDLE_CCW ) {
-		// clamp spindle speed to lo/hi range
-		if( cm.gm.spindle_speed < speed_lo ) cm.gm.spindle_speed = speed_lo;
-		if( cm.gm.spindle_speed > speed_hi ) cm.gm.spindle_speed = speed_hi;
 
 		// map speed to duty cycle
 #ifdef P1_USE_MAPPING_CUBIC
         // regressed cubic polynomial mapping
-        float x = cm.gm.spindle_speed;
+        float x = speed;
         float duty = P1_MAPPING_CUBIC_X0 + x * (P1_MAPPING_CUBIC_X1 + x * (P1_MAPPING_CUBIC_X2 + x * P1_MAPPING_CUBIC_X3));
 #else
         // simple linear map
-		float lerpfactor = (cm.gm.spindle_speed - speed_lo) / (speed_hi - speed_lo);
+		float lerpfactor = (speed - speed_lo) / (speed_hi - speed_lo);
 		float duty = (lerpfactor * (phase_hi - phase_lo)) + phase_lo;
 #endif
-        // clamp duty cycle to lo/hi range
-        if( duty < phase_lo ) duty = phase_lo;
-        if( duty > phase_hi ) duty = phase_hi;
+
+				// Always clamp duty cycle to hi range
+				if (duty > phase_hi) duty = phase_hi;
+
+				// Decreasing duty cycle, clamp to lo range
+				if ((cm.gm.spindle_speed < cm.gm.prev_spindle_speed) && (duty < phase_lo)) duty = phase_lo;
+
         return duty;
 	} else {
 		return pwm.c[PWM_1].phase_off;
 	}
 }
+
+/*
+ * get_speed_limits() - returns the speed range limits based on
+ * spindle direction
+ */
+ stat_t get_speed_limits(uint8_t mode, float *speed_lo, float *speed_hi) {
+	 if (mode == SPINDLE_CW ) {
+		 *speed_lo = pwm.c[PWM_1].cw_speed_lo;
+		 *speed_hi = pwm.c[PWM_1].cw_speed_hi;
+	 } else if (mode == SPINDLE_CCW ) {
+		 *speed_lo = pwm.c[PWM_1].ccw_speed_lo;
+		 *speed_hi = pwm.c[PWM_1].ccw_speed_hi;
+	 }
+	 return STAT_OK;
+ }
 
 /*
  * cm_spindle_control() -  queue the spindle command to the planner buffer
@@ -119,6 +140,7 @@ stat_t cm_spindle_control_immediate(uint8_t spindle_mode)
 static void _exec_spindle_control(float *value, float *flag)
 {
 	uint8_t spindle_mode = (uint8_t)value[0];
+	float speed_lo, speed_hi;
 
 	bool paused = spindle_mode & SPINDLE_PAUSED;
 	uint8_t raw_spindle_mode = spindle_mode & (~SPINDLE_PAUSED);
@@ -162,7 +184,19 @@ static void _exec_spindle_control(float *value, float *flag)
 	}
 #endif // __ARM
 
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(raw_spindle_mode));
+	// Check speed limits if spindle running
+	if ((spindle_mode == SPINDLE_CW) || (spindle_mode == SPINDLE_CCW)) {
+
+		// Get speed limits
+		get_speed_limits(spindle_mode, &speed_lo, &speed_hi);
+
+		// Clamp spindle speed to lo/hi range
+		if( cm.gm.spindle_speed < speed_lo ) cm.gm.spindle_speed = speed_lo;
+		if( cm.gm.spindle_speed > speed_hi ) cm.gm.spindle_speed = speed_hi;
+	}
+
+	// Perform soft-start
+	cm_spindle_soft_start(spindle_mode);
 }
 
 /*
@@ -180,10 +214,92 @@ stat_t cm_set_spindle_speed(float speed)
 
 static void _exec_spindle_speed(float *value, float *flag)
 {
-	cm_set_spindle_speed_parameter(MODEL, value[0]);
 	uint8_t spindle_mode = cm.gm.spindle_mode & (~SPINDLE_PAUSED);
 	bool paused = cm.gm.spindle_mode & SPINDLE_PAUSED;
+	float speed_lo, speed_hi;
+
 	if(cm.estop_state != 0 || cm.safety_state != 0 || paused)
 		spindle_mode = SPINDLE_OFF;
-	pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode) ); // update spindle speed if we're running
+
+	cm_set_spindle_speed_parameter(MODEL, value[0]);
+
+	// Check speed limits if spindle running
+	if ((spindle_mode == SPINDLE_CW) || (spindle_mode == SPINDLE_CCW)) {
+
+		// Get speed limits
+		get_speed_limits(spindle_mode, &speed_lo, &speed_hi);
+
+		// Clamp spindle speed to lo/hi range
+		if( cm.gm.spindle_speed < speed_lo ) cm.gm.spindle_speed = speed_lo;
+		if( cm.gm.spindle_speed > speed_hi ) cm.gm.spindle_speed = speed_hi;
+	}
+
+	// Perform soft-start
+	cm_spindle_soft_start(spindle_mode);
+}
+
+// cm_spindle_soft_start: performs soft-start procedure for spindle
+stat_t cm_spindle_soft_start(uint8_t spindle_mode) {
+
+	float prev_speed, pwm_rpm_delta, f;
+	bool paused = spindle_mode & SPINDLE_PAUSED;
+
+	// Spindle OFF (M5) or paused, run straight pwm command without ramp to turn off
+	if (spindle_mode == SPINDLE_OFF || paused) {
+
+		// Ensure timer is off and reset
+		pwm_soft_start_end();
+
+		// Run single PWM command to turn off
+		pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, cm.gm.spindle_speed) ); // update spindle speed if we're running
+
+		// Set previous speed to zero for next time
+		prev_speed = 0.0;
+
+	// Ramp up/down to final RPM value with soft-start delay in-between.
+	// Set a step only if haven't started or have completed previous ramp step.
+	} else if ((spindle_mode == SPINDLE_CW || spindle_mode == SPINDLE_CCW) &&
+						(cm.gm.spindle_speed != cm.gm.prev_spindle_speed) &&
+						(!pwm_is_soft_start_enabled() || pwm_is_soft_start_done(cm.gm.dly_per_rpm_incr))) {
+
+			// Check valid RPM setting
+			if (cm.gm.rpm_increment <= 0) {
+				return STAT_COMMAND_NOT_ACCEPTED;
+			}
+
+			// Ensure timer is off and reset
+			pwm_soft_start_end();
+
+			// Set increment/decrement based on whether increasing or decreasing speed
+			if (cm.gm.spindle_speed > cm.gm.prev_spindle_speed) {	// Increase speed
+				pwm_rpm_delta = cm.gm.rpm_increment;
+			} else {	// Decrease speed
+				pwm_rpm_delta = (-1.0 * cm.gm.rpm_increment);
+			}
+
+			// Set next step in spindle speed either to remainder or next RPM delta
+			if (fabs(cm.gm.spindle_speed - cm.gm.prev_spindle_speed) < fabs(pwm_rpm_delta)) {
+				f = cm.gm.spindle_speed;
+			} else {
+				f = cm.gm.prev_spindle_speed + pwm_rpm_delta;
+			}
+
+			// Update spindle speed if we're running; delay on valid duty cycle (cubic)
+			if (pwm_set_duty(PWM_1, cm_get_spindle_pwm(spindle_mode, f)) == STAT_OK) {
+				pwm_soft_start_begin();
+				//delay_test_pin.toggle();
+			}
+
+			// Set previous speed to current increment
+			prev_speed = f;
+
+	// In delay, previous speed should remain the same
+	} else {
+		prev_speed = cm.gm.prev_spindle_speed;
+	}
+
+	// Set previous speed
+	cm_set_prev_spindle_speed_parameter(MODEL, prev_speed);
+
+	return STAT_OK;
 }

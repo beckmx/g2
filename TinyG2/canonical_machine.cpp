@@ -241,6 +241,7 @@ float cm_get_feed_rate(GCodeState_t *gcode_state) { return gcode_state->feed_rat
 
 void cm_set_motion_mode(GCodeState_t *gcode_state, uint8_t motion_mode) { gcode_state->motion_mode = motion_mode;}
 void cm_set_spindle_mode(GCodeState_t *gcode_state, uint8_t spindle_mode) { gcode_state->spindle_mode = spindle_mode;}
+void cm_set_prev_spindle_speed_parameter(GCodeState_t *gcode_state, float prev_speed) { gcode_state->prev_spindle_speed = prev_speed;}
 void cm_set_spindle_speed_parameter(GCodeState_t *gcode_state, float speed) { gcode_state->spindle_speed = speed;}
 void cm_set_tool_number(GCodeState_t *gcode_state, uint8_t tool) { gcode_state->tool = tool;}
 
@@ -2047,6 +2048,9 @@ const char fmt_estp[] PROGMEM = "Emergency Stop:      %s\n";
 
 const char fmt_spc[] PROGMEM = "Spindle Control:     %d [0=OFF,1=CW,2=CCW]\n";
 const char fmt_sps[] PROGMEM = "Spindle Speed: %8.f rpm\n";
+const char fmt_spps[] PROGMEM = "Previous Spindle Speed: %8.f rpm\n";
+const char fmt_sprpm[] PROGMEM = "RPM Increment: %8.f rpm\n";
+const char fmt_spdly[] PROGMEM = "Delay per RPM Increment: %8.f ms\n";
 
 const char fmt_pos[] PROGMEM = "%c position:%15.3f%s\n";
 const char fmt_mpo[] PROGMEM = "%c machine posn:%11.3f%s\n";
@@ -2080,6 +2084,9 @@ void cm_print_safe(nvObj_t *nv) { text_print_str(nv, fmt_safe);}
 void cm_print_estp(nvObj_t *nv) { text_print_str(nv, fmt_estp);}
 void cm_print_spc(nvObj_t *nv) { text_print_int(nv, fmt_spc);}
 void cm_print_sps(nvObj_t *nv) { text_print_flt(nv, fmt_sps);}
+void cm_print_spps(nvObj_t *nv) { text_print_flt(nv, fmt_spps);}
+void cm_print_sprpm(nvObj_t *nv) { text_print_flt(nv, fmt_sprpm);}
+void cm_print_spdly(nvObj_t *nv) { text_print_flt(nv, fmt_spdly);}
 
 void cm_print_gpl(nvObj_t *nv) { text_print_int(nv, fmt_gpl);}
 void cm_print_gun(nvObj_t *nv) { text_print_int(nv, fmt_gun);}
