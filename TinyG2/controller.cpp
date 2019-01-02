@@ -48,6 +48,7 @@
 #include "spindle.h"
 #include "persistence.h"
 #include "pwm.h"
+#include "spi2.h"
 
 #ifdef __ARM
 #include "Reset.h"
@@ -75,6 +76,7 @@ static stat_t _sync_to_tx_buffer(void);
 static stat_t _controller_state(void);
 static stat_t _dispatch_command(void);
 static stat_t _dispatch_control(void);
+static stat_t _spi2_slave_handler(void);
 static void _dispatch_kernel(void);
 
 // prep for export to other modules:
@@ -176,6 +178,7 @@ static void _controller_HSM()
 	DISPATCH(xio_callback());					// 7. manages state changes in the XIO system
 	DISPATCH(_system_assertions());				// 8. system integrity assertions
 	DISPATCH(_pwm_soft_start_handler());	// 9. perform PWM soft-start on spindle
+	DISPATCH(_spi2_slave_handler());			// 10. SPI2 slave requests
 
 //----- planner hierarchy for gcode and cycles ---------------------------------------//
 
@@ -510,5 +513,14 @@ stat_t _system_assertions()
 	emergency___everybody_to_get_from_street(stepper_test_assertions());
 	emergency___everybody_to_get_from_street(encoder_test_assertions());
 	emergency___everybody_to_get_from_street(xio_test_assertions());
+	return (STAT_OK);
+}
+
+/*
+ *  _spi2_slave_handler() - process SPI2 slave requests
+ */
+static stat_t _spi2_slave_handler()
+{
+	spi2_slave_handler();
 	return (STAT_OK);
 }

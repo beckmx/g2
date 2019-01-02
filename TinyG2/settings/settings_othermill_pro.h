@@ -44,8 +44,6 @@
 // interim max values for testing
 #undef X_VELOCITY_MAX
 #undef Y_VELOCITY_MAX
-#undef P1_CW_SPEED_HI
-#undef P1_CW_SPEED_LO
 #undef P1_CW_PHASE_HI
 #undef P1_CW_PHASE_LO
 #define X_VELOCITY_MAX 2600

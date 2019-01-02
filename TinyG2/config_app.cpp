@@ -45,6 +45,7 @@
 #include "help.h"
 //#include "network.h"
 #include "xio.h"
+#include "spi2.h"
 
 /*** structures ***/
 
@@ -410,7 +411,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "g55","g55z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G55][AXIS_Z], G55_Z_OFFSET },
 	{ "g55","g55a",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G55][AXIS_A], G55_A_OFFSET },
 	{ "g55","g55b",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G55][AXIS_B], G55_B_OFFSET },
-	{ "g55","g55c",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G55][AXIS_C], G55_C_OFFSET },
+	{ "g55","g55c",_fipc, 3, cm_print_cofs, get_flt, cm_set_g55c,(float *)&cm.offset[G55][AXIS_C], G55_C_OFFSET },
 
 	{ "g56","g56x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G56][AXIS_X], G56_X_OFFSET },
 	{ "g56","g56y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G56][AXIS_Y], G56_Y_OFFSET },
@@ -552,6 +553,40 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "udd","udd1", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[1], USER_DATA_D1 },
 	{ "udd","udd2", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[2], USER_DATA_D2 },
 	{ "udd","udd3", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[3], USER_DATA_D3 },
+
+	// SPI2 Command Set
+	{ "","s21", _f0, 0, spi2_cmd1_print, get_nul, spi2_cmd1_set,(float *)&cs.null,0 },							// reset encoder positions to zero
+	{ "","s22", _f0, 0, spi2_cmd2_print, get_nul, spi2_cmd2_set,(float *)&cs.null,0 },							// start tool tip command
+
+																																																	// request encoder position
+	{ "s24","s24x", _f0, 3, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_X] },	//  x-axis
+	{ "s24","s24y", _f0, 3, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_Y] },	//  y-axis
+	{ "s24","s24z", _f0, 3, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_Z] },	//  Z-axis
+	{ "s24","s24a", _f0, 3, spi2_cmd4_print, get_flt, set_nul,(float *)&spi2_encoder_pos[AXIS_A] },	//  a-axis
+
+	{ "","s264", _f0, 3, spi2_cmd64_print, spi2_cmd64_get, spi2_cmd64_set,(float *)&cs.null,0 },		// read encoder position
+	{ "","s265", _f0, 0, spi2_cmd65_print, get_nul, spi2_cmd65_set,(float *)&cs.null,0 },						// set user io
+	{ "","s266", _f0, 0, spi2_cmd66_print, get_nul, spi2_cmd66_set,(float *)&cs.null,0 },						// clear user io
+	{ "","s267", _f0, 0, spi2_cmd67_print, get_ui8, spi2_cmd67_set,(float *)&spi2_io_val },					// read user io
+	{ "","s268", _f0, 0, spi2_cmd68_print, get_nul, spi2_cmd68_set,(float *)&cs.null,0 },						// set user led
+	{ "","s269", _f0, 0, spi2_cmd69_print, get_nul, spi2_cmd69_set,(float *)&cs.null,0 },						// clear user led
+	{ "","s270", _f0, 0, spi2_cmd70_print, get_ui8, spi2_cmd70_set,(float *)&spi2_itr_val },  			// read interlock loop
+
+																																																	// set spindle led
+	{ "s271","s271l", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_spd_led[SPI2_SPD_IDX]},	// strip index
+	{ "s271","s271r", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_spd_led[SPI2_SPD_R]},		// red
+	{ "s271","s271g", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_spd_led[SPI2_SPD_G] },	// green
+	{ "s271","s271b", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_spd_led[SPI2_SPD_B] },	// blue
+	{ "s271","s271w", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_spd_led[SPI2_SPD_W] },	// white
+
+																																																	// set epsilon
+	{ "s272","s272x", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_eps_axis },							// axis
+	{ "s272","s272e", _f0, 3, tx_print_nul, get_nul, set_flt,(float *)&spi2_eps_val },							// epsilon value
+
+																																																	// read firmware version
+	{ "s274","s274a", _f0, 0, spi2_cmd74_print, get_ui8, set_nul,(float *)&spi2_fw_ver.major },	 	  // major
+	{ "s274","s274i", _f0, 0, spi2_cmd74_print, get_ui8, set_nul,(float *)&spi2_fw_ver.minor },			// minor
+	{ "s274","s274r", _f0, 0, spi2_cmd74_print, get_ui8, set_nul,(float *)&spi2_fw_ver.rev },				// revision
 
 	// Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS
@@ -703,6 +738,11 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","udc", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
 	{ "","udd", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// user data group
 
+	{ "","s24", _f0, 0, tx_print_nul, get_grp, spi2_cmd4_set,(float *)&cs.null,0 },		// request encoder position group
+	{ "","s271", _f0, 0, tx_print_nul, get_nul, spi2_cmd71_set,(float *)&cs.null,0 },	// spindle led group
+	{ "","s272", _f0, 0, tx_print_nul, get_nul, spi2_cmd72_set,(float *)&cs.null,0 },	// epsilon group
+	{ "","s274", _f0, 0, tx_print_nul, get_grp, spi2_cmd74_set,(float *)&cs.null,0 },	// firmware version group
+
 #ifdef __DIAGNOSTIC_PARAMETERS
 	{ "","_te",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// target axis endpoint group
 	{ "","_tr",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// target axis runtime group
@@ -725,7 +765,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 /***** Make sure these defines line up with any changes in the above table *****/
 
 #define NV_COUNT_UBER_GROUPS 	4 		// count of uber-groups, above
-#define STANDARD_GROUPS 		33		// count of standard groups, excluding diagnostic parameter groups
+#define STANDARD_GROUPS 			38		// count of standard groups, excluding diagnostic parameter groups
 
 #if (MOTORS >= 5)
 #define MOTOR_GROUP_5			1

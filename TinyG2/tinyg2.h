@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		072.73
+#define TINYG_FIRMWARE_BUILD   		300.01
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.971						// firmware major version
@@ -580,6 +580,9 @@ char *get_status_message(stat_t status);
 #define	STAT_PROBE_CYCLE_FAILED 250						// probing cycle did not complete
 #define STAT_PROBE_ENDPOINT_IS_STARTING_POINT 251
 #define	STAT_JOGGING_CYCLE_FAILED 252					// jogging cycle did not complete
+
+// SPI2 additional status messages
+#define	STAT_HOMING_ERROR_RST_ENC_FAILED 253  // reset encoders to zero failed
 
 // !!! Do not exceed 255 without also changing stat_t typedef
 

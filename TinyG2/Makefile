@@ -102,6 +102,7 @@ CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
 #CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
 CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
 CPPFLAGS += -Wredundant-decls -Wlong-long
+CPPFLAGS += -Wno-strict-aliasing
 #CPPFLAGS += -Wmissing-noreturn -Wpacked
 #CPPFLAGS += -Wconversion
 
@@ -208,7 +209,7 @@ ifeq ("$(PLATFORM)", "OthermillPro")
 
 BASE_PLATFORM=v9_3x8c
 SETTINGS_FILE="settings_othermill_pro.h"
-DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
+DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE} FIXMATH_NO_64BIT
 
 endif
 

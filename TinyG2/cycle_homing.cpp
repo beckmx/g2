@@ -34,6 +34,7 @@
 #include "planner.h"
 #include "switch.h"
 #include "report.h"
+#include "spi2.h"
 
 /**** Homing singleton structure ****/
 
@@ -254,6 +255,9 @@ static stat_t _homing_axis_start(int8_t axis)
 	if ((axis = _get_next_axis(axis)) < 0) { 				// axes are done or error
 		if (axis == -1) {									// -1 is done
 			cm.homing_state = HOMING_HOMED;
+			if (spi2_cmd_helper(spi2_reset_encoder_positions()) != STAT_OK) {	// Reset encoder positions to zero
+				return (_homing_error_exit(-3, STAT_HOMING_ERROR_RST_ENC_FAILED));
+			}
 			return (_set_homing_func(_homing_finalize_exit));
 		} else if (axis == -2) { 							// -2 is error
 			return (_homing_error_exit(-2, STAT_HOMING_ERROR_BAD_OR_NO_AXIS));
@@ -452,7 +456,9 @@ static stat_t _homing_error_exit(int8_t axis, stat_t status)
 	// - and not the main controller - it requires its own display processing
 	nv_reset_nv_list();
 
-	if (axis == -2) {
+	if (axis == -3) {
+		nv_add_conditional_message((const char_t *)"Homing error - Reset encoders to zero failed");;
+	} else if (axis == -2) {
 		nv_add_conditional_message((const char_t *)"Homing error - Bad or no axis(es) specified");;
 	} else {
 		char message[NV_MESSAGE_LEN];

@@ -35,6 +35,7 @@
 #include "test.h"
 #include "pwm.h"
 #include "xio.h"
+#include "spi2.h"
 //#include "network.h"
 
 #ifdef __AVR
@@ -105,7 +106,7 @@ void _system_init(void)
 
 	// Initialize C library
 	__libc_init_array();
-    
+
     // Store the flash UUID
     cacheUniqueId();
 
@@ -131,9 +132,10 @@ static void _application_init(void)
 
 	// do these first
 	hardware_init();				// system hardware setup 			- must be first
-	persistence_init();				// set up EEPROM or other NVM		- must be second
+	persistence_init();			// set up EEPROM or other NVM		- must be second
 //	rtc_init();						// real time counter
-	xio_init();						// xtended io subsystem				- must be third
+	xio_init();							// xtended io subsystem				- must be third
+	spi2_init();						// spi2 subsystem - must be fourth (before config)
 	config_init();					// apply config from persistence
 
 	// do these next
@@ -170,7 +172,7 @@ int main(void)
 {
 	// system initialization
 	_system_init();
-    
+
 	// TinyG application setup
 	_application_init();
 	_unit_tests();					// run any unit tests that are enabled
