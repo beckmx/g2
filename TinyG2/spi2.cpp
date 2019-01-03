@@ -278,7 +278,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
 
     // Read the status
     start_time = SysTickTimer_getValue();
-    while (((ret = spi2->read(true)) < 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
+    while (((ret = spi2->read(true)) <= 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
       delay_us(25);
     }
     // Timed out, report and exit with timeout status
@@ -327,7 +327,7 @@ uint8_t spi2_slave_handler() {
 
     // Read command
     start_time = SysTickTimer_getValue();
-    while (((ret = spi2->read(true)) < 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
+    while (((ret = spi2->read(true)) <= 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
       delay_us(25);
     }
     // Timed out, report and exit with timeout status
