@@ -441,7 +441,7 @@ uint8_t spi2_read_encoder_position(uint8_t axis) {
   st = spi2_cmd(false, SPI2_CMD_RD_ENC_POS, wbuf, 1, rbuf, 4);
 
   // Read the data in the buffer into a fixed point and covert to float
-  x = (rbuf[axis*4] << 24) | (rbuf[axis*4+1] << 16) | (rbuf[axis*4+2] << 8) | rbuf[axis*4+3];
+  x = (rbuf[4] << 24) | (rbuf[1] << 16) | (rbuf[2] << 8) | rbuf[3];
   spi2_encoder_pos[axis] = fix16_to_float(x);
 
   return st;

@@ -209,7 +209,7 @@ ifeq ("$(PLATFORM)", "OthermillPro")
 
 BASE_PLATFORM=v9_3x8c
 SETTINGS_FILE="settings_othermill_pro.h"
-DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE} FIXMATH_NO_64BIT
+DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
@@ -299,13 +299,13 @@ PATH := $(PATH):../Tools/gcc-$(CROSS_COMPILE)/bin
 # C Flags (NOT CPP flags)
 
 #CFLAGS +=  $(DEVICE_CFLAGS)
-CFLAGS +=  $(DEVICE_CFLAGS) -DPLATFORM=$(PLATFORM)
+CFLAGS +=  $(DEVICE_CFLAGS) -DPLATFORM=$(PLATFORM) -DFIXMATH_NO_64BIT
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
 #CPPFLAGS +=  $(DEVICE_CPPFLAGS)
-CPPFLAGS +=  $(DEVICE_CPPFLAGS) -DPLATFORM=$(PLATFORM)
+CPPFLAGS +=  $(DEVICE_CPPFLAGS) -DPLATFORM=$(PLATFORM) -DFIXMATH_NO_64BIT
 
 # ---------------------------------------------------------------------------------------
 # ASM Flags
