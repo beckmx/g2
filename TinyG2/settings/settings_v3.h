@@ -41,11 +41,11 @@
 // ***> NOTE: The init message must be a single line with no CRs or LFs
 #define INIT_MESSAGE "Initializing configs to Bantam Tools V3 settings"
 
-#define JERK_MAX					    500		  // 500 million mm/(min^3)
-#define JERK_HOMING					  1000		// 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
-#define JUNCTION_DEVIATION		0.01		// default value, in mm
+#define JERK_MAX              500     // 500 million mm/(min^3)
+#define JERK_HOMING           1000    // 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
+#define JUNCTION_DEVIATION    0.01    // default value, in mm
 #define JUNCTION_ACCELERATION 100000  // centripetal acceleration around corners
-#define LATCH_VELOCITY				25			// reeeeally slow for accuracy
+#define LATCH_VELOCITY        25      // reeeeally slow for accuracy
 
 // Switch definitions for interlock & E-stop
 #define ENABLE_INTERLOCK_AND_ESTOP
@@ -54,7 +54,7 @@
 #define ESTOP_SWITCH_AXIS           AXIS_X
 #define ESTOP_SWITCH_POSITION       SW_MAX
 #undef PAUSE_DWELL_TIME
-#define PAUSE_DWELL_TIME				    1.5 //after unpausing and turning the spindle on, dwell for 1.5s
+#define PAUSE_DWELL_TIME            1.5 //after unpausing and turning the spindle on, dwell for 1.5s
 //how long the ESC takes to boot, in milliseconds
 #define ESC_BOOT_TIME               5000
 //how long the interlock needs to be engaged before killing power... actually 1s, but be conservative
@@ -63,9 +63,9 @@
 // *** settings.h overrides ***
 // Note: there are some commented test values below
 
-#define MOTOR_POWER_LEVEL_XY		    1.00  // default motor power level 0.00 - 1.00 (ARM only)
+#define MOTOR_POWER_LEVEL_XY        1.00  // default motor power level 0.00 - 1.00 (ARM only)
 #define MOTOR_POWER_LEVEL_XY_IDLE   0.25
-#define MOTOR_POWER_LEVEL_Z			    0.75
+#define MOTOR_POWER_LEVEL_Z         0.75
 #define MOTOR_POWER_LEVEL_Z_IDLE    0.25
 #define MOTOR_POWER_LEVEL_DISABLED  0.05
 
@@ -113,13 +113,13 @@
 
 // NOTE: Motor numnbers are reversed from TInyGv8 in order to maintain compatibility with wiring harnesses
 
-#define M1_MOTOR_MAP 			  AXIS_X                    // 1ma
-#define M1_STEP_ANGLE 		  1.8                       // 1sa
+#define M1_MOTOR_MAP        AXIS_X                    // 1ma
+#define M1_STEP_ANGLE       1.8                       // 1sa
 #define M1_TRAVEL_PER_REV   9.525                     // 1tr
-#define M1_MICROSTEPS 		  8                         // 1mi		1,2,4,8
-#define M1_POLARITY 			  0                         // 1po		0=normal, 1=reversed
-#define M1_POWER_MODE 		  MOTOR_POWER_MODE          // 1pm		See enum cmMotorPowerMode in stepper.h
-#define M1_POWER_LEVEL		  MOTOR_POWER_LEVEL_XY      // 0.00=off, 1.00=max
+#define M1_MICROSTEPS       8                         // 1mi		1,2,4,8
+#define M1_POLARITY         0                         // 1po		0=normal, 1=reversed
+#define M1_POWER_MODE       MOTOR_POWER_MODE          // 1pm		See enum cmMotorPowerMode in stepper.h
+#define M1_POWER_LEVEL      MOTOR_POWER_LEVEL_XY      // 0.00=off, 1.00=max
 #define M1_POWER_LEVEL_IDLE MOTOR_POWER_LEVEL_XY_IDLE
 
 #define M2_MOTOR_MAP        AXIS_Y
@@ -281,16 +281,16 @@
 
 // *** PWM SPINDLE CONTROL ***
 
-#define P1_PWM_FREQUENCY		100					// in Hz
-#define P1_CW_SPEED_LO			10500				// in RPM (arbitrary units)
-#define P1_CW_SPEED_HI			16400
-#define P1_CW_PHASE_LO			0.11				// phase [0..1]
-#define P1_CW_PHASE_HI			0.17
-#define P1_CCW_SPEED_LO			0
-#define P1_CCW_SPEED_HI			0
-#define P1_CCW_PHASE_LO			0.1
-#define P1_CCW_PHASE_HI			0.1
-#define P1_PWM_PHASE_OFF		0.1
+#define P1_PWM_FREQUENCY  100   // in Hz
+#define P1_CW_SPEED_LO    10500 // in RPM (arbitrary units)
+#define P1_CW_SPEED_HI    20000
+#define P1_CW_PHASE_LO    0.135 // phase [0..1]
+#define P1_CW_PHASE_HI    0.19
+#define P1_CCW_SPEED_LO   0
+#define P1_CCW_SPEED_HI   0
+#define P1_CCW_PHASE_LO   0.1
+#define P1_CCW_PHASE_HI   0.1
+#define P1_PWM_PHASE_OFF  0.1
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
 
