@@ -237,10 +237,10 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
         fprintf_P(stderr, PSTR("\nERROR: Timed out waiting on command byte\n"));
         return SPI2_STS_TIMEOUT;
       }
-      // Request Encoder Positions and Read Encoder Position commands require time for SPI2 to prep data - TODO fix performance
+      // Request Encoder Positions, Reset Encoder Positions and Read Encoder Position commands require time for SPI2 to prep data - TODO fix performance
       if (cmd_byte == SPI2_CMD_REQ_ENC_POS) {
         delay(4);
-      } else if (cmd_byte == SPI2_CMD_RD_ENC_POS) {
+      } else if (cmd_byte == SPI2_CMD_RST_ENC_POS || cmd_byte == SPI2_CMD_RD_ENC_POS) {
         delay(1);
       } else {
         delay_us(75);
