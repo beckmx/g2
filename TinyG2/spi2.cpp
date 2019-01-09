@@ -216,9 +216,6 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
   // Attempt command up to the specified number of retries or when OK status
   for (i = 0; (i < SPI2_NUM_RETRIES && sts_byte != SPI2_STS_OK); i++) {
 
-    // Select the SS for the SPI2 slave
-    spi2->setChannel();
-
     // Write out command byte (slave request, skip this)
     if (!slave_req) {
       if (wr_cnt > 0) {
@@ -321,12 +318,6 @@ uint8_t spi2_slave_handler() {
     // Clear flag
     spi2_slave_int = false;
 
-    // Disable Interrupts
-	  //__disable_irq();
-
-    // Enable SPI2 slave select
-    spi2->setChannel();
-
     // Read command
     start_time = SysTickTimer_getValue();
     while (((ret = spi2->read(true)) <= 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
@@ -356,9 +347,6 @@ uint8_t spi2_slave_handler() {
         status = SPI2_STS_ERR;
         break;
     }
-
-    // Enable Interrupts
-    //__enable_irq();
 
   } else {
     status = SPI2_STS_OK;
@@ -557,8 +545,6 @@ uint8_t spi2_get_fw_version() {
 
 // spi2_test: unit testing for SPI2 interface
 void spi2_test() {
-
-  spi2->setChannel();
 
   uint8_t *null_buf = 0;
 
