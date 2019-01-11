@@ -216,8 +216,8 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
   // Attempt command up to the specified number of retries or when OK status
   for (i = 0; (i < SPI2_NUM_RETRIES && sts_byte != SPI2_STS_OK); i++) {
 
-    // Write out command byte (slave request, skip this)
-    if (!slave_req) {
+    // Write out command byte (slave request or retry on Send Motor Positions command, skip this)
+    if (!slave_req && (cmd_byte != SPI2_CMD_SND_MTR_POS || i == 0)) {
       if (wr_cnt > 0) {
         spi2->write(cmd_byte, false);
       } else {
@@ -243,7 +243,8 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
     }
 
     // Process data bytes if available; process write data, then read data
-    if (wr_cnt > 0) {
+    // Skip on retry of Send Motor Positions command
+    if ((wr_cnt > 0) && (cmd_byte != SPI2_CMD_SND_MTR_POS || i == 0)) {
       spi2->write(wr_buf, wr_cnt, true);
       // Wait for TXEMPTY to flush, then clear unused RX data without invoking read
       start_time = SysTickTimer_getValue();
@@ -251,7 +252,6 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       while(spi2->is_rx_ready() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {
         // Commands with multiple writes and reads need time to prep data - TODO fix performance
         if (rd_cnt > 0) {
-          //delay(1);
           delay_us(25);
         }
         spi2->read(false);
@@ -261,22 +261,23 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
         fprintf_P(stderr, PSTR("\nERROR: Timed out waiting on data bytes\n"));
         return SPI2_STS_TIMEOUT;
       }
-      // Commands with multiple writes and reads need time to prep data - TODO fix performance
-     // if (rd_cnt > 0) {
-    //    delay(1);
-    //  } else {
-        delay_us(5);
-     // }
+      delay_us(5);
     }
     if (rd_cnt > 0) {
       spi2->read(rd_buf, rd_cnt, false);   // Read RX data (performs dummy writes, doesn't count if RDRF = 0)
       delay_us(5);
     }
-    delay_us(50);
+
+    // Send Motor Positions command, add additional delay to prevent buffer overflow on V3 during tool tip
+    if (cmd_byte == SPI2_CMD_SND_MTR_POS) {
+      delay_us(125);
+    } else {
+      delay_us(50);
+    }
 
     // Read the status
     start_time = SysTickTimer_getValue();
-    while (((ret = spi2->read(true)) <= 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
+    while (((ret = spi2->read(true)) < 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
       delay_us(5);
     }
     // Timed out, report and exit with timeout status
@@ -298,6 +299,9 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
     return SPI2_STS_RETRIES;
   }
 
+  // Buffer between commands if running really fast
+  delay_us(25);
+
   // Return the status code
   return sts_byte;
 }
@@ -312,14 +316,15 @@ uint8_t spi2_slave_handler() {
   // SPI2 Slave Interrupt received
   if (spi2_slave_int) {
 
-    delay_us(300);
+    // Delay for pulse width to allow V3 time to be ready
+    delay_us(100);
 
     // Clear flag
     spi2_slave_int = false;
 
     // Read command
     start_time = SysTickTimer_getValue();
-    while (((ret = spi2->read(true)) <= 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
+    while (((ret = spi2->read(true)) < 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
       delay_us(25);
     }
     // Timed out, report and exit with timeout status

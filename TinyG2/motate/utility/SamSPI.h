@@ -330,12 +330,15 @@ namespace Motate {
 
 		int16_t read(const bool lastXfer = false, uint8_t toSendAsNoop = 0xFF) {
             // Activate correct slave select (multi-slave support)
-            if (!setChannel()) return -1;
+            setChannel();
             return hardware.read(lastXfer, toSendAsNoop);
 		};
 
         // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
 		int16_t read(uint8_t *buffer, const uint16_t length, bool useLastXfer = true) {
+
+      // Activate correct slave select (multi-slave support)
+      setChannel();
 
 			int16_t total_read = 0;
 			int16_t to_read = length;
@@ -363,13 +366,13 @@ namespace Motate {
 
         int16_t write(uint8_t data, const bool lastXfer = false) {
             // Activate correct slave select (multi-slave support)
-            if (!setChannel()) return -1;
+            setChannel();
             return hardware.write(data, lastXfer);
 		};
 
         int16_t write(uint8_t data, int16_t &readValue, const bool lastXfer = false) {
             // Activate correct slave select (multi-slave support)
-            if (!setChannel()) return -1;
+            setChannel();
             return hardware.write(data, lastXfer);
 		};
 
@@ -386,6 +389,9 @@ namespace Motate {
 			int16_t to_write = length;
 
             bool lastXfer = false;
+
+      // Activate correct slave select (multi-slave support)
+      setChannel();
 
 			// BLOCKING!!
 			do {
