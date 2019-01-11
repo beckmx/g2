@@ -63,8 +63,8 @@ void spi2_init() {
   spi2.reset(new Motate::SPI<kSocket2_SPISlaveSelectPinNumber>(SPI2_MCK_DIV));
 
   // Add delays for 1) SS low to SCLK and 2) between transfers for SPI slave
-  spi2->setBSDelay(SPI2_DLYBS_US);
-  spi2->setBCTDelay(SPI2_DLYBCT_US);
+  spi2->setBSDelay(SPI2_DLYBS_NS);
+  spi2->setBCTDelay(SPI2_DLYBCT_NS);
 
   // Set up highest priority interrupt on falling edge of SPI_CS2 pin
   spi2_int_pin.setInterrupts(kPinInterruptOnFallingEdge|kPinInterruptPriorityHighest);
@@ -236,11 +236,9 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       }
       // Request Encoder Positions, Reset Encoder Positions and Read Encoder Position commands require time for SPI2 to prep data - TODO fix performance
       if (cmd_byte == SPI2_CMD_REQ_ENC_POS) {
-        delay(4);
-      } else if (cmd_byte == SPI2_CMD_RST_ENC_POS || cmd_byte == SPI2_CMD_RD_ENC_POS) {
-        delay(1);
+        delay_us(125);
       } else {
-        delay_us(75);
+        delay_us(25);
       }
     }
 
@@ -253,7 +251,8 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       while(spi2->is_rx_ready() && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {
         // Commands with multiple writes and reads need time to prep data - TODO fix performance
         if (rd_cnt > 0) {
-          delay(1);
+          //delay(1);
+          delay_us(25);
         }
         spi2->read(false);
       }
@@ -263,22 +262,22 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
         return SPI2_STS_TIMEOUT;
       }
       // Commands with multiple writes and reads need time to prep data - TODO fix performance
-      if (rd_cnt > 0) {
-        delay(1);
-      } else {
-        delay_us(25);
-      }
+     // if (rd_cnt > 0) {
+    //    delay(1);
+    //  } else {
+        delay_us(5);
+     // }
     }
     if (rd_cnt > 0) {
       spi2->read(rd_buf, rd_cnt, false);   // Read RX data (performs dummy writes, doesn't count if RDRF = 0)
-      delay_us(25);
+      delay_us(5);
     }
     delay_us(50);
 
     // Read the status
     start_time = SysTickTimer_getValue();
     while (((ret = spi2->read(true)) <= 0) && ((SysTickTimer_getValue() - start_time) < SPI2_TIMEOUT)) {  // Waits until RX ready to read (performs dummy writes)
-      delay_us(25);
+      delay_us(5);
     }
     // Timed out, report and exit with timeout status
     if ((SysTickTimer_getValue() - start_time) >= SPI2_TIMEOUT) {

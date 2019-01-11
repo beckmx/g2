@@ -20,9 +20,9 @@ typedef enum {
 } spi2SpdEnum;
 
 // General Definitions
-#define SPI2_MCK_DIV      (SystemCoreClock / 84)   // SPI clock divider to generate baud (based on 84MHz MCK)
-#define SPI2_DLYBS_US     3                        // Delay between SS low and SCLK (in us)
-#define SPI2_DLYBCT_US    19                       // Delay between transfers (in us)
+#define SPI2_MCK_DIV      (SystemCoreClock / 16)   // SPI clock divider to generate baud (based on 84MHz MCK)
+#define SPI2_DLYBS_NS     357                      // Delay between SS low and SCLK (in ns)
+#define SPI2_DLYBCT_NS    381                      // Delay between transfers (in ns)
 #define SPI2_NUM_AXES     4                        // Number of axes (XYZA) - DO NOT use AXES for SPI2!
 #define SPI2_BUF_SIZE     (SPI2_NUM_AXES*4)        // Buffer size for passing data
 #define SPI2_NUM_RETRIES  3                        // Number of retries on error condition

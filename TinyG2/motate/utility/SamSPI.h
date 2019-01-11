@@ -302,10 +302,10 @@ namespace Motate {
             return spi()->SPI_CSR[spiChannelNumber()]/* & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)*/;
         };
 
-        // Set delay between SS low to SCLK transition (in us)
-        void setBSDelay(uint8_t delay_us) {
+        // Set delay between SS low to SCLK transition (in ns)
+        void setBSDelay(uint16_t delay_ns) {
 
-          uint16_t dlybs = ((SystemCoreClock / 1000000) * delay_us);
+          uint16_t dlybs = (((SystemCoreClock / 1000000) * delay_ns) / 1000);
 
           if (dlybs > 255)
               dlybs = 255;
@@ -315,10 +315,10 @@ namespace Motate {
           spi()->SPI_CSR[spiChannelNumber()] |= SPI_CSR_DLYBS(dlybs);
         };
 
-        // Set delay between consecutive transfers (in us)
-        void setBCTDelay(uint8_t delay_us) {
+        // Set delay between consecutive transfers (in ns)
+        void setBCTDelay(uint16_t delay_ns) {
 
-          uint16_t dlybct = (((SystemCoreClock / 1000000) * delay_us) / 32);
+          uint16_t dlybct = ((((SystemCoreClock / 1000000) * delay_ns) / 1000) / 32);
 
           if (dlybct > 255)
               dlybct = 255;
