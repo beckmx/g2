@@ -38,7 +38,7 @@
 /****** REVISIONS ******/
 
 #ifndef TINYG_FIRMWARE_BUILD
-#define TINYG_FIRMWARE_BUILD   		300.04
+#define TINYG_FIRMWARE_BUILD   		300.05
 
 #endif
 #define TINYG_FIRMWARE_VERSION		0.971						// firmware major version

@@ -416,6 +416,11 @@ uint8_t spi2_request_encoder_positions() {
 
     x = (rbuf[axis*4] << 24) | (rbuf[axis*4+1] << 16) | (rbuf[axis*4+2] << 8) | rbuf[axis*4+3];
     spi2_encoder_pos[axis] = fix16_to_float(x);
+
+    // Flip XY encoder values
+    if (axis == AXIS_X || axis == AXIS_Y) {
+      spi2_encoder_pos[axis] *= (-1.0);
+    }
   }
 
   return st;
@@ -437,6 +442,11 @@ uint8_t spi2_read_encoder_position(uint8_t axis) {
   // Read the data in the buffer into a fixed point and covert to float
   x = (rbuf[0] << 24) | (rbuf[1] << 16) | (rbuf[2] << 8) | rbuf[3];
   spi2_encoder_pos[axis] = fix16_to_float(x);
+
+  // Flip XY encoder values
+  if (axis == AXIS_X || axis == AXIS_Y) {
+    spi2_encoder_pos[axis] *= (-1.0);
+  }
 
   return st;
 }
