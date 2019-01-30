@@ -584,9 +584,9 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "s272","s272e", _f0, 3, tx_print_nul, get_nul, set_flt,(float *)&spi2_eps_val },							// epsilon value
 
 																																																	// read firmware version
-	{ "s274","s274a", _f0, 0, spi2_cmd74_print, get_ui8, set_nul,(float *)&spi2_fw_ver.major },	 	  // major
-	{ "s274","s274i", _f0, 0, spi2_cmd74_print, get_ui8, set_nul,(float *)&spi2_fw_ver.minor },			// minor
-	{ "s274","s274r", _f0, 0, spi2_cmd74_print, get_ui8, set_nul,(float *)&spi2_fw_ver.rev },				// revision
+	{ "s277","s277a", _f0, 0, spi2_cmd77_print, get_ui8, set_nul,(float *)&spi2_fw_ver.major },	 	  // major
+	{ "s277","s277i", _f0, 0, spi2_cmd77_print, get_ui8, set_nul,(float *)&spi2_fw_ver.minor },			// minor
+	{ "s277","s277r", _f0, 0, spi2_cmd77_print, get_ui8, set_nul,(float *)&spi2_fw_ver.rev },				// revision
 
 	// Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS
@@ -741,7 +741,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","s24", _f0, 0, tx_print_nul, get_grp, spi2_cmd4_set,(float *)&cs.null,0 },		// request encoder position group
 	{ "","s271", _f0, 0, tx_print_nul, get_nul, spi2_cmd71_set,(float *)&cs.null,0 },	// spindle led group
 	{ "","s272", _f0, 0, tx_print_nul, get_nul, spi2_cmd72_set,(float *)&cs.null,0 },	// epsilon group
-	{ "","s274", _f0, 0, tx_print_nul, get_grp, spi2_cmd74_set,(float *)&cs.null,0 },	// firmware version group
+	{ "","s277", _f0, 0, tx_print_nul, get_grp, spi2_cmd77_set,(float *)&cs.null,0 },	// firmware version group
 
 #ifdef __DIAGNOSTIC_PARAMETERS
 	{ "","_te",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// target axis endpoint group

@@ -889,7 +889,7 @@ stat_t spi2_cmd72_set(nvObj_t *nv) {
   return (spi2_cmd_helper(spi2_set_epsilon()));
 }
 
-stat_t spi2_cmd74_set(nvObj_t *nv) {
+stat_t spi2_cmd77_set(nvObj_t *nv) {
   return (spi2_cmd_helper(spi2_get_fw_version()));
 }
 
@@ -917,7 +917,7 @@ static const char fmt_spi2_cmd68[] PROGMEM = "Set User LED %u\n";
 static const char fmt_spi2_cmd69[] PROGMEM = "Clear User LED %u\n";
 static const char fmt_spi2_cmd70[] PROGMEM = "Interlock Loop %u value: %u\n";
 static const char fmt_spi2_cmd71[] PROGMEM = "Spindle LED %s: %X\n";
-static const char fmt_spi2_cmd74[] PROGMEM = "Firmware %s Number: %u\n";
+static const char fmt_spi2_cmd77[] PROGMEM = "Firmware %s Number: %u\n";
 
 static int8_t _get_axis(const index_t index)
 {
@@ -997,7 +997,7 @@ void spi2_cmd67_print(nvObj_t *nv) { _print_user_io(nv, fmt_spi2_cmd67);}
 void spi2_cmd68_print(nvObj_t *nv) { text_print_ui8(nv, fmt_spi2_cmd68);}
 void spi2_cmd69_print(nvObj_t *nv) { text_print_ui8(nv, fmt_spi2_cmd69);}
 void spi2_cmd70_print(nvObj_t *nv) { _print_interlock(nv, fmt_spi2_cmd70);}
-void spi2_cmd74_print(nvObj_t *nv) { _print_fw_version(nv, fmt_spi2_cmd74);}
+void spi2_cmd77_print(nvObj_t *nv) { _print_fw_version(nv, fmt_spi2_cmd77);}
 #endif
 
 /////////////////////////////////////////////////////////////

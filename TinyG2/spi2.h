@@ -92,7 +92,7 @@ stat_t spi2_cmd69_set(nvObj_t *);
 stat_t spi2_cmd70_set(nvObj_t *);
 stat_t spi2_cmd71_set(nvObj_t *);
 stat_t spi2_cmd72_set(nvObj_t *);
-stat_t spi2_cmd74_set(nvObj_t *);
+stat_t spi2_cmd77_set(nvObj_t *);
 
 #ifdef __TEXT_MODE
 void spi2_cmd1_print(nvObj_t *);
@@ -105,7 +105,7 @@ void spi2_cmd67_print(nvObj_t *);
 void spi2_cmd68_print(nvObj_t *);
 void spi2_cmd69_print(nvObj_t *);
 void spi2_cmd70_print(nvObj_t *);
-void spi2_cmd74_print(nvObj_t *);
+void spi2_cmd77_print(nvObj_t *);
 #else
 #define spi2_cmd1_print tx_print_stub
 #define spi2_cmd2_print tx_print_stub
@@ -117,7 +117,7 @@ void spi2_cmd74_print(nvObj_t *);
 #define spi2_cmd68_print tx_print_stub
 #define spi2_cmd69_print tx_print_stub
 #define spi2_cmd70_print tx_print_stub
-#define spi2_cmd74_print tx_print_stub
+#define spi2_cmd77_print tx_print_stub
 #endif
 
 #ifdef __cplusplus
