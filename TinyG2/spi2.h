@@ -44,7 +44,10 @@ typedef enum {
 #define SPI2_CMD_SET_SPIN_LED   0x47  // Set Spindle LEDs
 #define SPI2_CMD_SET_EPS        0x48  // Set Epsilon
 #define SPI2_CMD_RD_ESC_CURR    0x49  // Read ESC Current
-#define SPI2_CMD_FW_VER         0x4A  // Firmware Version
+#define SPI2_CMD_RST_ESC_VAL    0x4A  // Reset Min/Max/Mean ESC Current
+#define SPI2_CMD_RD_ESC_VAL     0x4B  // Read Min/Max/Mean ESC Current
+#define SPI2_CMD_SET_THRES      0x4C  // Set ESC Current Threshold Value, Time
+#define SPI2_CMD_FW_VER         0x4D  // Firmware Version
 
 #define SPI2_STS_OK             0x10  // OK Status
 #define SPI2_STS_ERR            0x11  // Error Status
