@@ -42,11 +42,16 @@ uint8_t spi2_spd_led[5] = {0,0,0,0,0};
 uint8_t spi2_eps_axis = 0;
 float spi2_eps_val = 0.0;
 
-// WORKAROUND: Stop Tool Tip command global variable
-bool spi2_stop_tool_tip = false;
+// ESC current global variables (for JSON commands)
+float spi2_esc_current = 0.0;
+struct spi2_esc_val_type spi2_esc_val = {0.0, 0.0, 0.0};
+struct spi2_thres_type spi2_thres = {0.0, 0};
 
 // Firmware version global variable (for JSON commands)
 struct spi2_fw_type spi2_fw_ver = {0, 0, 0};
+
+// WORKAROUND: Stop Tool Tip command global variable
+bool spi2_stop_tool_tip = false;
 
 //TEMP: Calibrated delay function
 static void delay_us(uint32_t us) {

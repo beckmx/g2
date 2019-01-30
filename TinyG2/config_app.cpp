@@ -583,17 +583,17 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "s272","s272x", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_eps_axis },							// axis
 	{ "s272","s272e", _f0, 3, tx_print_nul, get_nul, set_flt,(float *)&spi2_eps_val },							// epsilon value
 
-	{ "","s273", _f0, 3, spi2_cmd73_print, get_flt, set_nul,(float *)&cs.null,0 },									// read current esc value
+	{ "","s273", _f0, 3, spi2_cmd73_print, get_flt, set_nul,(float *)&spi2_esc_current },						// read current esc value
 	{ "","s274", _f0, 0, spi2_cmd74_print, get_nul, spi2_cmd74_set,(float *)&cs.null,0 },						// reset min/max/mean esc current value
 
 																																																	// read min/max/mean esc current value
-	{ "s275","s275n", _f0, 3, spi2_cmd75_print, get_flt, set_nul,(float *)&cs.null,0 },							// min
-	{ "s275","s275x", _f0, 3, spi2_cmd75_print, get_flt, set_nul,(float *)&cs.null,0 },							// max
-  { "s275","s275m", _f0, 3, spi2_cmd75_print, get_flt, set_nul,(float *)&cs.null,0 },							// mean
+	{ "s275","s275n", _f0, 3, spi2_cmd75_print, get_flt, set_nul,(float *)&spi2_esc_val.min },			// min
+	{ "s275","s275x", _f0, 3, spi2_cmd75_print, get_flt, set_nul,(float *)&spi2_esc_val.max },  		// max
+  { "s275","s275m", _f0, 3, spi2_cmd75_print, get_flt, set_nul,(float *)&spi2_esc_val.mean },			// mean
 
 																																																	// set esc current threshold
-	{ "s276","s276c", _f0, 3, tx_print_nul, get_nul, set_flt,(float *)&cs.null,0 },									// minimum value
-	{ "s276","s276t", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&cs.null,0 },									// time
+	{ "s276","s276c", _f0, 3, tx_print_nul, get_nul, set_flt,(float *)&spi2_thres.min_current },		// minimum value
+	{ "s276","s276t", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_thres.count_total },		// time
 
 																																																	// read firmware version
 	{ "s277","s277a", _f0, 0, spi2_cmd77_print, get_ui8, set_nul,(float *)&spi2_fw_ver.major },	 	  // major

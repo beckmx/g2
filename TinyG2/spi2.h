@@ -6,6 +6,17 @@ extern "C" {
 #endif
 
 // Structures and Type Definitions
+struct spi2_esc_val_type
+{
+   float min, max, mean;
+};
+
+struct spi2_thres_type
+{
+   float min_current;
+   uint8_t count_total;
+};
+
 struct spi2_fw_type
 {
    uint8_t major, minor, rev;
