@@ -940,6 +940,11 @@ static const char msg_units1[] PROGMEM = " mm";
 static const char msg_units2[] PROGMEM = " deg";
 static const char *const msg_units[] PROGMEM = { msg_units0, msg_units1, msg_units2 };
 
+static const char min_max_mean0[] PROGMEM = "MIN";
+static const char min_max_mean1[] PROGMEM = "MAX";
+static const char min_max_mean2[] PROGMEM = "MEAN";
+static const char *const min_max_means[] PROGMEM = { min_max_mean0, min_max_mean1, min_max_mean2 };
+
 static const char fw_ver0[] PROGMEM = "MAJOR Version";
 static const char fw_ver1[] PROGMEM = "MINOR Version";
 static const char fw_ver2[] PROGMEM = "REVISION";
@@ -974,6 +979,19 @@ static int8_t _get_axis(const index_t index)
 		}
 	}
 	return (ptr - axes);
+}
+
+static int8_t _get_min_max_mean(const index_t index)
+{
+	char_t *ptr;
+	char_t tmp[TOKEN_LEN+1];
+	char_t min_max_mean_tokens[] = {"nxm"};
+
+	strncpy_P(tmp, cfgArray[index].token, TOKEN_LEN);	// kind of a hack. Looks for a version type
+	if ((ptr = strchr(min_max_mean_tokens, tmp[4])) == NULL) {
+	   return -1;
+	}
+	return (ptr - min_max_mean_tokens);
 }
 
 static int8_t _get_fw_ver(const index_t index)
@@ -1023,6 +1041,12 @@ static void _print_interlock(nvObj_t *nv, const char *format)
   fprintf_P(stderr, format, spi2_itr_idx, spi2_itr_val);
 }
 
+static void _print_min_max_mean(nvObj_t *nv, const char *format)
+{
+  uint8_t min_max_mean_idx = _get_min_max_mean(nv->index);
+  fprintf_P(stderr, format, GET_TEXT_ITEM(min_max_means, min_max_mean_idx), (float)nv->value);
+}
+
 static void _print_fw_version(nvObj_t *nv, const char *format)
 {
   uint8_t fw_ver_idx = _get_fw_ver(nv->index);
@@ -1039,9 +1063,9 @@ void spi2_cmd67_print(nvObj_t *nv) { _print_user_io(nv, fmt_spi2_cmd67);}
 void spi2_cmd68_print(nvObj_t *nv) { text_print_ui8(nv, fmt_spi2_cmd68);}
 void spi2_cmd69_print(nvObj_t *nv) { text_print_ui8(nv, fmt_spi2_cmd69);}
 void spi2_cmd70_print(nvObj_t *nv) { _print_interlock(nv, fmt_spi2_cmd70);}
-void spi2_cmd73_print(nvObj_t *nv) {  /*TODO */ }
-void spi2_cmd74_print(nvObj_t *nv) {  /*TODO */ }
-void spi2_cmd75_print(nvObj_t *nv) {  /*TODO */ }
+void spi2_cmd73_print(nvObj_t *nv) { text_print_flt(nv, fmt_spi2_cmd73); }
+void spi2_cmd74_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd74);}
+void spi2_cmd75_print(nvObj_t *nv) { _print_min_max_mean(nv, fmt_spi2_cmd75); }
 void spi2_cmd77_print(nvObj_t *nv) { _print_fw_version(nv, fmt_spi2_cmd77);}
 #endif
 
