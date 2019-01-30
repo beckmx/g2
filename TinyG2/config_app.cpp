@@ -583,6 +583,14 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "s272","s272x", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_eps_axis },							// axis
 	{ "s272","s272e", _f0, 3, tx_print_nul, get_nul, set_flt,(float *)&spi2_eps_val },							// epsilon value
 
+	{ "","s273", _f0, 3, spi2_cmd73_print, get_flt, set_nul,(float *)&cs.null,0 },									// read current esc value
+	{ "","s274", _f0, 0, spi2_cmd74_print, get_nul, spi2_cmd74_set,(float *)&cs.null,0 },						// reset min/max/mean esc current value
+	{ "","s275", _f0, 3, spi2_cmd75_print, get_flt, set_nul,(float *)&cs.null,0 },									// read min/max/mean esc current value
+
+																																																	// set esc current threshold
+	{ "s276","s276c", _f0, 3, tx_print_nul, get_nul, set_flt,(float *)&cs.null,0 },									// minimum value
+	{ "s276","s276t", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&cs.null,0 },									// time
+
 																																																	// read firmware version
 	{ "s277","s277a", _f0, 0, spi2_cmd77_print, get_ui8, set_nul,(float *)&spi2_fw_ver.major },	 	  // major
 	{ "s277","s277i", _f0, 0, spi2_cmd77_print, get_ui8, set_nul,(float *)&spi2_fw_ver.minor },			// minor
