@@ -99,9 +99,10 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
   // Command error checking, immediately return error on malformed command
   switch (cmd_byte) {
 
-    // Single byte master write commands (0x01, 0x02)
+    // Single byte master write commands (0x01, 0x02, 0x4A)
     case SPI2_CMD_RST_ENC_POS:
     case SPI2_CMD_START_TOOL_TIP:
+    case SPI2_CMD_RST_ESC_VAL:
 
       if ((slave_req) || (wr_cnt > 0) || (rd_cnt > 0)) {
 
@@ -199,9 +200,35 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       }
       break;
 
-    // Read ESC Current command (0x49) skipped (TODO - implement)
+    // Read ESC Current command (0x49)
+    case SPI2_CMD_RD_ESC_CURR:
 
-    // Firmware Version command (0x4A)
+      if ((slave_req) || (wr_cnt > 0) || (rd_cnt != 4)) {
+        fprintf_P(stderr, PSTR("\nERROR: Malformed Read ESC Current command (Command 0x%02X)\n"),cmd_byte);
+        return SPI2_STS_ERR;
+      }
+      break;
+
+    // Read Min/Max/Mean ESC Current command (0x4B)
+    case SPI2_CMD_RD_ESC_VAL:
+
+      if ((slave_req) || (wr_cnt > 0) || (rd_cnt != 12)) {
+        fprintf_P(stderr, PSTR("\nERROR: Malformed Read Min/Max/Mean ESC Current command (Command 0x%02X)\n"),cmd_byte);
+        return SPI2_STS_ERR;
+      }
+      break;
+
+    // Set ESC Current Threshold Value, Time command (0x4C)
+    case SPI2_CMD_SET_THRES:
+
+      if ((slave_req) || (wr_cnt != 5) || (rd_cnt > 0)) {
+
+        fprintf_P(stderr, PSTR("\nERROR: Malformed Set ESC Current Threshold command (Command 0x%02X)\n"),cmd_byte);
+        return SPI2_STS_ERR;
+      }
+      break;
+
+    // Firmware Version command (0x4D)
     case SPI2_CMD_FW_VER:
 
       if ((slave_req) || (wr_cnt > 0) || (rd_cnt != 3)) {
@@ -530,7 +557,7 @@ uint8_t spi2_set_epsilon() {
 
   fix16_t x;
 
-  // Set index and value for global variables
+  // Set index and value from global variables
   wbuf[0] = spi2_eps_axis;
 
   // Read the epsilon value and covert from float to fixed point
@@ -547,22 +574,63 @@ uint8_t spi2_set_epsilon() {
 
 // spi2_read_esc_current: read esc current (command 0x49 / 73)
 uint8_t spi2_read_esc_current() {
- return SPI2_STS_OK;
+
+  uint8_t st;
+  fix16_t x;
+
+  // Get the esc current data as one 4-byte transfer
+  st = spi2_cmd(false, SPI2_CMD_RD_ESC_CURR, NULL, 0, rbuf, 4);
+
+  // Read the data in the buffer into a fixed point and covert to float
+  x = (rbuf[0] << 24) | (rbuf[1] << 16) | (rbuf[2] << 8) | rbuf[3];
+  spi2_esc_current = fix16_to_float(x);
+
+  return st;
 }
 
 // spi2_reset_min_max_mean: reset min/max/mean esc current (command 0x4a / 74)
 uint8_t spi2_reset_min_max_mean() {
- return SPI2_STS_OK;
+ return (spi2_cmd(false, SPI2_CMD_RST_ESC_VAL, NULL, 0, NULL, 0));
 }
 
 // spi2_read_min_max_mean: read min/max/mean esc current (command 0x4b / 75)
 uint8_t spi2_read_min_max_mean() {
- return SPI2_STS_OK;
+
+  uint8_t st;
+  fix16_t x;
+
+  // Get the min/max/mean data as one 12-byte transfer
+  st = spi2_cmd(false, SPI2_CMD_RD_ESC_VAL, NULL, 0, rbuf, 12);
+
+  // Read the data in the buffer into a fixed point and covert to floats
+  x = (rbuf[0*4] << 24) | (rbuf[0*4+1] << 16) | (rbuf[0*4+2] << 8) | rbuf[0*4+3];
+  spi2_esc_val.min = fix16_to_float(x);
+  x = (rbuf[1*4] << 24) | (rbuf[1*4+1] << 16) | (rbuf[1*4+2] << 8) | rbuf[1*4+3];
+  spi2_esc_val.max = fix16_to_float(x);
+  x = (rbuf[2*4] << 24) | (rbuf[2*4+1] << 16) | (rbuf[2*4+2] << 8) | rbuf[2*4+3];
+  spi2_esc_val.mean = fix16_to_float(x);
+
+  return st;
 }
 
 // spi2_set_threshold: set esc current threshold value, time (command 0x4c / 76)
 uint8_t spi2_set_threshold() {
- return SPI2_STS_OK;
+
+  fix16_t x;
+
+  // Read the current value and covert from float to fixed point
+  x = fix16_from_float(spi2_thres.min_current);
+
+  // Break up fixed point and send to buffer
+  wbuf[0] = (x >> 24);
+  wbuf[1] = ((x >> 16) & 0x000000FF);
+  wbuf[2] = ((x >> 8) & 0x000000FF);
+  wbuf[3] = (x & 0x000000FF);
+
+  // Set time from global variables
+  wbuf[4] = spi2_thres.count_total;
+
+  return(spi2_cmd(false, SPI2_CMD_SET_THRES, wbuf, 5, rbuf, 0));
 }
 
 // spi2_get_fw_version: firmware version (command 0x4d / 77)
