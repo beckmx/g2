@@ -73,6 +73,10 @@ uint8_t spi2_clear_user_led(uint8_t);
 uint8_t spi2_read_itr_loop(uint8_t);
 uint8_t spi2_set_spindle_led(void);
 uint8_t spi2_set_epsilon(void);
+uint8_t spi2_read_esc_current(void);
+uint8_t spi2_reset_min_max_mean(void);
+uint8_t spi2_read_min_max_mean(void);
+uint8_t spi2_set_threshold(void);
 uint8_t spi2_get_fw_version(void);
 void spi2_test(void);
 

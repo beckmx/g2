@@ -540,9 +540,27 @@ uint8_t spi2_set_epsilon() {
   return(spi2_cmd(false, SPI2_CMD_SET_EPS, wbuf, 5, rbuf, 0));
 }
 
-// spi2_read_esc_current: read esc current (command 0x49 / 73) - TODO implement
+// spi2_read_esc_current: read esc current (command 0x49 / 73)
+uint8_t spi2_read_esc_current() {
+ return SPI2_STS_OK;
+}
 
-// spi2_get_fw_version: firmware version (command 0x4a / 74)
+// spi2_reset_min_max_mean: reset min/max/mean esc current (command 0x4a / 74)
+uint8_t spi2_reset_min_max_mean() {
+ return SPI2_STS_OK;
+}
+
+// spi2_read_min_max_mean: read min/max/mean esc current (command 0x4b / 75)
+uint8_t spi2_read_min_max_mean() {
+ return SPI2_STS_OK;
+}
+
+// spi2_set_threshold: set esc current threshold value, time (command 0x4c / 76)
+uint8_t spi2_set_threshold() {
+ return SPI2_STS_OK;
+}
+
+// spi2_get_fw_version: firmware version (command 0x4d / 77)
 uint8_t spi2_get_fw_version() {
 
   uint8_t st;
@@ -890,23 +908,24 @@ stat_t spi2_cmd72_set(nvObj_t *nv) {
 }
 
 stat_t spi2_cmd73_set(nvObj_t *nv) {
-  //TODO
-  return STAT_OK;
+  return (spi2_cmd_helper(spi2_read_esc_current()));
 }
 
 stat_t spi2_cmd74_set(nvObj_t *nv) {
-  //TODO
-  return STAT_OK;
+  return (spi2_cmd_helper(spi2_reset_min_max_mean()));
 }
 
 stat_t spi2_cmd75_set(nvObj_t *nv) {
-  //TODO
-  return STAT_OK;
+  return (spi2_cmd_helper(spi2_read_min_max_mean()));
 }
 
 stat_t spi2_cmd76_set(nvObj_t *nv) {
-  //TODO
-  return STAT_OK;
+
+  // Call set_grp() to set all the variables using the JSON
+  set_grp(nv);
+
+  // Run the SPI command
+  return (spi2_cmd_helper(spi2_set_threshold()));
 }
 
 stat_t spi2_cmd77_set(nvObj_t *nv) {
