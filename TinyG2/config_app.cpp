@@ -583,7 +583,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "s272","s272x", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_eps_axis },							// axis
 	{ "s272","s272e", _f0, 3, tx_print_nul, get_nul, set_flt,(float *)&spi2_eps_val },							// epsilon value
 
-	{ "","s273", _f0, 3, spi2_cmd73_print, get_flt, set_nul,(float *)&spi2_esc_current },						// read current esc value
+	{ "","s273", _f0, 3, spi2_cmd73_print, get_flt, spi2_cmd73_set,(float *)&spi2_esc_current },		// read current esc value
 	{ "","s274", _f0, 0, spi2_cmd74_print, get_nul, spi2_cmd74_set,(float *)&cs.null,0 },						// reset min/max/mean esc current value
 
 																																																	// read min/max/mean esc current value
@@ -753,6 +753,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","s24", _f0, 0, tx_print_nul, get_grp, spi2_cmd4_set,(float *)&cs.null,0 },		// request encoder position group
 	{ "","s271", _f0, 0, tx_print_nul, get_nul, spi2_cmd71_set,(float *)&cs.null,0 },	// spindle led group
 	{ "","s272", _f0, 0, tx_print_nul, get_nul, spi2_cmd72_set,(float *)&cs.null,0 },	// epsilon group
+	{ "","s275", _f0, 0, tx_print_nul, get_nul, spi2_cmd75_set,(float *)&cs.null,0 },	// read min/max/mean esc current group
+	{ "","s276", _f0, 0, tx_print_nul, get_nul, spi2_cmd76_set,(float *)&cs.null,0 },	// threshold group
 	{ "","s277", _f0, 0, tx_print_nul, get_grp, spi2_cmd77_set,(float *)&cs.null,0 },	// firmware version group
 
 #ifdef __DIAGNOSTIC_PARAMETERS
@@ -777,7 +779,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 /***** Make sure these defines line up with any changes in the above table *****/
 
 #define NV_COUNT_UBER_GROUPS 	4 		// count of uber-groups, above
-#define STANDARD_GROUPS 			38		// count of standard groups, excluding diagnostic parameter groups
+#define STANDARD_GROUPS 			40		// count of standard groups, excluding diagnostic parameter groups
 
 #if (MOTORS >= 5)
 #define MOTOR_GROUP_5			1

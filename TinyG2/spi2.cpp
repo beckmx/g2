@@ -266,8 +266,10 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
         fprintf_P(stderr, PSTR("\nERROR: Timed out waiting on command byte\n"));
         return SPI2_STS_TIMEOUT;
       }
-      // Request Encoder Positions, Reset Encoder Positions and Read Encoder Position commands require time for SPI2 to prep data - TODO fix performance
-      if (cmd_byte == SPI2_CMD_REQ_ENC_POS) {
+      // Request Encoder Positions and Read ESC Current commands require time for SPI2 to prep data - TODO fix performance
+      if (cmd_byte == SPI2_CMD_RD_ESC_CURR) {
+        delay(2);
+      } else if (cmd_byte == SPI2_CMD_REQ_ENC_POS) {
         delay_us(125);
       } else {
         delay_us(25);
@@ -1114,6 +1116,11 @@ static void _print_interlock(nvObj_t *nv, const char *format)
   fprintf_P(stderr, format, spi2_itr_idx, spi2_itr_val);
 }
 
+static void _print_esc_current(nvObj_t *nv, const char *format)
+{
+  fprintf_P(stderr, format, spi2_esc_current);
+}
+
 static void _print_min_max_mean(nvObj_t *nv, const char *format)
 {
   uint8_t min_max_mean_idx = _get_min_max_mean(nv->index);
@@ -1136,7 +1143,7 @@ void spi2_cmd67_print(nvObj_t *nv) { _print_user_io(nv, fmt_spi2_cmd67);}
 void spi2_cmd68_print(nvObj_t *nv) { text_print_ui8(nv, fmt_spi2_cmd68);}
 void spi2_cmd69_print(nvObj_t *nv) { text_print_ui8(nv, fmt_spi2_cmd69);}
 void spi2_cmd70_print(nvObj_t *nv) { _print_interlock(nv, fmt_spi2_cmd70);}
-void spi2_cmd73_print(nvObj_t *nv) { text_print_flt(nv, fmt_spi2_cmd73); }
+void spi2_cmd73_print(nvObj_t *nv) { _print_esc_current(nv, fmt_spi2_cmd73); }
 void spi2_cmd74_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd74);}
 void spi2_cmd75_print(nvObj_t *nv) { _print_min_max_mean(nv, fmt_spi2_cmd75); }
 void spi2_cmd77_print(nvObj_t *nv) { _print_fw_version(nv, fmt_spi2_cmd77);}
