@@ -102,7 +102,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
     // Single byte master write commands (0x01, 0x02, 0x4A)
     case SPI2_CMD_RST_ENC_POS:
     case SPI2_CMD_START_TOOL_TIP:
-    case SPI2_CMD_RST_ESC_VAL:
+    case SPI2_CMD_RST_MIN_MAX_MEAN:
 
       if ((slave_req) || (wr_cnt > 0) || (rd_cnt > 0)) {
 
@@ -210,7 +210,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       break;
 
     // Read Min/Max/Mean ESC Current command (0x4B)
-    case SPI2_CMD_RD_ESC_VAL:
+    case SPI2_CMD_RD_MIN_MAX_MEAN:
 
       if ((slave_req) || (wr_cnt > 0) || (rd_cnt != 12)) {
         fprintf_P(stderr, PSTR("\nERROR: Malformed Read Min/Max/Mean ESC Current command (Command 0x%02X)\n"),cmd_byte);
@@ -266,10 +266,10 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
         fprintf_P(stderr, PSTR("\nERROR: Timed out waiting on command byte\n"));
         return SPI2_STS_TIMEOUT;
       }
-      // Request Encoder Positions and Read ESC Current commands require time for SPI2 to prep data - TODO fix performance
+      // Read ESC Current, Request Encoder Positions and Read Min/Max/Mean commands require time for SPI2 to prep data - TODO fix performance
       if (cmd_byte == SPI2_CMD_RD_ESC_CURR) {
         delay(2);
-      } else if (cmd_byte == SPI2_CMD_REQ_ENC_POS) {
+      } else if (cmd_byte == SPI2_CMD_REQ_ENC_POS || cmd_byte == SPI2_CMD_RD_MIN_MAX_MEAN) {
         delay_us(125);
       } else {
         delay_us(25);
@@ -592,7 +592,7 @@ uint8_t spi2_read_esc_current() {
 
 // spi2_reset_min_max_mean: reset min/max/mean esc current (command 0x4a / 74)
 uint8_t spi2_reset_min_max_mean() {
- return (spi2_cmd(false, SPI2_CMD_RST_ESC_VAL, NULL, 0, NULL, 0));
+ return (spi2_cmd(false, SPI2_CMD_RST_MIN_MAX_MEAN, NULL, 0, NULL, 0));
 }
 
 // spi2_read_min_max_mean: read min/max/mean esc current (command 0x4b / 75)
@@ -602,7 +602,7 @@ uint8_t spi2_read_min_max_mean() {
   fix16_t x;
 
   // Get the min/max/mean data as one 12-byte transfer
-  st = spi2_cmd(false, SPI2_CMD_RD_ESC_VAL, NULL, 0, rbuf, 12);
+  st = spi2_cmd(false, SPI2_CMD_RD_MIN_MAX_MEAN, NULL, 0, rbuf, 12);
 
   // Read the data in the buffer into a fixed point and covert to floats
   x = (rbuf[0*4] << 24) | (rbuf[0*4+1] << 16) | (rbuf[0*4+2] << 8) | rbuf[0*4+3];
@@ -1060,7 +1060,7 @@ static int8_t _get_min_max_mean(const index_t index)
 {
 	char_t *ptr;
 	char_t tmp[TOKEN_LEN+1];
-	char_t min_max_mean_tokens[] = {"nxm"};
+	char_t min_max_mean_tokens[] = {"ixm"};
 
 	strncpy_P(tmp, cfgArray[index].token, TOKEN_LEN);	// kind of a hack. Looks for a version type
 	if ((ptr = strchr(min_max_mean_tokens, tmp[4])) == NULL) {

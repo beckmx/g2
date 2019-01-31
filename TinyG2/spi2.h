@@ -40,32 +40,32 @@ typedef enum {
 #define SPI2_TIMEOUT      100                      // SPI2 bus timeout (in ms)
 
 // SPI2 Command Set
-#define SPI2_CMD_RST_ENC_POS    0x01  // Reset Encoder Positions to Zero
-#define SPI2_CMD_START_TOOL_TIP 0x02  // Start Tool Tip Command
-#define SPI2_CMD_SND_MTR_POS    0x03  // Send Motor Positions
-#define SPI2_CMD_REQ_ENC_POS    0x04  // Request Encoder Positions
+#define SPI2_CMD_RST_ENC_POS      0x01  // Reset Encoder Positions to Zero
+#define SPI2_CMD_START_TOOL_TIP   0x02  // Start Tool Tip Command
+#define SPI2_CMD_SND_MTR_POS      0x03  // Send Motor Positions
+#define SPI2_CMD_REQ_ENC_POS      0x04  // Request Encoder Positions
 
-#define SPI2_CMD_RD_ENC_POS     0x40  // Read Encoder Position
-#define SPI2_CMD_SET_USER_IO    0x41  // Set User IO
-#define SPI2_CMD_CLR_USER_IO    0x42  // Clear User IO
-#define SPI2_CMD_RD_USER_IO     0x43  // Read User IO
-#define SPI2_CMD_SET_USER_LED   0x44  // Set User LED
-#define SPI2_CMD_CLR_USER_LED   0x45  // Clear User LED
-#define SPI2_CMD_RD_ITR_LOOP    0x46  // Read Interlock Loop
-#define SPI2_CMD_SET_SPIN_LED   0x47  // Set Spindle LEDs
-#define SPI2_CMD_SET_EPS        0x48  // Set Epsilon
-#define SPI2_CMD_RD_ESC_CURR    0x49  // Read ESC Current
-#define SPI2_CMD_RST_ESC_VAL    0x4A  // Reset Min/Max/Mean ESC Current
-#define SPI2_CMD_RD_ESC_VAL     0x4B  // Read Min/Max/Mean ESC Current
-#define SPI2_CMD_SET_THRES      0x4C  // Set ESC Current Threshold Value, Time
-#define SPI2_CMD_FW_VER         0x4D  // Firmware Version
+#define SPI2_CMD_RD_ENC_POS       0x40  // Read Encoder Position
+#define SPI2_CMD_SET_USER_IO      0x41  // Set User IO
+#define SPI2_CMD_CLR_USER_IO      0x42  // Clear User IO
+#define SPI2_CMD_RD_USER_IO       0x43  // Read User IO
+#define SPI2_CMD_SET_USER_LED     0x44  // Set User LED
+#define SPI2_CMD_CLR_USER_LED     0x45  // Clear User LED
+#define SPI2_CMD_RD_ITR_LOOP      0x46  // Read Interlock Loop
+#define SPI2_CMD_SET_SPIN_LED     0x47  // Set Spindle LEDs
+#define SPI2_CMD_SET_EPS          0x48  // Set Epsilon
+#define SPI2_CMD_RD_ESC_CURR      0x49  // Read ESC Current
+#define SPI2_CMD_RST_MIN_MAX_MEAN 0x4A  // Reset Min/Max/Mean ESC Current
+#define SPI2_CMD_RD_MIN_MAX_MEAN  0x4B  // Read Min/Max/Mean ESC Current
+#define SPI2_CMD_SET_THRES        0x4C  // Set ESC Current Threshold Value, Time
+#define SPI2_CMD_FW_VER           0x4D  // Firmware Version
 
-#define SPI2_STS_OK             0x10  // OK Status
-#define SPI2_STS_ERR            0x11  // Error Status
-#define SPI2_STS_TIMEOUT        0x12  // Timeout Status
-#define SPI2_STS_RETRIES        0x13  // Exceeded Retries Status
+#define SPI2_STS_OK               0x10  // OK Status
+#define SPI2_STS_ERR              0x11  // Error Status
+#define SPI2_STS_TIMEOUT          0x12  // Timeout Status
+#define SPI2_STS_RETRIES          0x13  // Exceeded Retries Status
 
-#define SPI2_STOP_TOOL_TIP      100.0 // WORKAROUND: Unique command to stop tool tip (Z Axis runs 0 to -100 typically)
+#define SPI2_STOP_TOOL_TIP        100.0 // WORKAROUND: Unique command to stop tool tip (Z Axis runs 0 to -100 typically)
 
 // Function Prototypes
 void spi2_init(void);

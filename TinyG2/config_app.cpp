@@ -587,7 +587,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","s274", _f0, 0, spi2_cmd74_print, get_nul, spi2_cmd74_set,(float *)&cs.null,0 },						// reset min/max/mean esc current value
 
 																																																	// read min/max/mean esc current value
-	{ "s275","s275n", _f0, 3, spi2_cmd75_print, get_flt, set_nul,(float *)&spi2_esc_val.min },			// min
+	{ "s275","s275i", _f0, 3, spi2_cmd75_print, get_flt, set_nul,(float *)&spi2_esc_val.min },			// min
 	{ "s275","s275x", _f0, 3, spi2_cmd75_print, get_flt, set_nul,(float *)&spi2_esc_val.max },  		// max
   { "s275","s275m", _f0, 3, spi2_cmd75_print, get_flt, set_nul,(float *)&spi2_esc_val.mean },			// mean
 
@@ -753,7 +753,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","s24", _f0, 0, tx_print_nul, get_grp, spi2_cmd4_set,(float *)&cs.null,0 },		// request encoder position group
 	{ "","s271", _f0, 0, tx_print_nul, get_nul, spi2_cmd71_set,(float *)&cs.null,0 },	// spindle led group
 	{ "","s272", _f0, 0, tx_print_nul, get_nul, spi2_cmd72_set,(float *)&cs.null,0 },	// epsilon group
-	{ "","s275", _f0, 0, tx_print_nul, get_nul, spi2_cmd75_set,(float *)&cs.null,0 },	// read min/max/mean esc current group
+	{ "","s275", _f0, 0, tx_print_nul, get_grp, spi2_cmd75_set,(float *)&cs.null,0 },	// read min/max/mean esc current group
 	{ "","s276", _f0, 0, tx_print_nul, get_nul, spi2_cmd76_set,(float *)&cs.null,0 },	// threshold group
 	{ "","s277", _f0, 0, tx_print_nul, get_grp, spi2_cmd77_set,(float *)&cs.null,0 },	// firmware version group
 
