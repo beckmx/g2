@@ -57,8 +57,9 @@ typedef enum {
 #define SPI2_CMD_RD_ESC_CURR      0x49  // Read ESC Current
 #define SPI2_CMD_RST_MIN_MAX_MEAN 0x4A  // Reset Min/Max/Mean ESC Current
 #define SPI2_CMD_RD_MIN_MAX_MEAN  0x4B  // Read Min/Max/Mean ESC Current
-#define SPI2_CMD_SET_THRES        0x4C  // Set ESC Current Threshold Value, Time
-#define SPI2_CMD_FW_VER           0x4D  // Firmware Version
+#define SPI2_CMD_RST_THRES        0x4C  // Reset ESC Current Threshold Value, Time
+#define SPI2_CMD_SET_THRES        0x4D  // Set ESC Current Threshold Value, Time
+#define SPI2_CMD_FW_VER           0x4E  // Firmware Version
 
 #define SPI2_STS_OK               0x10  // OK Status
 #define SPI2_STS_ERR              0x11  // Error Status
@@ -110,8 +111,8 @@ stat_t spi2_cmd72_set(nvObj_t *);
 stat_t spi2_cmd73_set(nvObj_t *);
 stat_t spi2_cmd74_set(nvObj_t *);
 stat_t spi2_cmd75_set(nvObj_t *);
-stat_t spi2_cmd76_set(nvObj_t *);
 stat_t spi2_cmd77_set(nvObj_t *);
+stat_t spi2_cmd78_set(nvObj_t *);
 
 #ifdef __TEXT_MODE
 void spi2_cmd1_print(nvObj_t *);
@@ -127,7 +128,7 @@ void spi2_cmd70_print(nvObj_t *);
 void spi2_cmd73_print(nvObj_t *);
 void spi2_cmd74_print(nvObj_t *);
 void spi2_cmd75_print(nvObj_t *);
-void spi2_cmd77_print(nvObj_t *);
+void spi2_cmd78_print(nvObj_t *);
 #else
 #define spi2_cmd1_print tx_print_stub
 #define spi2_cmd2_print tx_print_stub
@@ -142,7 +143,7 @@ void spi2_cmd77_print(nvObj_t *);
 #define spi2_cmd73_print tx_print_stub
 #define spi2_cmd74_print tx_print_stub
 #define spi2_cmd75_print tx_print_stub
-#define spi2_cmd77_print tx_print_stub
+#define spi2_cmd78_print tx_print_stub
 #endif
 
 #ifdef __cplusplus

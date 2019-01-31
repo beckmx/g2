@@ -592,13 +592,13 @@ const cfgItem_t cfgArray[] PROGMEM = {
   { "s275","s275m", _f0, 3, spi2_cmd75_print, get_flt, set_nul,(float *)&spi2_esc_val.mean },			// mean
 
 																																																	// set esc current threshold
-	{ "s276","s276c", _f0, 3, tx_print_nul, get_nul, set_flt,(float *)&spi2_thres.min_current },		// minimum value
-	{ "s276","s276t", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_thres.count_total },		// time
+	{ "s277","s277c", _f0, 3, tx_print_nul, get_nul, set_flt,(float *)&spi2_thres.min_current },		// minimum value
+	{ "s277","s277t", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_thres.count_total },		// time
 
 																																																	// read firmware version
-	{ "s277","s277a", _f0, 0, spi2_cmd77_print, get_ui8, set_nul,(float *)&spi2_fw_ver.major },	 	  // major
-	{ "s277","s277i", _f0, 0, spi2_cmd77_print, get_ui8, set_nul,(float *)&spi2_fw_ver.minor },			// minor
-	{ "s277","s277r", _f0, 0, spi2_cmd77_print, get_ui8, set_nul,(float *)&spi2_fw_ver.rev },				// revision
+	{ "s278","s278a", _f0, 0, spi2_cmd78_print, get_ui8, set_nul,(float *)&spi2_fw_ver.major },	 	  // major
+	{ "s278","s278i", _f0, 0, spi2_cmd78_print, get_ui8, set_nul,(float *)&spi2_fw_ver.minor },			// minor
+	{ "s278","s278r", _f0, 0, spi2_cmd78_print, get_ui8, set_nul,(float *)&spi2_fw_ver.rev },				// revision
 
 	// Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS
@@ -754,8 +754,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","s271", _f0, 0, tx_print_nul, get_nul, spi2_cmd71_set,(float *)&cs.null,0 },	// spindle led group
 	{ "","s272", _f0, 0, tx_print_nul, get_nul, spi2_cmd72_set,(float *)&cs.null,0 },	// epsilon group
 	{ "","s275", _f0, 0, tx_print_nul, get_grp, spi2_cmd75_set,(float *)&cs.null,0 },	// read min/max/mean esc current group
-	{ "","s276", _f0, 0, tx_print_nul, get_nul, spi2_cmd76_set,(float *)&cs.null,0 },	// threshold group
-	{ "","s277", _f0, 0, tx_print_nul, get_grp, spi2_cmd77_set,(float *)&cs.null,0 },	// firmware version group
+	{ "","s277", _f0, 0, tx_print_nul, get_nul, spi2_cmd77_set,(float *)&cs.null,0 },	// threshold group
+	{ "","s278", _f0, 0, tx_print_nul, get_grp, spi2_cmd78_set,(float *)&cs.null,0 },	// firmware version group
 
 #ifdef __DIAGNOSTIC_PARAMETERS
 	{ "","_te",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// target axis endpoint group
