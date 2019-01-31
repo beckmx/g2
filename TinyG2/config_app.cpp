@@ -591,6 +591,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "s275","s275x", _f0, 3, spi2_cmd75_print, get_flt, set_nul,(float *)&spi2_esc_val.max },  		// max
   { "s275","s275m", _f0, 3, spi2_cmd75_print, get_flt, set_nul,(float *)&spi2_esc_val.mean },			// mean
 
+	{ "","s276", _f0, 0, spi2_cmd76_print, get_nul, spi2_cmd76_set,(float *)&cs.null,0 },						// reset esc current threshold value/time
+
 																																																	// set esc current threshold
 	{ "s277","s277c", _f0, 3, tx_print_nul, get_nul, set_flt,(float *)&spi2_thres.min_current },		// minimum value
 	{ "s277","s277t", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_thres.count_total },		// time

@@ -99,10 +99,11 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
   // Command error checking, immediately return error on malformed command
   switch (cmd_byte) {
 
-    // Single byte master write commands (0x01, 0x02, 0x4A)
+    // Single byte master write commands (0x01, 0x02, 0x4A, 0x4C)
     case SPI2_CMD_RST_ENC_POS:
     case SPI2_CMD_START_TOOL_TIP:
     case SPI2_CMD_RST_MIN_MAX_MEAN:
+    case SPI2_CMD_RST_THRES:
 
       if ((slave_req) || (wr_cnt > 0) || (rd_cnt > 0)) {
 
@@ -218,7 +219,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       }
       break;
 
-    // Set ESC Current Threshold Value, Time command (0x4C)
+    // Set ESC Current Threshold Value, Time command (0x4D)
     case SPI2_CMD_SET_THRES:
 
       if ((slave_req) || (wr_cnt != 5) || (rd_cnt > 0)) {
@@ -228,7 +229,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       }
       break;
 
-    // Firmware Version command (0x4D)
+    // Firmware Version command (0x4E)
     case SPI2_CMD_FW_VER:
 
       if ((slave_req) || (wr_cnt > 0) || (rd_cnt != 3)) {
@@ -615,7 +616,12 @@ uint8_t spi2_read_min_max_mean() {
   return st;
 }
 
-// spi2_set_threshold: set esc current threshold value, time (command 0x4c / 76)
+// spi2_reset_threshold: reset esc current threshold value and time (command 0x4c / 76)
+uint8_t spi2_reset_threshold() {
+ return (spi2_cmd(false, SPI2_CMD_RST_THRES, NULL, 0, NULL, 0));
+}
+
+// spi2_set_threshold: set esc current threshold value, time (command 0x4d / 77)
 uint8_t spi2_set_threshold() {
 
   fix16_t x;
@@ -635,7 +641,7 @@ uint8_t spi2_set_threshold() {
   return(spi2_cmd(false, SPI2_CMD_SET_THRES, wbuf, 5, rbuf, 0));
 }
 
-// spi2_get_fw_version: firmware version (command 0x4d / 77)
+// spi2_get_fw_version: firmware version (command 0x4e / 78)
 uint8_t spi2_get_fw_version() {
 
   uint8_t st;
@@ -994,6 +1000,10 @@ stat_t spi2_cmd75_set(nvObj_t *nv) {
   return (spi2_cmd_helper(spi2_read_min_max_mean()));
 }
 
+stat_t spi2_cmd76_set(nvObj_t *nv) {
+  return (spi2_cmd_helper(spi2_reset_threshold()));
+}
+
 stat_t spi2_cmd77_set(nvObj_t *nv) {
 
   // Call set_grp() to set all the variables using the JSON
@@ -1039,6 +1049,7 @@ static const char fmt_spi2_cmd71[] PROGMEM = "Spindle LED %s: %X\n";
 static const char fmt_spi2_cmd73[] PROGMEM = "ESC Current: %5.3fA\n";
 static const char fmt_spi2_cmd74[] PROGMEM = "Reset Min/Max/Mean ESC Current Command\n";
 static const char fmt_spi2_cmd75[] PROGMEM = "%s ESC Current = %5.3fA\n";
+static const char fmt_spi2_cmd76[] PROGMEM = "Reset ESC Current Threshold Value/Time Command\n";
 static const char fmt_spi2_cmd78[] PROGMEM = "Firmware %s Number: %u\n";
 
 static int8_t _get_axis(const index_t index)
@@ -1146,6 +1157,7 @@ void spi2_cmd70_print(nvObj_t *nv) { _print_interlock(nv, fmt_spi2_cmd70);}
 void spi2_cmd73_print(nvObj_t *nv) { _print_esc_current(nv, fmt_spi2_cmd73); }
 void spi2_cmd74_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd74);}
 void spi2_cmd75_print(nvObj_t *nv) { _print_min_max_mean(nv, fmt_spi2_cmd75); }
+void spi2_cmd76_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd76);}
 void spi2_cmd78_print(nvObj_t *nv) { _print_fw_version(nv, fmt_spi2_cmd78);}
 #endif
 
