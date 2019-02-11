@@ -229,6 +229,15 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       }
       break;
 
+    // Read Current Threshold Value, Time command (0x4E)
+    case SPI2_CMD_RD_THRES:
+
+      if ((slave_req) || (wr_cnt > 0) || (rd_cnt != 5)) {
+        fprintf_P(stderr, PSTR("\nERROR: Malformed Read Current Threshold Value, Time command (Command 0x%02X)\n"),cmd_byte);
+        return SPI2_STS_ERR;
+      }
+      break;
+
     // Firmware Version command (0x4F)
     case SPI2_CMD_FW_VER:
 
@@ -636,9 +645,28 @@ uint8_t spi2_set_threshold() {
   wbuf[3] = (x & 0x000000FF);
 
   // Set time from global variables
-  wbuf[4] = spi2_thres.count_total;
+  wbuf[4] = spi2_thres.count_total_secs;
 
   return(spi2_cmd(false, SPI2_CMD_SET_THRES, wbuf, 5, rbuf, 0));
+}
+
+// spi2_read_threshold: reads esc current threshold value, time (command 0x4e / 78)
+uint8_t spi2_read_threshold() {
+
+  uint8_t st;
+  fix16_t x;
+
+  // Get the threshold value and time as one 5-byte transfer
+  st = spi2_cmd(false, SPI2_CMD_RD_THRES, NULL, 0, rbuf, 5);
+
+  // Read the threshold value in the buffer into a fixed point and covert to floats
+  x = (rbuf[0] << 24) | (rbuf[1] << 16) | (rbuf[2] << 8) | rbuf[3];
+  spi2_thres.min_current = fix16_to_float(x);
+
+  // Read the threshold time
+  spi2_thres.count_total_secs = rbuf[4];
+
+  return st;
 }
 
 // spi2_get_fw_version: firmware version (command 0x4F / 79)
@@ -1013,6 +1041,10 @@ stat_t spi2_cmd77_set(nvObj_t *nv) {
   return (spi2_cmd_helper(spi2_set_threshold()));
 }
 
+stat_t spi2_cmd78_set(nvObj_t *nv) {
+  return (spi2_cmd_helper(spi2_read_threshold()));
+}
+
 stat_t spi2_cmd79_set(nvObj_t *nv) {
   return (spi2_cmd_helper(spi2_get_fw_version()));
 }
@@ -1050,6 +1082,7 @@ static const char fmt_spi2_cmd73[] PROGMEM = "ESC Current: %5.3fA\n";
 static const char fmt_spi2_cmd74[] PROGMEM = "Reset Min/Max/Mean ESC Current Command\n";
 static const char fmt_spi2_cmd75[] PROGMEM = "%s ESC Current = %5.3fA\n";
 static const char fmt_spi2_cmd76[] PROGMEM = "Reset ESC Current Threshold Value/Time Command\n";
+static const char fmt_spi2_cmd78[] PROGMEM = "Threshold Value = %5.3A, Time = %us\n";
 static const char fmt_spi2_cmd79[] PROGMEM = "Firmware %s Number: %u\n";
 
 static int8_t _get_axis(const index_t index)
@@ -1138,6 +1171,11 @@ static void _print_min_max_mean(nvObj_t *nv, const char *format)
   fprintf_P(stderr, format, GET_TEXT_ITEM(min_max_means, min_max_mean_idx), (float)nv->value);
 }
 
+static void _print_thresholds(nvObj_t *nv, const char *format)
+{
+  fprintf_P(stderr, format, spi2_thres.min_current, spi2_thres.count_total_secs);
+}
+
 static void _print_fw_version(nvObj_t *nv, const char *format)
 {
   uint8_t fw_ver_idx = _get_fw_ver(nv->index);
@@ -1158,6 +1196,7 @@ void spi2_cmd73_print(nvObj_t *nv) { _print_esc_current(nv, fmt_spi2_cmd73); }
 void spi2_cmd74_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd74);}
 void spi2_cmd75_print(nvObj_t *nv) { _print_min_max_mean(nv, fmt_spi2_cmd75); }
 void spi2_cmd76_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd76);}
+void spi2_cmd78_print(nvObj_t *nv) { _print_thresholds(nv, fmt_spi2_cmd78); }
 void spi2_cmd79_print(nvObj_t *nv) { _print_fw_version(nv, fmt_spi2_cmd79);}
 #endif
 

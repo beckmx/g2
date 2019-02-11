@@ -593,9 +593,13 @@ const cfgItem_t cfgArray[] PROGMEM = {
 
 	{ "","s276", _f0, 0, spi2_cmd76_print, get_nul, spi2_cmd76_set,(float *)&cs.null,0 },						// reset esc current threshold value/time
 
-																																																	// set esc current threshold
-	{ "s277","s277c", _f0, 3, tx_print_nul, get_nul, set_flt,(float *)&spi2_thres.min_current },		// minimum value
-	{ "s277","s277t", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_thres.count_total },		// time
+																																																		// set esc current threshold
+	{ "s277","s277c", _f0, 3, tx_print_nul, get_nul, set_flt,(float *)&spi2_thres.min_current },			// minimum value
+	{ "s277","s277t", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_thres.count_total_secs },	// time
+
+																																																				// read esc current threshold
+	{ "s278","s278c", _f0, 3, spi2_cmd78_print, get_flt, set_nul,(float *)&spi2_thres.min_current },			// minimum value
+	{ "s278","s278t", _f0, 0, spi2_cmd78_print, get_ui8, set_nul,(float *)&spi2_thres.count_total_secs },	// time
 
 																																																	// read firmware version
 	{ "s279","s279a", _f0, 0, spi2_cmd79_print, get_ui8, set_nul,(float *)&spi2_fw_ver.major },	 	  // major
@@ -756,7 +760,8 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","s271", _f0, 0, tx_print_nul, get_nul, spi2_cmd71_set,(float *)&cs.null,0 },	// spindle led group
 	{ "","s272", _f0, 0, tx_print_nul, get_nul, spi2_cmd72_set,(float *)&cs.null,0 },	// epsilon group
 	{ "","s275", _f0, 0, tx_print_nul, get_grp, spi2_cmd75_set,(float *)&cs.null,0 },	// read min/max/mean esc current group
-	{ "","s277", _f0, 0, tx_print_nul, get_nul, spi2_cmd77_set,(float *)&cs.null,0 },	// threshold group
+	{ "","s277", _f0, 0, tx_print_nul, get_nul, spi2_cmd77_set,(float *)&cs.null,0 },	// set threshold group
+	{ "","s278", _f0, 0, tx_print_nul, get_grp, spi2_cmd78_set,(float *)&cs.null,0 },	// read threshold group
 	{ "","s279", _f0, 0, tx_print_nul, get_grp, spi2_cmd79_set,(float *)&cs.null,0 },	// firmware version group
 
 #ifdef __DIAGNOSTIC_PARAMETERS
@@ -781,7 +786,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 /***** Make sure these defines line up with any changes in the above table *****/
 
 #define NV_COUNT_UBER_GROUPS 	4 		// count of uber-groups, above
-#define STANDARD_GROUPS 			40		// count of standard groups, excluding diagnostic parameter groups
+#define STANDARD_GROUPS 			41		// count of standard groups, excluding diagnostic parameter groups
 
 #if (MOTORS >= 5)
 #define MOTOR_GROUP_5			1
