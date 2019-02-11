@@ -229,7 +229,7 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       }
       break;
 
-    // Firmware Version command (0x4E)
+    // Firmware Version command (0x4F)
     case SPI2_CMD_FW_VER:
 
       if ((slave_req) || (wr_cnt > 0) || (rd_cnt != 3)) {
@@ -641,7 +641,7 @@ uint8_t spi2_set_threshold() {
   return(spi2_cmd(false, SPI2_CMD_SET_THRES, wbuf, 5, rbuf, 0));
 }
 
-// spi2_get_fw_version: firmware version (command 0x4e / 78)
+// spi2_get_fw_version: firmware version (command 0x4F / 79)
 uint8_t spi2_get_fw_version() {
 
   uint8_t st;
@@ -1013,7 +1013,7 @@ stat_t spi2_cmd77_set(nvObj_t *nv) {
   return (spi2_cmd_helper(spi2_set_threshold()));
 }
 
-stat_t spi2_cmd78_set(nvObj_t *nv) {
+stat_t spi2_cmd79_set(nvObj_t *nv) {
   return (spi2_cmd_helper(spi2_get_fw_version()));
 }
 
@@ -1050,7 +1050,7 @@ static const char fmt_spi2_cmd73[] PROGMEM = "ESC Current: %5.3fA\n";
 static const char fmt_spi2_cmd74[] PROGMEM = "Reset Min/Max/Mean ESC Current Command\n";
 static const char fmt_spi2_cmd75[] PROGMEM = "%s ESC Current = %5.3fA\n";
 static const char fmt_spi2_cmd76[] PROGMEM = "Reset ESC Current Threshold Value/Time Command\n";
-static const char fmt_spi2_cmd78[] PROGMEM = "Firmware %s Number: %u\n";
+static const char fmt_spi2_cmd79[] PROGMEM = "Firmware %s Number: %u\n";
 
 static int8_t _get_axis(const index_t index)
 {
@@ -1158,7 +1158,7 @@ void spi2_cmd73_print(nvObj_t *nv) { _print_esc_current(nv, fmt_spi2_cmd73); }
 void spi2_cmd74_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd74);}
 void spi2_cmd75_print(nvObj_t *nv) { _print_min_max_mean(nv, fmt_spi2_cmd75); }
 void spi2_cmd76_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd76);}
-void spi2_cmd78_print(nvObj_t *nv) { _print_fw_version(nv, fmt_spi2_cmd78);}
+void spi2_cmd79_print(nvObj_t *nv) { _print_fw_version(nv, fmt_spi2_cmd79);}
 #endif
 
 /////////////////////////////////////////////////////////////

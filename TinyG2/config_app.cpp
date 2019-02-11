@@ -598,9 +598,9 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "s277","s277t", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_thres.count_total },		// time
 
 																																																	// read firmware version
-	{ "s278","s278a", _f0, 0, spi2_cmd78_print, get_ui8, set_nul,(float *)&spi2_fw_ver.major },	 	  // major
-	{ "s278","s278i", _f0, 0, spi2_cmd78_print, get_ui8, set_nul,(float *)&spi2_fw_ver.minor },			// minor
-	{ "s278","s278r", _f0, 0, spi2_cmd78_print, get_ui8, set_nul,(float *)&spi2_fw_ver.rev },				// revision
+	{ "s279","s279a", _f0, 0, spi2_cmd79_print, get_ui8, set_nul,(float *)&spi2_fw_ver.major },	 	  // major
+	{ "s279","s279i", _f0, 0, spi2_cmd79_print, get_ui8, set_nul,(float *)&spi2_fw_ver.minor },			// minor
+	{ "s279","s279r", _f0, 0, spi2_cmd79_print, get_ui8, set_nul,(float *)&spi2_fw_ver.rev },				// revision
 
 	// Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS
@@ -757,7 +757,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","s272", _f0, 0, tx_print_nul, get_nul, spi2_cmd72_set,(float *)&cs.null,0 },	// epsilon group
 	{ "","s275", _f0, 0, tx_print_nul, get_grp, spi2_cmd75_set,(float *)&cs.null,0 },	// read min/max/mean esc current group
 	{ "","s277", _f0, 0, tx_print_nul, get_nul, spi2_cmd77_set,(float *)&cs.null,0 },	// threshold group
-	{ "","s278", _f0, 0, tx_print_nul, get_grp, spi2_cmd78_set,(float *)&cs.null,0 },	// firmware version group
+	{ "","s279", _f0, 0, tx_print_nul, get_grp, spi2_cmd79_set,(float *)&cs.null,0 },	// firmware version group
 
 #ifdef __DIAGNOSTIC_PARAMETERS
 	{ "","_te",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// target axis endpoint group
