@@ -276,7 +276,8 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
         fprintf_P(stderr, PSTR("\nERROR: Timed out waiting on command byte\n"));
         return SPI2_STS_TIMEOUT;
       }
-      // Read ESC Current, Request Encoder Positions and Read Min/Max/Mean commands require time for SPI2 to prep data - TODO fix performance
+      // Read ESC Current, Request Encoder Positions and Read Min/Max/Mean commands
+      // require time for SPI2 to prep data - TODO fix performance
       if (cmd_byte == SPI2_CMD_RD_ESC_CURR) {
         delay(2);
       } else if (cmd_byte == SPI2_CMD_REQ_ENC_POS || cmd_byte == SPI2_CMD_RD_MIN_MAX_MEAN) {
@@ -911,17 +912,22 @@ void Pin<kSocket3_SPISlaveSelectPinNumber>::interrupt() {
 //  cmd1  - Reset Encoder Positions to Zero
 //  cmd2  - Start Tool Tip Command
 //  cmd4  - Request Encoder Positions
-//  cmd40 - Read Encoder Position
-//  cmd41 - Set User IO
-//  cmd42 - Clear User IO
-//  cmd43 - Read User IO
-//  cmd44 - Set User LED
-//  cmd45 - Clear User LED
-//  cmd46 - Read Interlock Loop
-//  cmd47 - Set Spindle LED
-//  cmd48 - Set Epsilon
-//  cmd49 - Read ESC Current (Skipped)
-//  cmd4a - Firmware Version
+//  cmd64 - Read Encoder Position
+//  cmd65 - Set User IO
+//  cmd66 - Clear User IO
+//  cmd67 - Read User IO
+//  cmd68 - Set User LED
+//  cmd69 - Clear User LED
+//  cmd70 - Read Interlock Loop
+//  cmd71 - Set Spindle LED
+//  cmd72 - Set Epsilon
+//  cmd73 - Read ESC Current
+//  cmd74 - Reset Min/Max/Mean ESC Current
+//  cmd75 - Read Min/Max/Mean ESC Current
+//  cmd76 - Reset ESC Current Threshold
+//  cmd77 - Set ESC Current Threshold
+//  cmd78 - Read ESC Current Threshold
+//  cmd79 - Firmware Version
 //
 
 // spi2_cmd_helper: helper function to return proper status
@@ -1082,7 +1088,8 @@ static const char fmt_spi2_cmd73[] PROGMEM = "ESC Current: %5.3fA\n";
 static const char fmt_spi2_cmd74[] PROGMEM = "Reset Min/Max/Mean ESC Current Command\n";
 static const char fmt_spi2_cmd75[] PROGMEM = "%s ESC Current = %5.3fA\n";
 static const char fmt_spi2_cmd76[] PROGMEM = "Reset ESC Current Threshold Value/Time Command\n";
-static const char fmt_spi2_cmd78[] PROGMEM = "Threshold Value = %5.3A, Time = %us\n";
+static const char fmt_spi2_cmd78c[] PROGMEM = "Threshold Current Value = %5.3fA\n";
+static const char fmt_spi2_cmd78t[] PROGMEM = "Threshold Time = %us\n";
 static const char fmt_spi2_cmd79[] PROGMEM = "Firmware %s Number: %u\n";
 
 static int8_t _get_axis(const index_t index)
@@ -1171,9 +1178,14 @@ static void _print_min_max_mean(nvObj_t *nv, const char *format)
   fprintf_P(stderr, format, GET_TEXT_ITEM(min_max_means, min_max_mean_idx), (float)nv->value);
 }
 
-static void _print_thresholds(nvObj_t *nv, const char *format)
+static void _print_thres_current(nvObj_t *nv, const char *format)
 {
-  fprintf_P(stderr, format, spi2_thres.min_current, spi2_thres.count_total_secs);
+  fprintf_P(stderr, format, spi2_thres.min_current);
+}
+
+static void _print_thres_time(nvObj_t *nv, const char *format)
+{
+  fprintf_P(stderr, format, spi2_thres.count_total_secs);
 }
 
 static void _print_fw_version(nvObj_t *nv, const char *format)
@@ -1196,7 +1208,8 @@ void spi2_cmd73_print(nvObj_t *nv) { _print_esc_current(nv, fmt_spi2_cmd73); }
 void spi2_cmd74_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd74);}
 void spi2_cmd75_print(nvObj_t *nv) { _print_min_max_mean(nv, fmt_spi2_cmd75); }
 void spi2_cmd76_print(nvObj_t *nv) { text_print_nul(nv, fmt_spi2_cmd76);}
-void spi2_cmd78_print(nvObj_t *nv) { _print_thresholds(nv, fmt_spi2_cmd78); }
+void spi2_cmd78c_print(nvObj_t *nv) { _print_thres_current(nv, fmt_spi2_cmd78c); }
+void spi2_cmd78t_print(nvObj_t *nv) { _print_thres_time(nv, fmt_spi2_cmd78t); }
 void spi2_cmd79_print(nvObj_t *nv) { _print_fw_version(nv, fmt_spi2_cmd79);}
 #endif
 

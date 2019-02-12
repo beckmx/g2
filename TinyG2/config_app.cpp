@@ -597,9 +597,9 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "s277","s277c", _f0, 3, tx_print_nul, get_nul, set_flt,(float *)&spi2_thres.min_current },			// minimum value
 	{ "s277","s277t", _f0, 0, tx_print_nul, get_nul, set_ui8,(float *)&spi2_thres.count_total_secs },	// time
 
-																																																				// read esc current threshold
-	{ "s278","s278c", _f0, 3, spi2_cmd78_print, get_flt, set_nul,(float *)&spi2_thres.min_current },			// minimum value
-	{ "s278","s278t", _f0, 0, spi2_cmd78_print, get_ui8, set_nul,(float *)&spi2_thres.count_total_secs },	// time
+																																																					// read esc current threshold
+	{ "s278","s278c", _f0, 3, spi2_cmd78c_print, get_flt, set_nul,(float *)&spi2_thres.min_current },				// minimum value
+	{ "s278","s278t", _f0, 0, spi2_cmd78t_print, get_ui8, set_nul,(float *)&spi2_thres.count_total_secs },	// time
 
 																																																	// read firmware version
 	{ "s279","s279a", _f0, 0, spi2_cmd79_print, get_ui8, set_nul,(float *)&spi2_fw_ver.major },	 	  // major
