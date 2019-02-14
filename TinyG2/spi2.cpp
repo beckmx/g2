@@ -276,10 +276,12 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
         fprintf_P(stderr, PSTR("\nERROR: Timed out waiting on command byte\n"));
         return SPI2_STS_TIMEOUT;
       }
-      // Read ESC Current, Request Encoder Positions and Read Min/Max/Mean commands
+      // Read ESC Current, Reset Min/Max/Mean/Threshold,
+      // Request Encoder Positions and Read Min/Max/Mean commands
       // require time for SPI2 to prep data - TODO fix performance
-      if (cmd_byte == SPI2_CMD_RD_ESC_CURR) {
-        delay(2);
+      if (cmd_byte == SPI2_CMD_RD_ESC_CURR || cmd_byte == SPI2_CMD_RST_MIN_MAX_MEAN ||
+          cmd_byte == SPI2_CMD_RST_THRES) {
+        delay(2); // Due to EEPROM access
       } else if (cmd_byte == SPI2_CMD_REQ_ENC_POS || cmd_byte == SPI2_CMD_RD_MIN_MAX_MEAN) {
         delay_us(125);
       } else {
@@ -313,8 +315,11 @@ uint8_t spi2_cmd(bool slave_req, uint8_t cmd_byte, uint8_t *wr_buf, uint16_t wr_
       delay_us(5);
     }
 
-    // Send Motor Positions command, add additional delay to prevent buffer overflow on V3 during tool tip
-    if (cmd_byte == SPI2_CMD_SND_MTR_POS) {
+    // Set Threshold command, delay before status byte to account for EEPROM access
+    // Send Motor Positions command, add delay to prevent buffer overflow on V3 during tool tip
+    if (cmd_byte == SPI2_CMD_SET_THRES) {
+      delay(2);
+    } else if (cmd_byte == SPI2_CMD_SND_MTR_POS) {
       delay_us(125);
     } else {
       delay_us(50);
