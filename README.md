@@ -94,7 +94,14 @@ bossac -p tty.usbmodem1411 -e -w -v -b -R g2/TinyG2/bin/V3/V3.bin
 * The last argument is the filename of the firmware, in .bin format.
 
 ## Verifying the TinyG Firmware Version
-TBD
+
+To verify that the correct TinyG version is installed (based on versions provided in https://github.com/bantamtools/g2/releases), connect the TinyG to your computer via USB.  Power up the TinyG and open the Bantam Tools software application.
+
+When the application starts, you'll notice several numbers in the bottom left corner of your screen.  The second number (typically with the format `300.xx`) designates the current firmware build running on the TinyG.
+
+![Bantam Tools Application](https://github.com/bantamtools/g2/blob/msx_dev/Resources/screenshots/bt_app.png "Bantam Tools Application")
+
+**NOTE**: To update the TinyG firmware version for future versions and custom test builds, edit the `TINYG_FIRMWARE_BUILD` variable found in `TinyG2/tinyg2.h` file of this repository and rebuild the firmware.
 
 ### Clean Build
 
