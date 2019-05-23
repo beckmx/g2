@@ -54,11 +54,13 @@ You may hit **Read** next to the Device Signature or Target Voltage to verify yo
 
 Hit **Memories** on the left-hand side of the window.  Under **Flash**, browse to the .bin file you generated.  Be sure to choose **Binary (.bin, .dat) (\*.bin;\*.dat)** as the file type when browsing for your file.
 
-NOTE: For Linux users, you will have to copy the .bin file over to Windows, as Atmel Studio is a Windows-only application.
+**NOTE**: For Linux users, you will have to copy the .bin file over to Windows, as Atmel Studio is a Windows-only application.
 
 Hit **Program** to write your TinyG binary to flash and have it verified.
 
-## Flashing the TinyG2 using BOSSA
+## Alternate: Flashing the TinyG2 using BOSSA
+
+**NOTE**: The Atmel Studio method is recommended over BOSSA because it is faster and less error-prone.
 
 To get TinyG2 to reboot into SAM-BA mode, you can issue the json command {"boot":1}.  You can also open & close the serial port at 1200 baud.  The easiest way to do the latter is with the command stty -f /dev/tty.usbserial* 1200.
 
