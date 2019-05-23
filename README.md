@@ -1,17 +1,15 @@
 # TinyG2
 
-This is the Other Machine Co production fork of Synthetos's g2 firmware.
+This is the Bantam Tools V3 development fork of Synthetos's g2 firmware.
 
 ## Toolchain
 
 This project requires gcc 4.8.
 
-You can install the toolchain using any of the following commands:
+You can install the toolchain using the following command:
 
 ```
-make
 make toolchain
-cd Tools && make
 ```
 
 ## Compiling Firmware
@@ -21,31 +19,23 @@ The firmware is contained in the `TinyG2/` directory.
 When compiling the TinyG firmware, you need to specify a platform:
 
 ```
-make PLATFORM=Othermill
-make PLATFORM=OthermillPro
+make PLATFORM=V3
 make PLATFORM=G2v9i
 ```
 
 You must build the firmware from the `TinyG2/` directory:
 
 ```
-cd TinyG2 && make PLATFORM=OthermillPro
-cd TinyG2 && make PLATFORM=G2v9i
+cd TinyG2 && make PLATFORM=V3
 ```
 
-Alternatively, you can use the top-level Makefile shim:
-
-```
-make fw
-```
-
-This command build the `G2v9i` version of firmware, which is targeted for boards in V2 machines.
+Note: For the V3, you may run the makefile with either 'V3' or 'v3' as the PLATFORM.
 
 ### Firmware Binaries
 
 Firmware binaries can be found in the `TinyG2/bin` folder. Output is organized by `PLATFORM`.
 
-The build puts both an ELF and a binary. ELF is the executable linker format and has symbols for debugging. The .bin is the binary image that we supply to BOSSA.
+The build puts both an ELF and a binary. ELF is the executable linker format and has symbols for debugging. The .bin is the binary image that we can supply to Atmel Studio or BOSSA.
 
 ### Clean Build
 
@@ -54,11 +44,14 @@ To clean, run `make clean` at the top-level. By default, this will run a clean b
 If you need to clean another platform, specify it as you would during compilation:
 
 ```
-cd TinyG2 && make PLATFORM=OthermillPro clean
+cd TinyG2 && make PLATFORM=V3 clean
 cd TinyG2 && make PLATFORM=G2v9i clean
 ```
 
-## Flashing the TinyG2
+## Flashing the TinyG2 using Atmel Studio
+TBD
+
+## Flashing the TinyG2 using BOSSA
 
 To get TinyG2 to reboot into SAM-BA mode, you can issue the json command {"boot":1}.  You can also open & close the serial port at 1200 baud.  The easiest way to do the latter is with the command stty -f /dev/tty.usbserial* 1200.
 
@@ -73,7 +66,7 @@ bossac -p tty.usbserialXX -e -w -v -b -R path/to/firmware.bin
 Example:
 
 ```
-bossac -p tty.usbmodem1411 -e -w -v -b -R g2/TinyG2/bin/G2v9i/G2v9i.bin
+bossac -p tty.usbmodem1411 -e -w -v -b -R g2/TinyG2/bin/V3/V3.bin
 ```
 
 * `-p` specifies the serial port.  It is likely to be `/dev/tty.usbserialXX`.
@@ -87,7 +80,7 @@ bossac -p tty.usbmodem1411 -e -w -v -b -R g2/TinyG2/bin/G2v9i/G2v9i.bin
 
 ## Debugging
 
-You can debug the TinyG through JTAG using a SAMA-ICE adapter and the JLink tools.
+You can debug the TinyG through JTAG using a SAM-ICE adapter and the JLink tools.
 
 ### Installing JLink Tools
 
@@ -114,7 +107,7 @@ We recommend running `arm-none-eabi-gdb` inside of the `TinyG/` folder so that t
 You can build the code and open a debug terminal by adding `debug` to the build command:
 
 ```
-make PLATFORM=OthermillPro debug
+make PLATFORM=V3 debug
 ```
 
 This will automatically connect to `gdb`. The `JLinkGDBServer` needs to be running.
