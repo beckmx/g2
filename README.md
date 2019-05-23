@@ -52,7 +52,9 @@ In the Device Programming window, select the following parameters and hit **Appl
 
 You may hit **Read** next to the Device Signature or Target Voltage to verify your J-Link is properly connected to the TinyG.
 
-Hit **Memories** on the left-hand side of the window.  Under **Flash**, browse to the .bin file you generated.  Note that for Linux users, you will have to copy the .bin file over to Windows, as Atmel Studio is a Windows-only application.
+Hit **Memories** on the left-hand side of the window.  Under **Flash**, browse to the .bin file you generated.  Be sure to choose **Binary (.bin, .dat) (\*.bin;\*.dat)** as the file type when browsing for your file.
+
+NOTE: For Linux users, you will have to copy the .bin file over to Windows, as Atmel Studio is a Windows-only application.
 
 Hit **Program** to write your TinyG binary to flash and have it verified.
 
