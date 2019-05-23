@@ -31,6 +31,17 @@ cd TinyG2 && make PLATFORM=V3
 
 Note: For the V3, you may run the makefile with either `V3` or `v3` as the `PLATFORM`.
 
+### Clean Build
+
+To clean, run `make clean` at the top-level. By default, this will run a clean build for the `G2v9i` platform.
+
+If you need to clean another platform, specify it as you would during compilation:
+
+```
+cd TinyG2 && make PLATFORM=V3 clean
+cd TinyG2 && make PLATFORM=G2v9i clean
+```
+
 ### Firmware Binaries
 
 Firmware binaries can be found in the `TinyG2/bin` folder. Output is organized by `PLATFORM`.
@@ -102,17 +113,6 @@ When the application starts, you'll notice several numbers in the bottom left co
 ![Bantam Tools Application](https://github.com/bantamtools/g2/blob/msx_dev/Resources/screenshots/bt_app.png "Bantam Tools Application")
 
 **NOTE**: To update the TinyG firmware version for future versions and custom test builds, edit the `TINYG_FIRMWARE_BUILD` variable found in `TinyG2/tinyg2.h` file of this repository and rebuild the firmware.
-
-### Clean Build
-
-To clean, run `make clean` at the top-level. By default, this will run a clean build for the `G2v9i` platform.
-
-If you need to clean another platform, specify it as you would during compilation:
-
-```
-cd TinyG2 && make PLATFORM=V3 clean
-cd TinyG2 && make PLATFORM=G2v9i clean
-```
 
 ## Debugging
 
