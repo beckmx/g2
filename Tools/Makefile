@@ -26,12 +26,15 @@ DOWNLOAD_TOOL = wget
 EXTRACT_TOOL = tar xjf
 SYMLINK_COMMAND = ln -s $(TOOLS_EXPANDED_DIRNAME) $(TOOLS_SUBPATH)
 else
-ifeq (windows32,$(UNAME))
 TOOLS_FILENAME = $(TOOLS_WIN32_ZIP_FILENAME)
 DOWNLOAD_TOOL = wget
 EXTRACT_TOOL = 7z x -y -o$(TOOLS_EXPANDED_DIRNAME)
+# Windows uses cmd.exe; Cygwin uses ln -s
+ifeq (windows32,$(UNAME))
 SYMLINK_COMMAND = cmd /c "mklink /D $(TOOLS_SUBPATH) $(TOOLS_EXPANDED_DIRNAME)""
-endif #Windows
+else
+SYMLINK_COMMAND = ln -s $(TOOLS_EXPANDED_DIRNAME) $(TOOLS_SUBPATH)
+endif #Windows and Cygwin
 endif #Linux
 endif #Darwin
 

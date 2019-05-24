@@ -58,6 +58,9 @@ MOTATE_PATH := motate
 SOURCE_DIRS += $(MOTATE_PATH)
 USER_INCLUDE_DIRS += $(SOURCE_DIRS)
 
+# Detect OS
+UNAME := $(shell uname -s)
+
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP Flags)
 
@@ -120,7 +123,14 @@ CPPFLAGS += -Wno-format-nonliteral -Wno-format-security
 # Default is to compile more quielty.
 # To show actual commands: make [options] VERBOSE=1
 VERBOSE ?= 0
+
+# Disable color commands for windows
+ifeq ($(UNAME),windows32)
+COLOR ?= 0
+else
 COLOR ?= 1
+endif
+
 ifeq ($(VERBOSE),0)
 QUIET := @
 else
@@ -295,11 +305,16 @@ RM      = rm
 CP      = cp
 CKSUM		= cksum
 DD			= dd
-# NOTE: Atmel Studio 6.1 will default to the wrong mkdir that doesn't understand -p.
-#       So, in AS6.1, we have to pass MKDIR=gmkdir in the command line.
-MKDIR   ?= mkdir
 
+# Windows uses wrong mkdir without -p, no bash
+ifeq (windows32,$(UNAME))
+MKDIR   ?= gmkdir
+SHELL = cmd /c
+else
+MKDIR   ?= mkdir
 SHELL = bash
+endif #windows32
+
 PATH := $(PATH):../Tools/gcc-$(CROSS_COMPILE)/bin
 
 
@@ -375,7 +390,6 @@ endif
 #-------------------------------------------------------------------------------
 #    Rules
 #-------------------------------------------------------------------------------
-
 
 all: $(OUTPUT_BIN).elf
 
