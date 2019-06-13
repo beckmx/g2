@@ -21,13 +21,12 @@
     <OverrideVtorValue>exception_table</OverrideVtorValue>
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
-    <avrtoolinterface>
-    </avrtoolinterface>
-    <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
+    <avrtoolinterface>JTAG</avrtoolinterface>
+    <avrtool>com.atmel.avrdbg.tool.samice</avrtool>
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
-      <ToolName>SAM-ICE</ToolName>
-      <ToolNumber>000028016452</ToolNumber>
+      <ToolName>J-Link</ToolName>
+      <ToolNumber>50107300</ToolNumber>
       <Channel>
         <host>127.0.0.1</host>
         <port>1063</port>
@@ -36,7 +35,7 @@
       <ToolOptions>
         <InterfaceName>JTAG</InterfaceName>
         <InterfaceProperties>
-          <JtagDbgClock>0</JtagDbgClock>
+          <JtagDbgClock>4000000</JtagDbgClock>
           <JtagProgClock>1000000</JtagProgClock>
           <IspClock>150000</IspClock>
           <JtagInChain>false</JtagInChain>
@@ -45,6 +44,9 @@
           <JtagDevicesAfter>0</JtagDevicesAfter>
           <JtagInstrBitsBefore>0</JtagInstrBitsBefore>
           <JtagInstrBitsAfter>0</JtagInstrBitsAfter>
+          <JtagSelectedDeviceIndexInChain>0</JtagSelectedDeviceIndexInChain>
+          <JtagDaisyChainDevices>
+          </JtagDaisyChainDevices>
         </InterfaceProperties>
       </ToolOptions>
     </com_atmel_avrdbg_tool_samice>
@@ -70,7 +72,8 @@
         <InterfaceProperties>
           <SwdClock>2000000</SwdClock>
         </InterfaceProperties>
-        <InterfaceName>SWD</InterfaceName>
+        <InterfaceName>
+        </InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
       <ToolNumber>J41800005101</ToolNumber>
@@ -102,6 +105,9 @@
     <preserveEEPROM>true</preserveEEPROM>
     <ResetRule>0</ResetRule>
     <EraseKey />
+    <avrtoolserialnumber>50107300</avrtoolserialnumber>
+    <avrdeviceexpectedsignature>0x284E0A60</avrdeviceexpectedsignature>
+    <avrtoolinterfaceclock>4000000</avrtoolinterfaceclock>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
@@ -831,6 +837,15 @@
     <Compile Include="encoder.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="fix16.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="fix16.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="fix16.hpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="gcode_parser.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -841,6 +856,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="help.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="int64.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="json_parser.cpp">
@@ -1173,6 +1191,9 @@
     <Compile Include="settings\settings_othermill.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_othermill_pro.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_pendulum.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1197,7 +1218,16 @@
     <Compile Include="settings\settings_Ultimaker_Rob_v9h.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_v3.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_zen7x12.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="spi2.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="spi2.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="spindle.cpp">
