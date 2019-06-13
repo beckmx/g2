@@ -1,22 +1,30 @@
 #
 # Makefile
 #
-# Copyright (c) 2012 - 2013 Robert Giseburt
-# Copyright (c) 2013 Alden S. Hart Jr.
+# Copyright (c) 2012 - 2014 Robert Giseburt
+# Copyright (c) 2013 - 2014 Alden S. Hart Jr.
 #
-# This file is part of the TinyG2 project.
+#	This file is part of the Motate Library.
 #
-# This file ("the software") is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License, version 2 as published by the
-# Free Software Foundation. You should have received a copy of the GNU General Public
-# License, version 2 along with the software.  If not, see <http://www.gnu.org/licenses/>.
+#	This file ("the software") is free software: you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License, version 2 as published by the
+#	Free Software Foundation. You should have received a copy of the GNU General Public
+#	License, version 2 along with the software. If not, see <http://www.gnu.org/licenses/>.
 #
-# THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
-# WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-# SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
-# OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#	As a special exception, you may use this file as part of a software library without
+#	restriction. Specifically, if other files instantiate templates or use macros or
+#	inline functions from this file, or you compile this file and link it with  other
+#	files to produce an executable, this file does not by itself cause the resulting
+#	executable to be covered by the GNU General Public License. This exception does not
+#	however invalidate any other reasons why the executable file might be covered by the
+#	GNU General Public License.
+#
+#	THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+#	WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+#	OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+#	SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+#	OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
 ##############################################################################################
@@ -25,41 +33,40 @@
 
 PROJECT  = TinyG2
 
+MOTATE_PATH ?= motate
+export MOTATE_PATH
 
-# Include all of the *directories* containing files to compile to SOURCE_DIRS.
-# *EXCEPT* motate paths and processor-specific directories!
-SOURCE_DIRS = . fatfs
+TOOLS_PATH ?= ../Tools
 
-# List *project-specific* files that must be linked to first in FIRST_LINK_SOURCES.
-FIRST_LINK_SOURCES =
+SOURCE_DIRS ?= . fatfs
+SOURCE_DIRS += ${MOTATE_PATH}
 
-# List all user directories here that aren't in SOURCE_DIRS
-USER_INCLUDE_DIRS =
+FIRST_LINK_SOURCES +=
+
+# List all user directories here
+USER_INCLUDE_DIRS += $(SOURCE_DIRS)
 
 # List the user directory to look for the libraries here
-USER_LIB_DIRS =
+USER_LIB_DIRS +=
 
 # List all user libraries here
-USER_LIBS =
+USER_LIBS +=
 
 # Define optimisation level here
 #OPTIMIZATION ?= 0
 OPTIMIZATION ?= s
 #OPTIMIZATION ?= 3
 
-CFLAGS   :=
-CPPFLAGS :=
+CFLAGS   +=
+CPPFLAGS +=
 
-# List ASM source files here
-ASRC =
+#
+# End of configuration section
+##############################################################################################
 
-MOTATE_PATH := motate
-
-SOURCE_DIRS += $(MOTATE_PATH)
-USER_INCLUDE_DIRS += $(SOURCE_DIRS)
-
-# Detect OS
-UNAME := $(shell uname -s)
+##############################################################################################
+# Start of configuration section
+#
 
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP Flags)
@@ -68,29 +75,20 @@ UNAME := $(shell uname -s)
 CFLAGS += -Wall -Wchar-subscripts -Wcomment -Wformat=2 -Wimplicit-int
 CFLAGS += -Werror-implicit-function-declaration -Wmain -Wparentheses
 CFLAGS += -Wsequence-point -Wreturn-type -Wswitch -Wtrigraphs -Wunused
-CFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wundef
+CFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wfloat-equal -Wundef
 CFLAGS += -Wshadow -Wpointer-arith -Wbad-function-cast -Wwrite-strings
 CFLAGS += -Wsign-compare -Waggregate-return
-#CFLAGS += -Wfloat-equal
 #CFLAGS += -Wstrict-prototypes
 #CFLAGS += -Wmissing-prototypes -Wmissing-declarations
 CFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-CFLAGS += -Wredundant-decls -Wnested-externs -Wlong-long
+CFLAGS += -Wredundant-decls -Wnested-externs -Winline -Wno-long-long
 CFLAGS += -Wunreachable-code
 #CFLAGS += -Wcast-align -Wpacked
 #CFLAGS += -Wmissing-noreturn
 #CFLAGS += -Wconversion
 
-
-# These are useful, but chatty:
-#CFLAGS += -Winline
-
-
 # Turn off printf() format strings. We use late bound FLASH and RAM format strings and this causes warnings
 CFLAGS += -Wno-format-nonliteral -Wno-format-security
-
-# To reduce application size use only integer printf function.
-#CFLAGS += -Dprintf=iprintf
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
@@ -99,37 +97,31 @@ CPPFLAGS += -Wall -Wchar-subscripts -Wcomment -Wformat=2
 CPPFLAGS += -Wmain -Wparentheses -Wunreachable-code
 #CPPFLAGS += -Wcast-align
 CPPFLAGS += -Wsequence-point -Wreturn-type -Wswitch -Wtrigraphs -Wunused
-CPPFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wundef
+CPPFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wno-float-equal -Wundef
 CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
-#CPPFLAGS += -Wfloat-equal
 #CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
 CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
 CPPFLAGS += -Wredundant-decls -Wlong-long
-CPPFLAGS += -Wno-strict-aliasing
+#CPPFLAGS += -Winline
 #CPPFLAGS += -Wmissing-noreturn -Wpacked
 #CPPFLAGS += -Wconversion
-
-
-# These are useful, but chatty:
-#CFLAGS += -Winline
-
+CPPFLAGS += -Wno-strict-aliasing
 
 # Turn off printf() format strings. We use late bound FLASH and RAM format strings and this causes warnings
 CPPFLAGS += -Wno-format-nonliteral -Wno-format-security
 
-# To reduce application size use only integer printf function.
-#CPPFLAGS += -Dprintf=iprintf
+#
+# End of configuration section
+##############################################################################################
+
+##############################################################################################
+# Start of build support section
+#
 
 # Default is to compile more quielty.
 # To show actual commands: make [options] VERBOSE=1
 VERBOSE ?= 0
-
-# Disable color commands for windows
-ifeq ($(UNAME),windows32)
-COLOR ?= 0
-else
 COLOR ?= 1
-endif
 
 ifeq ($(VERBOSE),0)
 QUIET := @
@@ -147,8 +139,19 @@ WARN_COLOR=`tput setaf 3`
 endif
 
 
+ifeq ($(VERBOSE),2)
+define NEWLINE_ONLY
+
+
+endef
+define NEWLINE_TAB
+
+
+endef
+endif
+
 #
-# End of default section
+# End of build support section
 ##############################################################################################
 
 ##############################################################################################
@@ -280,67 +283,133 @@ endif
 ##############################################################################################
 
 ##############################################################################################
-# Actual compilation
+# Start of setup tools
 #
-
 
 # Output file basename
 OUTPUT_BIN = $(BIN)/$(PLATFORM)
 
-#-------------------------------------------------------------------------------
-#    Tools
-#-------------------------------------------------------------------------------
-
-# Compilation tools
-CC      = $(CROSS_COMPILE)-gcc
-CXX     = $(CROSS_COMPILE)-g++
-LD      = $(CROSS_COMPILE)-ld
-AR      = $(CROSS_COMPILE)-ar
-SIZE    = $(CROSS_COMPILE)-size
-STRIP   = $(CROSS_COMPILE)-strip
-OBJCOPY = $(CROSS_COMPILE)-objcopy
-GDB     = $(CROSS_COMPILE)-gdb
-NM      = $(CROSS_COMPILE)-nm
+# Some basical (external) utility paths
 RM      = rm
 CP      = cp
-CKSUM		= cksum
-DD			= dd
+# NOTE: Atmel Studio will default to the wrong mkdir that doesn't understand -p.
+#       So, in windows we set MKDIR=gmkdir below.
+MKDIR   = mkdir
+GIT     = git
 
-# Windows uses wrong mkdir without -p, no bash
-ifeq (windows32,$(UNAME))
-MKDIR   ?= gmkdir
-SHELL = cmd /c
-else
-MKDIR   ?= mkdir
 SHELL = bash
-endif #windows32
 
-PATH := $(PATH):../Tools/gcc-$(CROSS_COMPILE)/bin
+SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS =
+
+# Here we use some heuristics to find the OS.
+# ifneq (,$(findstring Atmel,$(PATH)))
+# $(info "Found that we're in Atmel Studio")
+# OS := WIN32
+# TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+# PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
+# MKDIR   = gmkdir
+# SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS = $(PROJECT).elf $(PROJECT).map
+# else
+ifneq (,$(findstring Windows,$(PATH)))
+$(info "Found that we're in Cygwin or Windows")
+OS := WIN32
+TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
+MKDIR   = gmkdir
+else
+
+
+# Unix/Linux section:
+UNAME := $(shell uname -s)
+
+ifeq (Darwin,${UNAME})
+$(info "Found that we're in OS X")
+OS = OSX
+TOOLS_SUBPATH := osx/gcc-$(CROSS_COMPILE)
+else
+ifeq (Linux,${UNAME})
+$(info "Found that we're in Linux")
+OS = LINUX
+TOOLS_SUBPATH := linux/gcc-$(CROSS_COMPILE)
+endif #LINUX
+endif #Darwin
+
+
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin:$(PATH)
+
+# end Unix/linux section
+endif #Windows
+#endif #Atmel Studio
+
+export PATH
+export MOTATE_PATH
+
+CWD = $(realpath .)
+
+# Compilation tools - hardcode the full path to the ones we provide
+TOOLS_FULLPATH = "$(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin"
+CC      = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-gcc
+CXX     = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-g++
+LD      = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-ld
+AR      = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-ar
+SIZE    = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-size
+STRIP   = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-strip
+OBJCOPY = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-objcopy
+GDB     = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-gdb
+GDB_PY  = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-gdb-py
+NM      = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-nm
+
+
+ifneq ($(NOT_IN_GIT),1)
+	GIT_LOCATED := $(GIT)
+	GIT_VERSION := $(shell $(GIT) describe --abbrev=4 --dirty --always --tags)
+	GIT_EXACT_VERSION := $(shell $(GIT) describe --abbrev=0 --tags)
+
+	# Push the git version into the code -- the ""s must be escaped and make it into the code intact
+	DEVICE_DEFINES += GIT_VERSION=\"$(GIT_VERSION)\" GIT_EXACT_VERSION=$(GIT_EXACT_VERSION)
+else
+   # Push the git version into the code -- the ""s must be escaped and make it into the code intact
+   DEVICE_DEFINES += GIT_VERSION=\"UNKNOWN-not-from-git\" GIT_EXACT_VERSION=0.0
+endif
+
+
+# ---------------------------------------------------------------------------------------
+# LTO generic flags
+
+ifeq ($(USE_LTO),1)
+LTO = -flto
+else
+LTO =
+endif
 
 
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP flags)
 
 #CFLAGS +=  $(DEVICE_CFLAGS)
-CFLAGS +=  $(DEVICE_CFLAGS) -DPLATFORM=$(PLATFORM) -DFIXMATH_NO_64BIT
+CFLAGS +=  $(DEVICE_CFLAGS) -DPLATFORM=$(PLATFORM) $(LTO) -DFIXMATH_NO_64BIT
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
 #CPPFLAGS +=  $(DEVICE_CPPFLAGS)
-CPPFLAGS +=  $(DEVICE_CPPFLAGS) -DPLATFORM=$(PLATFORM) -DFIXMATH_NO_64BIT
+CPPFLAGS +=  $(DEVICE_CPPFLAGS) -DPLATFORM=$(PLATFORM) $(LTO) -DFIXMATH_NO_64BIT
 
 # ---------------------------------------------------------------------------------------
 # ASM Flags
 
-ASFLAGS = $(DEVICE_ASFLAGS)
-
+ASFLAGS = $(DEVICE_ASFLAGS)  $(LTO)
 
 # ---------------------------------------------------------------------------------------
 # Linker Flags
 
-LDFLAGS += $(LIBS) $(USER_LIBS) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols $(DEVICE_LDFLAGS)
+DEBUG_SYMBOLS = -g3
 
+LDFLAGS += $(LIBS) $(USER_LIBS) $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols $(DEVICE_LDFLAGS) $(LTO)
+
+#
+# End of setup tools
+##############################################################################################
 
 #-------------------------------------------------------------------------------
 #    Files
@@ -366,17 +435,15 @@ CFLAGS   += -g3 -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES)
 CPPFLAGS += -g3 -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
 ASFLAGS  += -g3 -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__ $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
 
+#
+# End of file paths setup
+##############################################################################################
+
+##############################################################################################
+# Start of RULES
+#
 
 ifeq ($(VERBOSE),2)
-define NEWLINE_ONLY
-
-
-endef
-define NEWLINE_TAB
-
-	${EMPTY}
-endef
-
 $(info DEVICE_INCLUDE_DIRS+USER_INCLUDE_DIRS:$(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS)))
 $(info $(NEWLINE_ONLY)DEVICE_LIB_DIRS+USER_LIB_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS)))
 $(info $(NEWLINE_ONLY)SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SOURCE_DIRS)))
@@ -403,11 +470,12 @@ MK_DIRS =   $(shell                              \
 
 $(eval $(DEVICE_RULES))
 
-.PHONY : MKTOOLS
+# We use tools as a "macro" for dependencies later
+tools: | $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin
 
-MKTOOLS:
-	@echo Looking for tools...
-	cd ../Tools && make "ARCH=gcc-${CROSS_COMPILE}"
+$(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin:
+	@echo Installing the necessary tools...
+	cd ${TOOLS_PATH} && make "ARCH=gcc-${CROSS_COMPILE}"
 
 OUTDIR = $(OBJ)
 REQUIRED_DIRS += $(OUTDIR)
@@ -443,7 +511,7 @@ DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
 $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_LINKER_SCRIPT)
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
 	@echo $(START_BOLD)"Using linker script: $(ABS_LINKER_SCRIPT)" $(END_BOLD)
-	$(QUIET)$(CXX) $(LIB_PATH) -T"$(ABS_LINKER_SCRIPT)" -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out MKTOOLS,$@} $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(ABS_LINKER_SCRIPT) MKTOOLS,$+) -Wl,--end-group
+	$(QUIET)$(CXX) $(LIB_PATH) -T"$(ABS_LINKER_SCRIPT)" -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out tools,$@} $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(ABS_LINKER_SCRIPT) tools,$+) -Wl,--end-group
 	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN).elf.txt" $(END_BOLD)
 	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
 	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
@@ -485,12 +553,19 @@ $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.S
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
+# Rule for debugging
 debug: $(OUTPUT_BIN).elf
-	$(GDB) -x "${PLATFORM_BASE}.gdb" -readnow -se "$(OUTPUT_BIN).elf"
+	$(GDB) -ex "dir '${MOTATE_PATH}/arch/'" -x "${PLATFORM_BASE}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
 
+# Rule for debugging (using python-enabled debugger)
+debuggy: $(OUTPUT_BIN).elf
+	$(GDB_PY) -ex "dir '${MOTATE_PATH}/arch/'" -x "${PLATFORM_BASE}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
+
+flash: $(FLASH_REQUIRES)
+	$(DEVICE_FLASH_CMD)
 
 #-------------------------------------------------------------------------------
-#    Default $(PROJECT).elf, and clean
+#		Default $(PROJECT).elf, and clean
 #-------------------------------------------------------------------------------
 
 $(PROJECT).elf: $(OUTPUT_BIN).elf
@@ -500,13 +575,15 @@ $(PROJECT).map: $(OUTPUT_BIN).map
 	$(CP) $< $@
 
 $(PROJECT).hex: $(OUTPUT_BIN).elf
-	$(QUIET)$(OBJCOPY) -O ihex $< $@
+	$(QUIET)$(OBJCOPY) -O ihex $(DEVICE_HEX_FLAGS) $< $@
 
 $(PROJECT).bin: $(OUTPUT_BIN).elf
 	$(QUIET)$(OBJCOPY) -O binary $< $@
 
 clean:
-	-$(RM) -fR $(OBJ) $(BIN) $(BOARD).elf $(BOARD).map $(BOARD).hex $(BOARD).bin
+	-$(RM) -fR $(OBJ)
+	-$(RM) -fR $(BIN)
+	-$(RM) -fR $(PLATFORM).elf $(PLATFORM).map $(PLATFORM).hex $(PLATFORM).bin
 
 
 #
@@ -514,5 +591,8 @@ clean:
 #
 -include $(shell mkdir $(OBJ)/dep 2>/dev/null) $(wildcard $(OBJ)/dep/*.d)
 
+#
+# End of RULES
+##############################################################################################
 
 # *** EOF ***

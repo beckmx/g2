@@ -1,2 +1,5 @@
 gcc-arm-none-eabi-*
 .DS_Store
+win32
+linux
+osx
