@@ -121,23 +121,13 @@ CPPFLAGS += -Wno-format-nonliteral -Wno-format-security
 # Default is to compile more quielty.
 # To show actual commands: make [options] VERBOSE=1
 VERBOSE ?= 0
-COLOR ?= 1
+COLOR ?= 0
 
 ifeq ($(VERBOSE),0)
 QUIET := @
 else
 QUIET :=
 endif
-
-ifeq ($(COLOR),1)
-START_BOLD=`tput bold`
-END_BOLD=`tput sgr0`
-NO_COLOR=`tput setaf 0`
-OK_COLOR=`tput setaf 2`
-ERROR_COLOR=`tput setaf 1`
-WARN_COLOR=`tput setaf 3`
-endif
-
 
 ifeq ($(VERBOSE),2)
 define NEWLINE_ONLY
@@ -170,38 +160,7 @@ DEPDIR = $(OBJ)/dep
 # Start of platforms section
 #
 
-PLATFORM ?= gShield
-
-ifeq ("$(PLATFORM)","gShield")
-
-	# This is a due with a Synthetos gShield. We'll use the Due platform, but set defines
-	# for the code to get the pinout right.
-
-	BASE_PLATFORM=due
-	DEVICE_DEFINES += MOTATE_BOARD="gShield"
-
-endif
-
-ifeq ("$(PLATFORM)","G2v9d")
-
-BASE_PLATFORM=v9_3x8c
-DEVICE_DEFINES += MOTATE_BOARD="G2v9d"
-
-endif
-
-ifeq ("$(PLATFORM)","G2v9f")
-
-BASE_PLATFORM=v9_3x8c
-DEVICE_DEFINES += MOTATE_BOARD="G2v9f"
-
-endif
-
-ifeq ("$(PLATFORM)","G2v9g")
-
-BASE_PLATFORM=v9_3x8c
-DEVICE_DEFINES += MOTATE_BOARD="G2v9g"
-
-endif
+PLATFORM ?= V3
 
 ifeq ("$(PLATFORM)","G2v9i")
 
@@ -234,29 +193,8 @@ DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
-#ifeq ("$(PLATFORM)","G2v9j")
-#
-#BASE_PLATFORM=v9_3x8c
-#DEVICE_DEFINES += MOTATE_BOARD="G2v9j"
-#
-#endif
-
 ifeq ("$(BASE_PLATFORM)","")
 	BASE_PLATFORM = $(PLATFORM)
-endif
-
-ifeq ("$(BASE_PLATFORM)","due")
-	_PLATFORM_FOUND = 1
-	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
-
-	CHIP = SAM3X8E
-		PLATFORM_BASE = platform/atmel_sam
-		CMSIS_ROOT = CMSIS
-
-	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/due
-
-
-	include $(PLATFORM_BASE).mk
 endif
 
 ifeq ("$(BASE_PLATFORM)","v9_3x8c")
@@ -302,20 +240,21 @@ SHELL = bash
 SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS =
 
 # Here we use some heuristics to find the OS.
-# ifneq (,$(findstring Atmel,$(PATH)))
-# $(info "Found that we're in Atmel Studio")
-# OS := WIN32
-# TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-# PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
-# MKDIR   = gmkdir
-# SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS = $(PROJECT).elf $(PROJECT).map
-# else
+ifneq (,$(findstring Atmel,$(PATH)))
+$(info "Found that we're in Atmel Studio")
+OS := WIN32
+TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
+MKDIR   = gmkdir
+SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS = $(PROJECT).elf $(PROJECT).map
+else
 ifneq (,$(findstring Windows,$(PATH)))
 $(info "Found that we're in Cygwin or Windows")
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
 MKDIR   = gmkdir
+COLOR := 1
 else
 
 
@@ -326,11 +265,13 @@ ifeq (Darwin,${UNAME})
 $(info "Found that we're in OS X")
 OS = OSX
 TOOLS_SUBPATH := osx/gcc-$(CROSS_COMPILE)
+COLOR := 1
 else
 ifeq (Linux,${UNAME})
 $(info "Found that we're in Linux")
 OS = LINUX
 TOOLS_SUBPATH := linux/gcc-$(CROSS_COMPILE)
+COLOR := 1
 endif #LINUX
 endif #Darwin
 
@@ -339,7 +280,7 @@ PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin:$(PATH)
 
 # end Unix/linux section
 endif #Windows
-#endif #Atmel Studio
+endif #Atmel Studio
 
 export PATH
 export MOTATE_PATH
@@ -407,6 +348,15 @@ DEBUG_SYMBOLS = -g3
 
 LDFLAGS += $(LIBS) $(USER_LIBS) $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols $(DEVICE_LDFLAGS) $(LTO)
 
+ifeq ($(COLOR),1)
+START_BOLD=`tput bold`
+END_BOLD=`tput sgr0`
+NO_COLOR=`tput setaf 0`
+OK_COLOR=`tput setaf 2`
+ERROR_COLOR=`tput setaf 1`
+WARN_COLOR=`tput setaf 3`
+endif
+
 #
 # End of setup tools
 ##############################################################################################
@@ -458,7 +408,7 @@ endif
 #    Rules
 #-------------------------------------------------------------------------------
 
-all: $(OUTPUT_BIN).elf
+all: $(OUTPUT_BIN).elf $(SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS)
 
 REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
 
