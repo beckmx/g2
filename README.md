@@ -189,7 +189,7 @@ Hit **Program** to write your TinyG binary to flash and have it verified.
 
 Atmel Studio offers a rich debug environment that can be used in conjunction with the J-Link for debugging.  
 
-Once you have compiled the TinyG project by following [Compiling Firmware using Atmel Studio](#compiling-firmware-using-atmel-studio) above, you may start debugging by pressing the **Start Debugging** button (green arrow) in the toolbar at the top or by hitting **F5**. 
+Once you have compiled the TinyG project by following [Compiling Firmware using Atmel Studio](#compiling-firmware-using-atmel-studio) above, you may start debugging by pressing the **Start Debugging** button ![Green Arrow](https://github.com/bantamtools/g2/blob/msx_dev/Resources/screenshots/start_dbg.PNG "Green Arrow") in the toolbar at the top or by hitting **F5**. 
 
 You can then step through the code, add breakpoints, view memories and more using the debug toolbar.  For more information on the debugging features of Atmel Studio, please see the [Atmel Studio 7 User Guide](https://www.microchip.com/webdoc/GUID-ECD8A826-B1DA-44FC-BE0B-5A53418A47BD/GUID-696C621E-EE89-4E38-88B6-B4E8B6D9F4B4.html).
 
