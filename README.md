@@ -185,6 +185,16 @@ Hit **Memories** on the left-hand side of the window.  Under **Flash**, browse t
 
 Hit **Program** to write your TinyG binary to flash and have it verified.
 
+## Verifying the TinyG Firmware Version
+
+To verify that the correct TinyG version is installed (based on versions provided in https://github.com/bantamtools/g2/releases), connect the TinyG to your computer via USB.  Power up the TinyG and open the Bantam Tools software application.
+
+When the application starts, you'll notice several numbers in the bottom left corner of your screen.  The second number (typically with the format `300.xx`) designates the current firmware build running on the TinyG.
+
+![Bantam Tools Application](https://github.com/bantamtools/g2/blob/msx_dev/Resources/screenshots/bt_app.png "Bantam Tools Application")
+
+**NOTE**: To update the TinyG firmware version for future versions and custom test builds, edit the `TINYG_FIRMWARE_BUILD` variable found in `TinyG2/tinyg2.h` file of this repository and rebuild the firmware.
+
 ## Alternate: Compiling Firmware from Source
 
 NOTE: The Atmel Studio method is recommended over compiling from source because it is faster and enables debugging through the IDE.
@@ -263,17 +273,9 @@ bossac -p tty.usbmodem1411 -e -w -v -b -R g2/TinyG2/bin/V3/V3.bin
 * `-R` tells it to reboot.
 * The last argument is the filename of the firmware, in .bin format.
 
-## Verifying the TinyG Firmware Version
+## Alternate: Debugging using GDB
 
-To verify that the correct TinyG version is installed (based on versions provided in https://github.com/bantamtools/g2/releases), connect the TinyG to your computer via USB.  Power up the TinyG and open the Bantam Tools software application.
-
-When the application starts, you'll notice several numbers in the bottom left corner of your screen.  The second number (typically with the format `300.xx`) designates the current firmware build running on the TinyG.
-
-![Bantam Tools Application](https://github.com/bantamtools/g2/blob/msx_dev/Resources/screenshots/bt_app.png "Bantam Tools Application")
-
-**NOTE**: To update the TinyG firmware version for future versions and custom test builds, edit the `TINYG_FIRMWARE_BUILD` variable found in `TinyG2/tinyg2.h` file of this repository and rebuild the firmware.
-
-## Debugging
+**NOTE**: The Atmel Studio debugger is recommended over GDB because it is easier to set up and offers a richer set of features for debugging than the console.
 
 You can debug the TinyG through JTAG using a SAM-ICE adapter and the J-Link tools.
 
