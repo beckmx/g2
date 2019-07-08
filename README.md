@@ -4,7 +4,159 @@ This is the Bantam Tools V3 development fork of Synthetos's g2 firmware.
 
 ## Compiling Firmware using Atmel Studio
 
-TBD
+This repository contains an Atmel Studio project **TinyG2.atsln** which can be found in the `TinyG2/` directory.  The project solution file can be used to compile the TinyG firmware in the Atmel Studio IDE without the need to download GCC or compile from source.
+
+Open the **TinyG2.atsln** project using Atmel Studio.
+
+Make sure that the **V3** platform is selected in the top toolbar next to the debug functions as shown below:
+
+![Platform Selection](https://github.com/bantamtools/g2/blob/msx_dev/Resources/screenshots/v3_platform.png "Platform Selection")
+
+To compile the entire TinyG solution, choose **Build > Build Solution** (or **Build > Rebuild Solution** to build from scratch).  This will begin the compile process using the custom Makefile included in the `TinyG2/` directory.
+
+**NOTE**: The compile process may take several minutes for a clean build due to downloading and extracting GCC.
+
+A sample build output is shown below:
+
+```
+------ Build started: Project: TinyG2, Configuration: V3 ARM ------
+Build started.
+Project "TinyG2.cppproj" (default targets):
+Target "PreBuildEvent" skipped, due to false condition; ('$(PreBuildEvent)'!='') was evaluated as (''!='').
+Target "CoreBuild" in file "C:\Program Files (x86)\Atmel\Studio\7.0\Vs\Compiler.targets" from project "C:\git\bt\sam_tinyg_test\TinyG2\TinyG2.cppproj" (target "Build" depends on it):
+	Task "RunCompilerTask"
+		Shell Utils Path C:\Program Files (x86)\Atmel\Studio\7.0\shellUtils
+		C:\Program Files (x86)\Atmel\Studio\7.0\shellUtils\make.exe -C "C:\git\bt\sam_tinyg_test\TinyG2" -f "Makefile" PLATFORM=V3 
+		make: Entering directory 'C:/git/bt/sam_tinyg_test/TinyG2'
+		"Found that we're in Atmel Studio"
+		The system cannot find the path specified.
+		Compiling c ./fix16.c
+		    -> build/V3/./fix16.o
+		Compiling c fatfs/ff.c
+		    -> build/V3/fatfs/ff.o
+		Compiling c CMSIS/Device/ATMEL/sam3xa/source/system_sam3xa.c
+		    -> build/V3/CMSIS/Device/ATMEL/sam3xa/source/system_sam3xa.o
+		Compiling c CMSIS/Device/ATMEL/sam3xa/source/gcc/startup_sam3xa.c
+		    -> build/V3/CMSIS/Device/ATMEL/sam3xa/source/gcc/startup_sam3xa.o
+		Compiling c platform/atmel_sam/cortex_handlers.c
+		    -> build/V3/platform/atmel_sam/cortex_handlers.o
+		Compiling c platform/atmel_sam/hooks.c
+		    -> build/V3/platform/atmel_sam/hooks.o
+		Compiling cpp motate/SamSPI.cpp
+		    -> build/V3/motate/SamSPI.o
+		Compiling cpp motate/SamPins.cpp
+		    -> build/V3/motate/SamPins.o
+		Compiling cpp motate/SamTimers.cpp
+		    -> build/V3/motate/SamTimers.o
+		Compiling cpp motate/SamUSB.cpp
+		    -> build/V3/motate/SamUSB.o
+		Compiling cpp motate/AvrUSB.cpp
+		    -> build/V3/motate/AvrUSB.o
+		Compiling cpp ./pwm.cpp
+		    -> build/V3/./pwm.o
+		Compiling cpp ./test.cpp
+		    -> build/V3/./test.o
+		Compiling cpp ./plan_exec.cpp
+		    -> build/V3/./plan_exec.o
+		Compiling cpp ./plan_zoid.cpp
+		    -> build/V3/./plan_zoid.o
+		Compiling cpp ./main.cpp
+		    -> build/V3/./main.o
+		Compiling cpp ./help.cpp
+		    -> build/V3/./help.o
+		Compiling cpp ./gcode_parser.cpp
+		    -> build/V3/./gcode_parser.o
+		Compiling cpp ./persistence.cpp
+		    -> build/V3/./persistence.o
+		Compiling cpp ./encoder.cpp
+		    -> build/V3/./encoder.o
+		Compiling cpp ./canonical_machine.cpp
+		    -> build/V3/./canonical_machine.o
+		Compiling cpp ./spindle.cpp
+		    -> build/V3/./spindle.o
+		Compiling cpp ./config.cpp
+		    -> build/V3/./config.o
+		Compiling cpp ./report.cpp
+		    -> build/V3/./report.o
+		Compiling cpp ./cycle_jogging.cpp
+		    -> build/V3/./cycle_jogging.o
+		Compiling cpp ./plan_arc.cpp
+		    -> build/V3/./plan_arc.o
+		Compiling cpp ./kinematics.cpp
+		    -> build/V3/./kinematics.o
+		Compiling cpp ./xio.cpp
+		    -> build/V3/./xio.o
+		Compiling cpp ./config_app.cpp
+		    -> build/V3/./config_app.o
+		Compiling cpp ./controller.cpp
+		    -> build/V3/./controller.o
+		Compiling cpp ./json_parser.cpp
+		    -> build/V3/./json_parser.o
+		Compiling cpp ./plan_line.cpp
+		    -> build/V3/./plan_line.o
+		Compiling cpp ./stepper.cpp
+		    -> build/V3/./stepper.o
+		Compiling cpp ./cycle_probing.cpp
+		    -> build/V3/./cycle_probing.o
+		Compiling cpp ./hardware.cpp
+		    -> build/V3/./hardware.o
+		Compiling cpp ./planner.cpp
+		    -> build/V3/./planner.o
+		Compiling cpp ./switch.cpp
+		    -> build/V3/./switch.o
+		Compiling cpp ./spi2.cpp
+		    -> build/V3/./spi2.o
+		Compiling cpp ./text_parser.cpp
+		    -> build/V3/./text_parser.o
+		Compiling cpp ./cycle_homing.cpp
+		    -> build/V3/./cycle_homing.o
+		Compiling cpp ./util.cpp
+		    -> build/V3/./util.o
+		Compiling cpp fatfs/diskio.cpp
+		    -> build/V3/fatfs/diskio.o
+		Compiling cpp platform/atmel_sam/Reset.cpp
+		    -> build/V3/platform/atmel_sam/Reset.o
+		Compiling cpp platform/atmel_sam/UniqueId.cpp
+		    -> build/V3/platform/atmel_sam/UniqueId.o
+		Compiling cpp platform/atmel_sam/syscalls_sam3.cpp
+		    -> build/V3/platform/atmel_sam/syscalls_sam3.o
+		Linking bin/V3/V3.elf
+		Using linker script: C:/git/bt/sam_tinyg_test/TinyG2/platform/atmel_sam/gcc_flash.ld
+C:\git\bt\sam_tinyg_test\TinyG2\build\V3\CMSIS\Device\ATMEL\sam3xa\source\gcc\startup_sam3xa.o(1,1): warning: undefined reference to `EMAC_Handler'
+		Exporting symbols bin/V3/V3.elf.txt
+		Making binary bin/V3/V3.bin
+		4+0 records in
+		4+0 records out
+		4 bytes copied, 0.0211035 s, 0.2 kB/s
+		4+0 records in
+		4+0 records out
+		4 bytes copied, 0.0310835 s, 0.1 kB/s
+		--- SIZE INFO ---
+		   text	   data	    bss	    dec	    hex	filename
+		 177944	      0	  14792	 192736	  2f0e0	bin/V3/V3.elf
+		cp bin/V3/V3.elf TinyG2.elf
+		cp bin/V3/V3.map TinyG2.map
+		make: Leaving directory 'C:/git/bt/sam_tinyg_test/TinyG2'
+	Done executing task "RunCompilerTask".
+	Task "RunOutputFileVerifyTask"
+		
+		Display Output File Size Skipped due to : Output File not found
+	Done executing task "RunOutputFileVerifyTask".
+Done building target "CoreBuild" in project "TinyG2.cppproj".
+Target "PostBuildEvent" skipped, due to false condition; ('$(PostBuildEvent)' != '') was evaluated as ('' != '').
+Target "Build" in file "C:\Program Files (x86)\Atmel\Studio\7.0\Vs\Avr.common.targets" from project "C:\git\bt\sam_tinyg_test\TinyG2\TinyG2.cppproj" (entry point):
+Done building target "Build" in project "TinyG2.cppproj".
+Done building project "TinyG2.cppproj".
+
+Build succeeded.
+========== Build: 1 succeeded or up-to-date, 0 failed, 0 skipped ==========
+```
+
+Once the build completes, you should receive only one warning in the Error List window:
+
+`undefined reference to EMAC_Handler`
+
+The build has completed sucessfully and you can now flash the TinyG with firmware.
 
 ## Flashing the TinyG2 using Atmel Studio
 
