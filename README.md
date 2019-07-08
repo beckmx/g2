@@ -2,7 +2,42 @@
 
 This is the Bantam Tools V3 development fork of Synthetos's g2 firmware.
 
-## Toolchain
+## Compiling Firmware using Atmel Studio
+
+TBD
+
+## Flashing the TinyG2 using Atmel Studio
+
+Using Atmel Studio, the TinyG can be programmed using the binary (.bin) file in the `TinyG2/bin` folder for your `PLATFORM`.  This method requires a Segger J-Link with an ARM 20-pin to JTAG 10-pin adapter, such as the [Olimex ARM-JTAG-20-10](https://www.digikey.com/products/en?keywords=ARM-JTAG-20-10%09).
+
+Connect the J-Link with adapter to connector **J6** on the TinyG as shown below.  Power up the TinyG and open up Atmel Studio.
+
+![J-Link connected to TinyG](https://github.com/bantamtools/g2/blob/msx_dev/Resources/screenshots/segger_tinyg.jpg "J-Link connected to TinyG")
+
+In Atmel Studio, go to **Tools > Device Programming**.  There is no need to open a specific project.
+
+In the Device Programming window, select the following parameters and hit **Apply**:
+* Tool: **J-Link**
+* Device: **ATSAM3X8C**
+* Interface: **JTAG**
+
+![Device Programming](https://github.com/bantamtools/g2/blob/msx_dev/Resources/screenshots/dev_prog.png "Device Programming")
+
+You may hit **Read** next to the Device Signature or Target Voltage to verify your J-Link is properly connected to the TinyG.
+
+Hit **Memories** on the left-hand side of the window.  Under **Flash**, browse to the .bin file you generated.  Be sure to choose **Binary (.bin, .dat) (\*.bin;\*.dat)** as the file type when browsing for your file.
+
+![Memories](https://github.com/bantamtools/g2/blob/msx_dev/Resources/screenshots/memories.png "Memories")
+
+**NOTE**: For Linux users, you will have to copy the .bin file over to Windows, as Atmel Studio is a Windows-only application.
+
+Hit **Program** to write your TinyG binary to flash and have it verified.
+
+## Alternate: Compiling Firmware from Source
+
+NOTE: The Atmel Studio method is recommended over compiling from source because it is faster and enables debugging through the IDE.
+
+### Toolchain
 
 This project requires gcc 4.8.
 
@@ -11,8 +46,7 @@ You can install the toolchain using the following command:
 ```
 make toolchain
 ```
-
-## Compiling Firmware
+### Build
 
 The firmware is contained in the `TinyG2/` directory.
 
@@ -47,33 +81,6 @@ cd TinyG2 && make PLATFORM=G2v9i clean
 Firmware binaries can be found in the `TinyG2/bin` folder. Output is organized by `PLATFORM`.
 
 The build puts both an ELF and a binary. ELF is the executable linker format and has symbols for debugging. The .bin is the binary image that we can supply to Atmel Studio or BOSSA.
-
-## Flashing the TinyG2 using Atmel Studio
-
-Using Atmel Studio, the TinyG can be programmed using the binary (.bin) file in the `TinyG2/bin` folder for your `PLATFORM`.  This method requires a Segger J-Link with an ARM 20-pin to JTAG 10-pin adapter, such as the [Olimex ARM-JTAG-20-10](https://www.digikey.com/products/en?keywords=ARM-JTAG-20-10%09).
-
-Connect the J-Link with adapter to connector **J6** on the TinyG as shown below.  Power up the TinyG and open up Atmel Studio.
-
-![J-Link connected to TinyG](https://github.com/bantamtools/g2/blob/msx_dev/Resources/screenshots/segger_tinyg.jpg "J-Link connected to TinyG")
-
-In Atmel Studio, go to **Tools > Device Programming**.  There is no need to open a specific project.
-
-In the Device Programming window, select the following parameters and hit **Apply**:
-* Tool: **J-Link**
-* Device: **ATSAM3X8C**
-* Interface: **JTAG**
-
-![Device Programming](https://github.com/bantamtools/g2/blob/msx_dev/Resources/screenshots/dev_prog.png "Device Programming")
-
-You may hit **Read** next to the Device Signature or Target Voltage to verify your J-Link is properly connected to the TinyG.
-
-Hit **Memories** on the left-hand side of the window.  Under **Flash**, browse to the .bin file you generated.  Be sure to choose **Binary (.bin, .dat) (\*.bin;\*.dat)** as the file type when browsing for your file.
-
-![Memories](https://github.com/bantamtools/g2/blob/msx_dev/Resources/screenshots/memories.png "Memories")
-
-**NOTE**: For Linux users, you will have to copy the .bin file over to Windows, as Atmel Studio is a Windows-only application.
-
-Hit **Program** to write your TinyG binary to flash and have it verified.
 
 ## Alternate: Flashing the TinyG2 using BOSSA
 
