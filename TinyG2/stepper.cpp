@@ -606,6 +606,8 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 {
 	uint32_t interrupt_cause = dda_timer.getInterruptCause();	// also clears interrupt condition
 
+  coolant_enable_pin.toggle();
+
 	if (interrupt_cause == kInterruptOnMatchA) {
 
 		if (!motor_1.step.isNull() && (st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {

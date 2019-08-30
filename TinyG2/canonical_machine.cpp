@@ -1117,11 +1117,11 @@ static void _exec_mist_coolant_control(float *value, float *flag)
 	gpio_set_bit_off(MIST_COOLANT_BIT);		// else
 #endif // __AVR
 
-#ifdef __ARM
+/*#ifdef __ARM
 	if (cm.gm.mist_coolant == true)
 		coolant_enable_pin.set();	// if
 	coolant_enable_pin.clear();		// else
-#endif // __ARM
+#endif // __ARM*/
 }
 
 stat_t cm_flood_coolant_control(uint8_t flood_coolant)
@@ -1144,7 +1144,7 @@ static void _exec_flood_coolant_control(float *value, float *flag)
 	}
 #endif // __AVR
 
-#ifdef __ARM
+/*#ifdef __ARM
 	if (cm.gm.flood_coolant == true) {
 		coolant_enable_pin.set();
 	} else {
@@ -1152,7 +1152,7 @@ static void _exec_flood_coolant_control(float *value, float *flag)
 		float vect[] = { 0,0,0,0,0,0 };				// turn off mist coolant
 		_exec_mist_coolant_control(vect, vect);		// M9 special function
 	}
-#endif // __ARM
+#endif // __ARM*/
 }
 
 /*
