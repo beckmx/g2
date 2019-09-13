@@ -193,6 +193,14 @@ DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
 
 endif
 
+ifeq ("$(PLATFORM)",$(filter "$(PLATFORM)","Daemon" "daemon"))
+
+BASE_PLATFORM=v9_3x8c
+SETTINGS_FILE="settings_daemon.h"
+DEVICE_DEFINES += MOTATE_BOARD="G2v9i" SETTINGS_FILE=${SETTINGS_FILE}
+
+endif
+
 ifeq ("$(BASE_PLATFORM)","")
 	BASE_PLATFORM = $(PLATFORM)
 endif

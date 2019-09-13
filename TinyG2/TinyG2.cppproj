@@ -21,7 +21,8 @@
     <OverrideVtorValue>exception_table</OverrideVtorValue>
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
-    <avrtoolinterface>JTAG</avrtoolinterface>
+    <avrtoolinterface>
+    </avrtoolinterface>
     <avrtool>com.atmel.avrdbg.tool.samice</avrtool>
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
@@ -652,6 +653,14 @@
     <BuildTarget>PLATFORM=V3</BuildTarget>
     <CleanTarget>PLATFORM=V3 clean</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'daemon' ">
+    <UsesExternalMakeFile>True</UsesExternalMakeFile>
+    <OutputDirectory />
+    <BuildTarget>PLATFORM=daemon</BuildTarget>
+    <CleanTarget>PLATFORM=daemon clean</CleanTarget>
+    <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
+    <OutputPath>bin\daemon\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="arduino\Arduino.h">
